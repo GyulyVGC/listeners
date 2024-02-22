@@ -1,5 +1,7 @@
-use listeners::linux_proc;
+use listeners::get_all_listeners;
 
 fn main() {
-    linux_proc();
+    for listener in get_all_listeners() {
+        println!("{listener}");
+    }
 }

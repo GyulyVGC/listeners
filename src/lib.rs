@@ -1,9 +1,21 @@
-use procfs::net::TcpState;
+use procfs::net::{TcpNetEntry, TcpState, UdpNetEntry};
 use procfs::process::{FDTarget, Process, Stat};
 use procfs::ProcResult;
 use std::collections::HashMap;
+use std::fmt::Display;
+use std::net::SocketAddr;
 
-pub fn linux_proc() {
+/// A struct representing a process that is listening on a socket
+pub struct Listener {
+    /// The process ID of the listener process
+    pub pid: i32,
+    /// The name of the listener process
+    pub pname: String,
+    /// The local socket this listener is listening on
+    pub socket: SocketAddr,
+}
+
+pub fn get_all_listeners() -> Vec<Listener> {
     // get all processes
     let all_procs = procfs::process::all_processes().unwrap();
 
@@ -20,15 +32,17 @@ pub fn linux_proc() {
         }
     }
 
-    // get the tcp table
+    // get the tcp tables
     let tcp = procfs::net::tcp().unwrap();
     let tcp6 = procfs::net::tcp6().unwrap();
-    // get the udp table
+    // get the udp tables
     let udp = procfs::net::udp().unwrap();
     let udp6 = procfs::net::udp6().unwrap();
 
-    for (collection,title) in [(tcp, "TCP"), (tcp6, "TCP6)")] {
-        println!("----- {title} -----");
+    let mut listeners = Vec::new();
+
+    for (collection, title) in [(tcp, "TCP"), (tcp6, "TCP6")] {
+        println!("===== {title} =====\n");
         println!(
             "{:<26} {:<26} {:<15} {:<8} {}",
             "Local address", "Remote address", "State", "Inode", "PID/Program name"
@@ -39,6 +53,7 @@ pub fn linux_proc() {
             let remote_addr = format!("{}", entry.remote_address);
             let state = format!("{:?}", entry.state);
             if let Some(stat) = map.get(&entry.inode) {
+                listeners.push(Listener::from_procfs_stat(stat, entry.local_address));
                 println!(
                     "{:<26} {:<26} {:<15} {:<12} {}/{}",
                     local_address, remote_addr, state, entry.inode, stat.pid, stat.comm
@@ -54,8 +69,8 @@ pub fn linux_proc() {
         println!("\n\n\n");
     }
 
-    for (collection,title) in [(udp, "UDP"), (udp6, "UDP6)")] {
-        println!("----- {title} -----\n");
+    for (collection, title) in [(udp, "UDP"), (udp6, "UDP6")] {
+        println!("===== {title} =====\n");
         println!(
             "{:<26} {:<26} {:<15} {:<8} {}",
             "Local address", "Remote address", "State", "Inode", "PID/Program name"
@@ -66,6 +81,7 @@ pub fn linux_proc() {
             let remote_addr = format!("{}", entry.remote_address);
             let state = format!("{:?}", entry.state);
             if let Some(stat) = map.get(&entry.inode) {
+                listeners.push(Listener::from_procfs_stat(stat, entry.local_address));
                 println!(
                     "{:<26} {:<26} {:<15} {:<12} {}/{}",
                     local_address, remote_addr, state, entry.inode, stat.pid, stat.comm
@@ -78,7 +94,34 @@ pub fn linux_proc() {
                 );
             }
         }
-        println!("\n\n");
+        println!("\n\n\n");
+    }
+
+    listeners
+}
+
+enum NetEntry {
+    Tcp(TcpNetEntry),
+    Udp(UdpNetEntry),
+}
+
+impl Listener {
+    fn from_procfs_stat(stat: &Stat, socket: SocketAddr) -> Self {
+        Self {
+            pid: stat.pid,
+            pname: stat.comm.to_owned(),
+            socket,
+        }
+    }
+}
+
+impl Display for Listener {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "PID: {:<10}, Process name: {:<20}, Socket: {:<26}",
+            self.pid, self.pname, self.socket
+        )
     }
 }
 
