@@ -1,6 +1,5 @@
-use procfs::net::{TcpNetEntry, TcpState, UdpNetEntry};
+use procfs::net::{TcpNetEntry, UdpNetEntry};
 use procfs::process::{FDTarget, Process, Stat};
-use procfs::ProcResult;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::net::SocketAddr;
@@ -131,11 +130,6 @@ pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
     }
 
     listeners
-}
-
-enum NetEntry {
-    Tcp(TcpNetEntry),
-    Udp(UdpNetEntry),
 }
 
 impl Listener {

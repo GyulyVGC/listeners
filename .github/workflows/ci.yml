@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - '*'
+  pull_request:
+    branches:
+      - '*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+# Linters inspired from here: https://github.com/actions-rs/meta/blob/master/recipes/quickstart.md
+jobs:
+
+  rust:
+    name: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: fmt
+        run: cargo fmt --all -- --check
+      - name: build
+        run: cargo build --verbose
+      - name: clippy
+        run: cargo clippy -- -D warnings
+      - name: test
+        run: cargo test --verbose -- --nocapture
+
+#      - name: Install cargo-llvm-cov
+#        if: matrix.os == 'ubuntu'
+#        uses: taiki-e/install-action@cargo-llvm-cov
+#      - name: Generate code coverage
+#        if: matrix.os == 'ubuntu'
+#        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
+#      - name: Upload coverage to Codecov
+#        if: matrix.os == 'ubuntu'
+#        uses: codecov/codecov-action@v4
+#        with:
+#          files: lcov.info
+#          fail_ci_if_error: false
+#          token: ${{ secrets.CODECOV_IO }}
