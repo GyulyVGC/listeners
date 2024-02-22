@@ -1,4 +1,3 @@
-use procfs::net::{TcpNetEntry, UdpNetEntry};
 use procfs::process::{FDTarget, Process, Stat};
 use std::collections::HashMap;
 use std::fmt::Display;
@@ -7,11 +6,43 @@ use std::net::SocketAddr;
 /// A struct representing a process that is listening on a socket
 pub struct Listener {
     /// The process ID of the listener process
-    pub pid: i32,
+    pid: i32,
     /// The name of the listener process
-    pub pname: String,
+    pname: String,
     /// The local socket this listener is listening on
-    pub socket: SocketAddr,
+    socket: SocketAddr,
+}
+
+impl Listener {
+    pub fn pid(&self) -> i32 {
+        self.pid
+    }
+
+    pub fn pname(&self) -> &str {
+        &self.pname
+    }
+
+    pub fn socket(&self) -> &SocketAddr {
+        &self.socket
+    }
+
+    fn from_proc_stat(stat: &Stat, socket: SocketAddr) -> Self {
+        Self {
+            pid: stat.pid,
+            pname: stat.comm.to_owned(),
+            socket,
+        }
+    }
+}
+
+impl Display for Listener {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "PID: {:<10} Process name: {:<20} Socket: {:<26}",
+            self.pid, self.pname, self.socket
+        )
+    }
 }
 
 pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
@@ -76,7 +107,7 @@ pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
     for (collection, title) in [(tcp, "TCP"), (tcp6, "TCP6")] {
         println!("===== {title} =====\n");
         println!(
-            "{:<26} {:<26} {:<15} {:<8} {}",
+            "{:<26} {:<26} {:<15} {:<12} {}",
             "Local address", "Remote address", "State", "Inode", "PID/Program name"
         );
         for entry in collection {
@@ -104,7 +135,7 @@ pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
     for (collection, title) in [(udp, "UDP"), (udp6, "UDP6")] {
         println!("===== {title} =====\n");
         println!(
-            "{:<26} {:<26} {:<15} {:<8} {}",
+            "{:<26} {:<26} {:<15} {:<12} {}",
             "Local address", "Remote address", "State", "Inode", "PID/Program name"
         );
         for entry in collection {
@@ -130,26 +161,6 @@ pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
     }
 
     listeners
-}
-
-impl Listener {
-    fn from_procfs_stat(stat: &Stat, socket: SocketAddr) -> Self {
-        Self {
-            pid: stat.pid,
-            pname: stat.comm.to_owned(),
-            socket,
-        }
-    }
-}
-
-impl Display for Listener {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "PID: {:<10} Process name: {:<20} Socket: {:<26}",
-            self.pid, self.pname, self.socket
-        )
-    }
 }
 
 #[cfg(test)]
