@@ -116,7 +116,7 @@ pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
             let remote_addr = format!("{}", entry.remote_address);
             let state = format!("{:?}", entry.state);
             if let Some(stat) = map.get(&entry.inode) {
-                listeners.push(Listener::from_procfs_stat(stat, entry.local_address));
+                listeners.push(Listener::from_proc_stat(stat, entry.local_address));
                 println!(
                     "{:<26} {:<26} {:<15} {:<12} {}/{}",
                     local_address, remote_addr, state, entry.inode, stat.pid, stat.comm
@@ -144,7 +144,7 @@ pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
             let remote_addr = format!("{}", entry.remote_address);
             let state = format!("{:?}", entry.state);
             if let Some(stat) = map.get(&entry.inode) {
-                listeners.push(Listener::from_procfs_stat(stat, entry.local_address));
+                listeners.push(Listener::from_proc_stat(stat, entry.local_address));
                 println!(
                     "{:<26} {:<26} {:<15} {:<12} {}/{}",
                     local_address, remote_addr, state, entry.inode, stat.pid, stat.comm
