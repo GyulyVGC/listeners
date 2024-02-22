@@ -15,7 +15,7 @@ pub struct Listener {
     pub socket: SocketAddr,
 }
 
-pub fn get_all_listeners() -> Vec<Listener> {
+pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
     // get all processes
     let all_procs = procfs::process::all_processes().unwrap();
 
@@ -32,12 +32,45 @@ pub fn get_all_listeners() -> Vec<Listener> {
         }
     }
 
-    // get the tcp tables
-    let tcp = procfs::net::tcp().unwrap();
-    let tcp6 = procfs::net::tcp6().unwrap();
-    // get the udp tables
-    let udp = procfs::net::udp().unwrap();
-    let udp6 = procfs::net::udp6().unwrap();
+    // get the tcp table
+    let tcp = match &pid {
+        Some(pid) => {
+            let pid = pid.parse::<i32>().unwrap();
+            let process = Process::new(pid).unwrap();
+            Process::tcp(&process).unwrap()
+        }
+        None => procfs::net::tcp().unwrap(),
+    };
+
+    // get the tcp6 table
+    let tcp6 = match &pid {
+        Some(pid) => {
+            let pid = pid.parse::<i32>().unwrap();
+            let process = Process::new(pid).unwrap();
+            Process::tcp6(&process).unwrap()
+        }
+        None => procfs::net::tcp6().unwrap(),
+    };
+
+    // get the udp table
+    let udp = match &pid {
+        Some(pid) => {
+            let pid = pid.parse::<i32>().unwrap();
+            let process = Process::new(pid).unwrap();
+            Process::udp(&process).unwrap()
+        }
+        None => procfs::net::udp().unwrap(),
+    };
+
+    // get the udp6 table
+    let udp6 = match &pid {
+        Some(pid) => {
+            let pid = pid.parse::<i32>().unwrap();
+            let process = Process::new(pid).unwrap();
+            Process::udp6(&process).unwrap()
+        }
+        None => procfs::net::udp6().unwrap(),
+    };
 
     let mut listeners = Vec::new();
 
@@ -119,7 +152,7 @@ impl Display for Listener {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "PID: {:<10}, Process name: {:<20}, Socket: {:<26}",
+            "PID: {:<10} Process name: {:<20} Socket: {:<26}",
             self.pid, self.pname, self.socket
         )
     }
