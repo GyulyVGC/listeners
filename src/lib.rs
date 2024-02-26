@@ -109,11 +109,11 @@ unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
     let mut temp: Vec<u8> = vec![];
     let len = name
         .iter()
-        .position(|&x| x == windows::Win32::Foundation::CHAR(0))
+        .position(|&x| x == 0)
         .unwrap();
 
     for i in name.iter() {
-        temp.push(i.0.clone());
+        temp.push(i as u8);
     }
     Some(String::from_utf8(temp[0..len].to_vec()).unwrap_or_default())
 }
