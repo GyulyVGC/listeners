@@ -103,7 +103,7 @@ fn get_name_from_pid(pid: u32) -> Option<String> {
         }
     }
 
-    unsafe { CloseHandle(h) };
+    unsafe { CloseHandle(h).unwrap() };
 
     let name = process.szExeFile;
     let mut temp: Vec<u8> = vec![];
