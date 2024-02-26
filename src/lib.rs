@@ -95,7 +95,7 @@ unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
         loop {
             if Process32Next(h, &mut process).as_bool() {
                 let id: u32 = process.th32ProcessID;
-                if id == process_id {
+                if id == pid {
                     break;
                 }
             } else {
