@@ -1,6 +1,7 @@
 use std::fmt::Display;
 use std::net::{IpAddr, SocketAddr};
 
+#[cfg(not(target_os = "windows"))]
 use libproc::libproc::proc_pid;
 use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo};
 

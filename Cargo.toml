@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 netstat2 = "0.9.1"
+[target.'cfg(not(target_os = "windows"))'.dependencies]
 libproc = "0.14.2"
