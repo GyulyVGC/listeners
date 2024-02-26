@@ -77,7 +77,7 @@ pub fn get_all_listeners() -> Vec<Listener> {
 }
 
 #[cfg(target_os = "windows")]
-unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
+fn get_name_from_pid(pid: u32) -> Option<String> {
     use std::mem::size_of;
     use std::mem::zeroed;
     use windows::Win32::Foundation::CloseHandle;
@@ -87,7 +87,7 @@ unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
 
     let h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).unwrap();
 
-    let mut process = zeroed::<PROCESSENTRY32>();
+    let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
     process.dwSize = size_of::<PROCESSENTRY32>() as u32;
 
     if Process32First(h, &mut process).is_ok() {
@@ -103,14 +103,11 @@ unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
         }
     }
 
-    CloseHandle(h);
+    unsafe { CloseHandle(h) };
 
     let name = process.szExeFile;
     let mut temp: Vec<u8> = vec![];
-    let len = name
-        .iter()
-        .position(|&x| x == 0)
-        .unwrap();
+    let len = name.iter().position(|&x| x == 0).unwrap();
 
     for i in name.iter() {
         temp.push(*i as u8);
