@@ -52,13 +52,13 @@ pub fn get_all_listeners() -> Vec<Listener> {
 
     let mut add_listeners = |pids: Vec<u32>, ip: IpAddr, port: u16| {
         for pid in pids {
-            #[allow(clippy::cast_possible_wrap)]
-            let pname = proc_pid::name(pid as i32).unwrap_or_default();
-            listeners.push(Listener {
-                pid,
-                pname,
-                socket: SocketAddr::new(ip, port),
-            });
+            if let Some(pname) = get_name_from_pid(pid) {
+                listeners.push(Listener {
+                    pid,
+                    pname,
+                    socket: SocketAddr::new(ip, port),
+                });
+            }
         }
     };
 
@@ -74,6 +74,55 @@ pub fn get_all_listeners() -> Vec<Listener> {
     }
 
     listeners
+}
+
+#[cfg(target_os = "windows")]
+unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
+    use std::mem::size_of;
+    use std::mem::zeroed;
+    use windows::core::imp::CloseHandle;
+    use windows::Win32::Foundation::CloseHandle;
+    use windows::Win32::System::Diagnostics::ToolHelp::{
+        CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
+    };
+
+    let h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).unwrap();
+
+    let mut process = zeroed::<PROCESSENTRY32>();
+    process.dwSize = size_of::<PROCESSENTRY32>() as u32;
+
+    if Process32First(h, &mut process).as_bool() {
+        loop {
+            if Process32Next(h, &mut process).as_bool() {
+                let id: u32 = process.th32ProcessID;
+                if id == process_id {
+                    break;
+                }
+            } else {
+                return None;
+            }
+        }
+    }
+
+    CloseHandle(h);
+
+    let name = process.szExeFile;
+    let mut temp: Vec<u8> = vec![];
+    let len = name
+        .iter()
+        .position(|&x| x == windows::Win32::Foundation::CHAR(0))
+        .unwrap();
+
+    for i in name.iter() {
+        temp.push(i.0.clone());
+    }
+    Some(String::from_utf8(temp[0..len].to_vec()).unwrap_or_default())
+}
+
+#[cfg(not(target_os = "windows"))]
+fn get_name_from_pid(pid: u32) -> Option<String> {
+    #[allow(clippy::cast_possible_wrap)]
+    proc_pid::name(pid as i32).ok()
 }
 
 #[cfg(test)]
