@@ -1,4 +1,5 @@
-use listeners::get_all_listeners;
+use std::net::IpAddr;
+use std::str::FromStr;
 
 fn main() {
     let print_title = |title: &str| {
@@ -7,8 +8,21 @@ fn main() {
         println!("\n{repeat_str} {title} {repeat_str}");
     };
 
-    print_title("get_all_listeners()");
-    for listener in get_all_listeners() {
+    print_title("get_all()");
+    for listener in listeners::get_all() {
         println!("{listener}");
+    }
+
+    let ip = IpAddr::from_str(
+        &std::env::args()
+            .skip(1)
+            .next()
+            .expect("Expected IP address as argument to program"),
+    )
+    .expect("The provided IP address is not valid");
+
+    print_title(&format!("get_for_nullnet({ip})"));
+    for pname in listeners::get_for_nullnet(ip) {
+        println!("{pname}");
     }
 }

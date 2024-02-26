@@ -1,7 +1,8 @@
+use std::collections::HashSet;
 use std::fmt::Display;
 use std::net::{IpAddr, SocketAddr};
 
-use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo};
+use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
 
 /// A struct representing a process that is listening on a socket
 pub struct Listener {
@@ -41,21 +42,48 @@ impl Display for Listener {
 }
 
 #[must_use]
-pub fn get_all_listeners() -> Vec<Listener> {
+pub fn get_all() -> Vec<Listener> {
+    get_with_filters(
+        AddressFamilyFlags::IPV4 | AddressFamilyFlags::IPV6,
+        ProtocolFlags::TCP | ProtocolFlags::UDP,
+        None,
+        None,
+    )
+}
+
+#[must_use]
+pub fn get_for_nullnet(ip_addr: IpAddr) -> HashSet<String> {
+    get_with_filters(
+        AddressFamilyFlags::IPV4,
+        ProtocolFlags::TCP,
+        Some(TcpState::Listen),
+        Some(ip_addr),
+    )
+    .iter()
+    .map(|l| l.pname.clone())
+    .collect()
+}
+
+fn get_with_filters(
+    af_flags: AddressFamilyFlags,
+    proto_flags: ProtocolFlags,
+    tcp_state: Option<TcpState>,
+    ip_addr: Option<IpAddr>,
+) -> Vec<Listener> {
     let mut listeners = Vec::new();
 
-    let af_flags = AddressFamilyFlags::IPV4 | AddressFamilyFlags::IPV6;
-    let proto_flags = ProtocolFlags::TCP | ProtocolFlags::UDP;
     let sockets_info = get_sockets_info(af_flags, proto_flags).unwrap_or_default();
 
     let mut add_listeners = |pids: Vec<u32>, ip: IpAddr, port: u16| {
         for pid in pids {
             if let Some(pname) = get_name_from_pid(pid) {
-                listeners.push(Listener {
-                    pid,
-                    pname,
-                    socket: SocketAddr::new(ip, port),
-                });
+                if ip.is_unspecified() || ip_addr.is_none() || ip_addr.unwrap() == ip {
+                    listeners.push(Listener {
+                        pid,
+                        pname,
+                        socket: SocketAddr::new(ip, port),
+                    });
+                }
             }
         }
     };
@@ -63,7 +91,9 @@ pub fn get_all_listeners() -> Vec<Listener> {
     for si in sockets_info {
         match si.protocol_socket_info {
             ProtocolSocketInfo::Tcp(tcp_si) => {
-                add_listeners(si.associated_pids, tcp_si.local_addr, tcp_si.local_port);
+                if tcp_state.is_none() || tcp_si.state == tcp_state.unwrap() {
+                    add_listeners(si.associated_pids, tcp_si.local_addr, tcp_si.local_port);
+                }
             }
             ProtocolSocketInfo::Udp(udp_si) => {
                 add_listeners(si.associated_pids, udp_si.local_addr, udp_si.local_port);
