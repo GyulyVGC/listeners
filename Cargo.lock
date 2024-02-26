@@ -160,8 +160,7 @@ checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 [[package]]
 name = "netstat2"
 version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0faa3f4ad230fd2bf2a5dad71476ecbaeaed904b3c7e7e5b1f266c415c03761f"
+source = "git+https://github.com/GyulyVGC/netstat2.git#fb892d54e3c2ac2454f4bd93c8e5708db9742baa"
 dependencies = [
  "bitflags 1.3.2",
  "byteorder",

@@ -1,8 +1,6 @@
 use std::fmt::Display;
 use std::net::{IpAddr, SocketAddr};
 
-#[cfg(not(target_os = "windows"))]
-use libproc::libproc::proc_pid;
 use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo};
 
 /// A struct representing a process that is listening on a socket
@@ -117,6 +115,7 @@ fn get_name_from_pid(pid: u32) -> Option<String> {
 
 #[cfg(not(target_os = "windows"))]
 fn get_name_from_pid(pid: u32) -> Option<String> {
+    use libproc::libproc::proc_pid;
     #[allow(clippy::cast_possible_wrap)]
     proc_pid::name(pid as i32).ok()
 }
