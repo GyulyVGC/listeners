@@ -80,7 +80,6 @@ pub fn get_all_listeners() -> Vec<Listener> {
 unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
     use std::mem::size_of;
     use std::mem::zeroed;
-    use windows::core::imp::CloseHandle;
     use windows::Win32::Foundation::CloseHandle;
     use windows::Win32::System::Diagnostics::ToolHelp::{
         CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
