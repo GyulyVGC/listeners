@@ -85,14 +85,14 @@ fn get_name_from_pid(pid: u32) -> Option<String> {
         CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
     };
 
-    let h = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).unwrap();
+    let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).unwrap() };
 
     let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
     process.dwSize = size_of::<PROCESSENTRY32>() as u32;
 
-    if Process32First(h, &mut process).is_ok() {
+    if unsafe { Process32First(h, &mut process) }.is_ok() {
         loop {
-            if Process32Next(h, &mut process).is_ok() {
+            if unsafe { Process32Next(h, &mut process) }.is_ok() {
                 let id: u32 = process.th32ProcessID;
                 if id == pid {
                     break;
