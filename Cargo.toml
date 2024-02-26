@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-netstat2 = { git = "https://github.com/GyulyVGC/netstat2.git" }
+netstat2 = "0.9.1"
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 libproc = "0.14.2"
 [target.'cfg(target_os = "windows")'.dependencies]
