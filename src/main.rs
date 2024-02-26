@@ -1,10 +1,14 @@
 use listeners::get_all_listeners;
 
 fn main() {
-    let listeners = get_all_listeners();
+    let print_title = |title: &str| {
+        let n_repeat = 40 - title.len() / 2;
+        let repeat_str = "=".repeat(n_repeat);
+        println!("\n{repeat_str} {title} {repeat_str}");
+    };
 
-    println!("===== Listeners =====\n");
-    for listener in listeners {
+    print_title("get_all_listeners()");
+    for listener in get_all_listeners() {
         println!("{listener}");
     }
 }
