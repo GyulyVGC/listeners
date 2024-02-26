@@ -90,9 +90,9 @@ unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
     let mut process = zeroed::<PROCESSENTRY32>();
     process.dwSize = size_of::<PROCESSENTRY32>() as u32;
 
-    if Process32First(h, &mut process).as_bool() {
+    if Process32First(h, &mut process).is_ok() {
         loop {
-            if Process32Next(h, &mut process).as_bool() {
+            if Process32Next(h, &mut process).is_ok() {
                 let id: u32 = process.th32ProcessID;
                 if id == pid {
                     break;
@@ -113,7 +113,7 @@ unsafe fn get_name_from_pid(pid: u32) -> Option<String> {
         .unwrap();
 
     for i in name.iter() {
-        temp.push(i as u8);
+        temp.push(*i as u8);
     }
     Some(String::from_utf8(temp[0..len].to_vec()).unwrap_or_default())
 }
