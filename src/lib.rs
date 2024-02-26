@@ -1,12 +1,13 @@
-use procfs::process::{FDTarget, Process, Stat};
-use std::collections::HashMap;
 use std::fmt::Display;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
+
+use libproc::libproc::proc_pid;
+use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo};
 
 /// A struct representing a process that is listening on a socket
 pub struct Listener {
     /// The process ID of the listener process
-    pid: i32,
+    pid: u32,
     /// The name of the listener process
     pname: String,
     /// The local socket this listener is listening on
@@ -14,24 +15,19 @@ pub struct Listener {
 }
 
 impl Listener {
-    pub fn pid(&self) -> i32 {
+    #[must_use]
+    pub fn pid(&self) -> u32 {
         self.pid
     }
 
+    #[must_use]
     pub fn pname(&self) -> &str {
         &self.pname
     }
 
+    #[must_use]
     pub fn socket(&self) -> &SocketAddr {
         &self.socket
-    }
-
-    fn from_proc_stat(stat: &Stat, socket: SocketAddr) -> Self {
-        Self {
-            pid: stat.pid,
-            pname: stat.comm.to_owned(),
-            socket,
-        }
     }
 }
 
@@ -45,119 +41,35 @@ impl Display for Listener {
     }
 }
 
-pub fn get_all_listeners(pid: Option<String>) -> Vec<Listener> {
-    // get all processes
-    let all_procs = procfs::process::all_processes().unwrap();
-
-    // build up a map between socket inodes and processes:
-    let mut map: HashMap<u64, Stat> = HashMap::new();
-    for p in all_procs {
-        let process = p.unwrap();
-        if let (Ok(stat), Ok(fds)) = (process.stat(), process.fd()) {
-            for fd in fds {
-                if let FDTarget::Socket(inode) = fd.unwrap().target {
-                    map.insert(inode, stat.clone());
-                }
-            }
-        }
-    }
-
-    // get the tcp table
-    let tcp = match &pid {
-        Some(pid) => {
-            let pid = pid.parse::<i32>().unwrap();
-            let process = Process::new(pid).unwrap();
-            Process::tcp(&process).unwrap()
-        }
-        None => procfs::net::tcp().unwrap(),
-    };
-
-    // get the tcp6 table
-    let tcp6 = match &pid {
-        Some(pid) => {
-            let pid = pid.parse::<i32>().unwrap();
-            let process = Process::new(pid).unwrap();
-            Process::tcp6(&process).unwrap()
-        }
-        None => procfs::net::tcp6().unwrap(),
-    };
-
-    // get the udp table
-    let udp = match &pid {
-        Some(pid) => {
-            let pid = pid.parse::<i32>().unwrap();
-            let process = Process::new(pid).unwrap();
-            Process::udp(&process).unwrap()
-        }
-        None => procfs::net::udp().unwrap(),
-    };
-
-    // get the udp6 table
-    let udp6 = match &pid {
-        Some(pid) => {
-            let pid = pid.parse::<i32>().unwrap();
-            let process = Process::new(pid).unwrap();
-            Process::udp6(&process).unwrap()
-        }
-        None => procfs::net::udp6().unwrap(),
-    };
-
+#[must_use]
+pub fn get_all_listeners() -> Vec<Listener> {
     let mut listeners = Vec::new();
 
-    for (collection, title) in [(tcp, "TCP"), (tcp6, "TCP6")] {
-        println!("===== {title} =====\n");
-        println!(
-            "{:<26} {:<26} {:<15} {:<12} {}",
-            "Local address", "Remote address", "State", "Inode", "PID/Program name"
-        );
-        for entry in collection {
-            // find the process (if any) that has an open FD to this entry's inode
-            let local_address = format!("{}", entry.local_address);
-            let remote_addr = format!("{}", entry.remote_address);
-            let state = format!("{:?}", entry.state);
-            if let Some(stat) = map.get(&entry.inode) {
-                listeners.push(Listener::from_proc_stat(stat, entry.local_address));
-                println!(
-                    "{:<26} {:<26} {:<15} {:<12} {}/{}",
-                    local_address, remote_addr, state, entry.inode, stat.pid, stat.comm
-                );
-            } else {
-                // We might not always be able to find the process associated with this socket
-                println!(
-                    "{:<26} {:<26} {:<15} {:<12} -",
-                    local_address, remote_addr, state, entry.inode
-                );
-            }
-        }
-        println!("\n\n\n");
-    }
+    let af_flags = AddressFamilyFlags::IPV4 | AddressFamilyFlags::IPV6;
+    let proto_flags = ProtocolFlags::TCP | ProtocolFlags::UDP;
+    let sockets_info = get_sockets_info(af_flags, proto_flags).unwrap_or_default();
 
-    for (collection, title) in [(udp, "UDP"), (udp6, "UDP6")] {
-        println!("===== {title} =====\n");
-        println!(
-            "{:<26} {:<26} {:<15} {:<12} {}",
-            "Local address", "Remote address", "State", "Inode", "PID/Program name"
-        );
-        for entry in collection {
-            // find the process (if any) that has an open FD to this entry's inode
-            let local_address = format!("{}", entry.local_address);
-            let remote_addr = format!("{}", entry.remote_address);
-            let state = format!("{:?}", entry.state);
-            if let Some(stat) = map.get(&entry.inode) {
-                listeners.push(Listener::from_proc_stat(stat, entry.local_address));
-                println!(
-                    "{:<26} {:<26} {:<15} {:<12} {}/{}",
-                    local_address, remote_addr, state, entry.inode, stat.pid, stat.comm
-                );
-            } else {
-                // We might not always be able to find the process associated with this socket
-                println!(
-                    "{:<26} {:<26} {:<15} {:<12} -",
-                    local_address, remote_addr, state, entry.inode
-                );
+    let mut add_listeners = |pids: Vec<u32>, ip: IpAddr, port: u16| {
+        for pid in pids {
+            #[allow(clippy::cast_possible_wrap)]
+            let pname = proc_pid::name(pid as i32).unwrap_or_default();
+            listeners.push(Listener {
+                pid,
+                pname,
+                socket: SocketAddr::new(ip, port),
+            });
+        }
+    };
+
+    for si in sockets_info {
+        match si.protocol_socket_info {
+            ProtocolSocketInfo::Tcp(tcp_si) => {
+                add_listeners(si.associated_pids, tcp_si.local_addr, tcp_si.local_port);
+            }
+            ProtocolSocketInfo::Udp(udp_si) => {
+                add_listeners(si.associated_pids, udp_si.local_addr, udp_si.local_port);
             }
         }
-        println!("\n\n\n");
     }
 
     listeners
