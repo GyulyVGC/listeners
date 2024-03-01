@@ -11,5 +11,5 @@ rustix = {version = "0.38.31", features = ["procfs", "fs"]}
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 libproc = "0.14.2"
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.53.0", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp"] }
+windows = { version = "0.54.0", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp"] }
 procfs = "0.16.0"
