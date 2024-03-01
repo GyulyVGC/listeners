@@ -4,6 +4,10 @@ use std::net::{IpAddr, SocketAddr};
 
 use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
 
+pub use platform::hi_cross;
+
+mod platform;
+
 /// A struct representing a process that is listening on a socket
 pub struct Listener {
     /// The process ID of the listener process
