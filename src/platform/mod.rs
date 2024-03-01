@@ -8,13 +8,13 @@ mod windows;
 use windows::hi;
 
 /* macos */
-#[cfg(target_os = "macos")]
-mod macos;
-#[cfg(target_os = "macos")]
-use macos::hi;
+// #[cfg(target_os = "macos")]
+// mod macos;
+// #[cfg(target_os = "macos")]
+// use macos::hi;
 
 /* linux */
-#[cfg(target_os = "linux")]
+// #[cfg(target_os = "linux")]
 mod linux;
-#[cfg(target_os = "linux")]
+// #[cfg(target_os = "linux")]
 use linux::hi;
