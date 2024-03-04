@@ -124,7 +124,7 @@ impl Process {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct PidName {
     pid: i32,
     name: String,
