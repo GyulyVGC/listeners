@@ -18,10 +18,6 @@ static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
 
 pub(crate) fn hi() {
     let processes = get_all_processes();
-    for p in processes.iter() {
-        println!("P: {:?}", p);
-    }
-    println!();
 
     let socket_inode_process_map = build_inode_process_map(processes);
     for (inode, process) in socket_inode_process_map {
@@ -31,7 +27,7 @@ pub(crate) fn hi() {
 }
 
 fn get_all_processes() -> Vec<Process> {
-    procfs::process::all_processes().unwrap();
+    // procfs::process::all_processes().unwrap();
 
     let root = rustix::fs::openat(
         rustix::fs::CWD,
@@ -82,6 +78,7 @@ fn get_all_processes() -> Vec<Process> {
 fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
     let mut map: HashMap<u64, PidName> = HashMap::new();
     for process in processes {
+        println!("P: {process:?}");
         let stat = rustix::fs::openat(
             &process.fd,
             "stat",
@@ -98,11 +95,11 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         .unwrap();
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).unwrap();
         let mut socket_inodes = Vec::new();
-        println!("dir_fd: {:?}", dir_fd);
-        println!("dir: {:?}", dir);
+        println!("\t dir_fd: {:?}", dir_fd);
+        println!("\t dir: {:?}", dir);
         if let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
-            println!("\tfile name: {:?}", name);
+            println!("\t file name: {:?}", name);
             if let Ok(fd) = RawFd::from_str(&name) {
                 if let Some(socket_inode) =
                     get_socket_inodes(process.root, dir_fd.as_fd(), name.as_ref(), fd)
@@ -112,7 +109,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
             }
         }
         if let Some(pid_name) = PidName::from_file(File::from(stat)) {
-            println!("pid_name: {:?}", pid_name);
+            println!("\t pid_name: {:?}", pid_name);
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
             }
