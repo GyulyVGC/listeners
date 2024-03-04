@@ -1,6 +1,5 @@
 use once_cell::sync::Lazy;
-use procfs::process::{FDInfo, FDTarget, Stat};
-use procfs::{expect, FromRead, KernelVersion, ProcError, ProcErrorExt, ProcResult};
+use procfs::process::{Stat};
 use rustix::fs::{AtFlags, Mode, OFlags};
 use std::collections::HashMap;
 use std::io;
@@ -11,9 +10,9 @@ use std::str::FromStr;
 
 const ROOT: &str = "/proc";
 
-static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
+static KERNEL: Lazy<Option<&str>> = Lazy::new(|| {
     std::fs::read_to_string("/proc/sys/kernel/osreleas")
-        .and_then(|s| Ok(s.trim().to_owned()))
+        .and_then(|s| Ok(s.trim()))
         .ok()
 });
 
@@ -33,16 +32,16 @@ fn get_all_processes() -> Vec<Process> {
 
     let mut processes: Vec<Process> = vec![];
     for entry in dir {
-        if let Some(Ok(e)) = entry {
+        if let Ok(e) = entry {
             if let Ok(pid) = i32::from_str(&e.file_name().to_string_lossy()) {
                 let proc_root = PathBuf::from(ROOT).join(pid.to_string());
 
                 // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
-                let flags = match KERNEL {
+                let flags = match *KERNEL {
                     Some(v) if v < "3.6.0" => OFlags::DIRECTORY | OFlags::CLOEXEC,
                     Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
-                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())?;
+                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
 
                 let pidres = proc_root
                     .as_path()
@@ -58,10 +57,7 @@ fn get_all_processes() -> Vec<Process> {
                             .ok()
                             .and_then(|s| s.to_string_lossy().parse::<i32>().ok())
                     });
-                let pid = match pidres {
-                    Some(pid) => pid,
-                    None => return Err(ProcError::NotFound(Some(proc_root))),
-                };
+                let pid = pidres.unwrap();
 
                 processes.push(Process::new(pid, file, proc_root));
             }
@@ -70,15 +66,15 @@ fn get_all_processes() -> Vec<Process> {
     processes
 }
 
-fn build_inode_process_map(processes: Vec<Process>) {
-    let mut map: HashMap<u64, Stat> = HashMap::new();
+fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
+    let mut map: HashMap<u64, PidName> = HashMap::new();
     for process in processes {
         let read = rustix::fs::openat(
             process.fd,
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
             Mode::empty(),
-        );
+        ).unwrap();
         let dir_fd = rustix::fs::openat(
             &process.fd,
             "fd",
@@ -98,7 +94,7 @@ fn build_inode_process_map(processes: Vec<Process>) {
                 }
             }
         }
-        if let Ok(pid_name) = PidName::from_read(read) {
+        if let Some(pid_name) = PidName::from_read(read) {
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
             }
@@ -128,7 +124,7 @@ impl PidName {
     fn from_read<R: Read>(mut r: R) -> Option<Self> {
         // read in entire thing, this is only going to be 1 line
         let mut buf = Vec::with_capacity(512);
-        r.read_to_end(&mut buf)?;
+        r.read_to_end(&mut buf).unwrap();
 
         let line = String::from_utf8_lossy(&buf);
         let buf = line.trim();
@@ -154,7 +150,7 @@ fn get_socket_inodes<P: AsRef<Path>, Q: AsRef<Path>>(
     let p = path.as_ref();
     let root = base.as_ref().join(p);
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
-    let flags = match KERNEL {
+    let flags = match *KERNEL {
         Ok(v) if v < "3.6.0" => OFlags::NOFOLLOW | OFlags::CLOEXEC,
         Ok(_) | Err(_) => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
     };
