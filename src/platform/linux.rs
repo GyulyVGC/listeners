@@ -96,6 +96,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         if let Some(Ok(entry)) = dir.next() {
             println!("A");
             let name = entry.file_name().to_string_lossy();
+            println!("name: {:?}", name);
             if let Ok(fd) = RawFd::from_str(&name) {
                 println!("B");
                 if let Some(socket_inode) =
