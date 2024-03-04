@@ -110,14 +110,15 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         .unwrap();
         println!("dir_fd: {:?}", dir_fd);
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).unwrap();
+        dir.rewind();
         println!("dir: {:?}", dir);
         let mut socket_inodes = Vec::new();
-        if let Some(Ok(entry)) = dir.next() {
+        while let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
             if let Ok(fd) = RawFd::from_str(&name) {
                 println!("\t Found valid!! With name {:?}", name);
                 if let Some(socket_inode) =
-                    get_socket_inodes(proc.root, dir_fd.as_fd(), name.as_ref(), fd)
+                    get_socket_inodes(&proc.root, dir_fd.as_fd(), name.as_ref(), fd)
                 {
                     socket_inodes.push(socket_inode);
                 }
