@@ -1,7 +1,8 @@
 use once_cell::sync::Lazy;
-use procfs::process::{Stat};
+use procfs::process::Stat;
 use rustix::fs::{AtFlags, Mode, OFlags};
 use std::collections::HashMap;
+use std::fs::File;
 use std::io;
 use std::io::Read;
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
@@ -41,7 +42,8 @@ fn get_all_processes() -> Vec<Process> {
                     Some(v) if v < "3.6.0" => OFlags::DIRECTORY | OFlags::CLOEXEC,
                     Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
-                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
+                let file =
+                    rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
 
                 let pidres = proc_root
                     .as_path()
@@ -74,7 +76,8 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
             Mode::empty(),
-        ).unwrap();
+        )
+        .unwrap();
         let dir_fd = rustix::fs::openat(
             &process.fd,
             "fd",
@@ -94,7 +97,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
                 }
             }
         }
-        if let Some(pid_name) = PidName::from_read(read) {
+        if let Some(pid_name) = PidName::from_read(File::from(read)) {
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
             }
@@ -115,6 +118,7 @@ impl Process {
     }
 }
 
+#[derive(Clone)]
 struct PidName {
     pid: i32,
     name: String,
@@ -151,8 +155,8 @@ fn get_socket_inodes<P: AsRef<Path>, Q: AsRef<Path>>(
     let root = base.as_ref().join(p);
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
     let flags = match *KERNEL {
-        Ok(v) if v < "3.6.0" => OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Ok(_) | Err(_) => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
+        Some(v) if v < "3.6.0" => OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Some(_) | None => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
     };
     let file = rustix::fs::openat(dirfd, p, flags, Mode::empty()).unwrap();
     let link = rustix::fs::readlinkat(&file, "", Vec::new())
