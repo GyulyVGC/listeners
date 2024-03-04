@@ -1,5 +1,4 @@
 use once_cell::sync::Lazy;
-use procfs::process::Stat;
 use rustix::fs::{AtFlags, Mode, OFlags};
 use std::collections::HashMap;
 use std::fs::File;
@@ -11,9 +10,9 @@ use std::str::FromStr;
 
 const ROOT: &str = "/proc";
 
-static KERNEL: Lazy<Option<&str>> = Lazy::new(|| {
+static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
     std::fs::read_to_string("/proc/sys/kernel/osreleas")
-        .and_then(|s| Ok(s.trim()))
+        .and_then(|s| Ok(s.trim().to_owned()))
         .ok()
 });
 
@@ -39,7 +38,7 @@ fn get_all_processes() -> Vec<Process> {
 
                 // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
                 let flags = match *KERNEL {
-                    Some(v) if v < "3.6.0" => OFlags::DIRECTORY | OFlags::CLOEXEC,
+                    Some(v) if v < String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
                     Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
                 let file =
@@ -72,7 +71,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
     let mut map: HashMap<u64, PidName> = HashMap::new();
     for process in processes {
         let read = rustix::fs::openat(
-            process.fd,
+            &process.fd,
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
             Mode::empty(),
@@ -155,7 +154,7 @@ fn get_socket_inodes<P: AsRef<Path>, Q: AsRef<Path>>(
     let root = base.as_ref().join(p);
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
     let flags = match *KERNEL {
-        Some(v) if v < "3.6.0" => OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Some(v) if v < String::from("3.6.0") => OFlags::NOFOLLOW | OFlags::CLOEXEC,
         Some(_) | None => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
     };
     let file = rustix::fs::openat(dirfd, p, flags, Mode::empty()).unwrap();
