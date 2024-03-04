@@ -12,9 +12,7 @@ const ROOT: &str = "/proc";
 
 static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
     std::fs::read_to_string("/proc/sys/kernel/osrelease")
-        .and_then(|s| {
-            println!("KERNEL: {}",s);
-            Ok(s.trim().to_owned())})
+        .and_then(|s| Ok(s.trim().to_owned()))
         .ok()
 });
 
@@ -23,9 +21,8 @@ pub(crate) fn hi() {
 
     let socket_inode_process_map = build_inode_process_map(processes);
     for (inode, process) in socket_inode_process_map {
-        println!("I: {inode} P: {process:?}");
+        println!("Inode: {inode} Process: {}", process.name);
     }
-    println!();
 }
 
 fn get_all_processes() -> Vec<Process> {
@@ -49,21 +46,10 @@ fn get_all_processes() -> Vec<Process> {
 
                 // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
                 let flags = match &*KERNEL {
-                    Some(v) if v < &String::from("3.6.0") => {
-                        println!("Kernel: {}", v);
-                        OFlags::DIRECTORY | OFlags::CLOEXEC
-                    },
-                    Some(v) => {
-                        println!("Kernel: {}", v);
-                        OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC
-                    },
-                    None => {
-                        println!("Kernel: None");
-                        OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC
-                    },
+                    Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
+                    Some(v) => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
+                    None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
-                println!("Root: {:?}", proc_root);
-                println!("CWD: {:?}", rustix::fs::CWD);
                 let file =
                     rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
 
@@ -93,7 +79,6 @@ fn get_all_processes() -> Vec<Process> {
 fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
     let mut map: HashMap<u64, PidName> = HashMap::new();
     for proc in processes {
-        println!("P: {proc:?}");
         let stat = rustix::fs::openat(
             &proc.fd,
             "stat",
@@ -108,26 +93,21 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
             Mode::empty(),
         )
         .unwrap();
-        println!("dir_fd: {:?}", dir_fd);
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).unwrap();
         dir.rewind();
-        println!("dir: {:?}", dir);
         let mut socket_inodes = Vec::new();
         while let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
             if let Ok(fd) = RawFd::from_str(&name) {
-                println!("\t Found valid!! With name {:?}", name);
                 if let Some(socket_inode) =
                     get_socket_inodes(&proc.root, dir_fd.as_fd(), name.as_ref(), fd)
                 {
                     socket_inodes.push(socket_inode);
                 }
             } else {
-                println!("\t Not a valid name: {:?}", name);
             }
         }
         if let Some(pid_name) = PidName::from_file(File::from(stat)) {
-            println!("\t pid_name: {:?}", pid_name);
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
             }
