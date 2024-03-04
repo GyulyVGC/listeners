@@ -12,7 +12,9 @@ const ROOT: &str = "/proc";
 
 static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
     std::fs::read_to_string("/proc/sys/kernel/osreleas")
-        .and_then(|s| Ok(s.trim().to_owned()))
+        .and_then(|s| {
+            println!("KERNEL: {}",s);
+            Ok(s.trim().to_owned())})
         .ok()
 });
 
@@ -29,20 +31,21 @@ pub(crate) fn hi() {
 fn get_all_processes() -> Vec<Process> {
     // procfs::process::all_processes().unwrap();
 
-    let root = rustix::fs::openat(
+    let root = Path::new("/proc");
+    let dir = rustix::fs::openat(
         rustix::fs::CWD,
-        Path::new(ROOT),
+        root,
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
         Mode::empty(),
     )
     .unwrap();
-    let dir = rustix::fs::Dir::read_from(root).unwrap();
+    let dir = rustix::fs::Dir::read_from(dir).unwrap();
 
     let mut processes: Vec<Process> = vec![];
     for entry in dir {
         if let Ok(e) = entry {
             if let Ok(pid) = i32::from_str(&e.file_name().to_string_lossy()) {
-                let proc_root = PathBuf::from(ROOT).join(pid.to_string());
+                let proc_root = PathBuf::from(root).join(pid.to_string());
 
                 // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
                 let flags = match &*KERNEL {
