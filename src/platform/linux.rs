@@ -98,6 +98,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         .unwrap();
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).unwrap();
         let mut socket_inodes = Vec::new();
+        println!("dir_fd: {:?}", dir_fd);
         if let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
             println!("\tfile name: {:?}", name);
@@ -110,6 +111,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
             }
         }
         if let Some(pid_name) = PidName::from_read(File::from(read)) {
+            println!("pid_name: {:?}", pid_name);
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
             }
