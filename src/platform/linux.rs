@@ -16,7 +16,14 @@ static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
         .ok()
 });
 
-pub(crate) fn hi() {}
+pub(crate) fn hi() {
+    let processes = get_all_processes();
+    for p in processes {
+        println!("{} {:?}", p.pid, p.root);
+    }
+    // let socket_inode_process_map = build_inode_process_map(processes);
+    //
+}
 
 fn get_all_processes() -> Vec<Process> {
     procfs::process::all_processes().unwrap();
