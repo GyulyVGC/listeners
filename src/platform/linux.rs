@@ -78,7 +78,7 @@ fn get_all_processes() -> Vec<Process> {
 fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
     let mut map: HashMap<u64, PidName> = HashMap::new();
     for proc in processes {
-        println!("P: {process:?}");
+        println!("P: {proc:?}");
         let stat = rustix::fs::openat(
             &proc.fd,
             "stat",
