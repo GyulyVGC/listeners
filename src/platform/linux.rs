@@ -82,7 +82,7 @@ fn get_all_processes() -> Vec<Process> {
 fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
     let mut map: HashMap<u64, PidName> = HashMap::new();
     for process in processes {
-        let read = rustix::fs::openat(
+        let stat = rustix::fs::openat(
             &process.fd,
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
@@ -99,6 +99,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).unwrap();
         let mut socket_inodes = Vec::new();
         println!("dir_fd: {:?}", dir_fd);
+        println!("dir: {:?}", dir);
         if let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
             println!("\tfile name: {:?}", name);
@@ -110,7 +111,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
                 }
             }
         }
-        if let Some(pid_name) = PidName::from_read(File::from(read)) {
+        if let Some(pid_name) = PidName::from_file(File::from(stat)) {
             println!("pid_name: {:?}", pid_name);
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
@@ -140,7 +141,7 @@ struct PidName {
 }
 
 impl PidName {
-    fn from_read<R: Read>(mut r: R) -> Option<Self> {
+    fn from_file<R: Read>(mut r: R) -> Option<Self> {
         // read in entire thing, this is only going to be 1 line
         let mut buf = Vec::with_capacity(512);
         r.read_to_end(&mut buf).unwrap();
