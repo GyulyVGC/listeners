@@ -11,7 +11,7 @@ use std::str::FromStr;
 const ROOT: &str = "/proc";
 
 static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
-    std::fs::read_to_string("/proc/sys/kernel/osreleas")
+    std::fs::read_to_string("/proc/sys/kernel/osrelease")
         .and_then(|s| {
             println!("KERNEL: {}",s);
             Ok(s.trim().to_owned())})
