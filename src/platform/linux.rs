@@ -95,6 +95,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         .unwrap();
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).unwrap();
         let mut socket_inodes = Vec::new();
+        println!("\t stat: {:?}", stat);
         println!("\t dir_fd: {:?}", dir_fd);
         println!("\t dir: {:?}", dir);
         if let Some(Ok(entry)) = dir.next() {
