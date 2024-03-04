@@ -49,9 +49,21 @@ fn get_all_processes() -> Vec<Process> {
 
                 // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
                 let flags = match &*KERNEL {
-                    Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
-                    Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
+                    Some(v) if v < &String::from("3.6.0") => {
+                        println!("Kernel: {}", v);
+                        OFlags::DIRECTORY | OFlags::CLOEXEC
+                    },
+                    Some(v) => {
+                        println!("Kernel: {}", v);
+                        OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC
+                    },
+                    None => {
+                        println!("Kernel: None");
+                        OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC
+                    },
                 };
+                println!("Root: {:?}", proc_root);
+                println!("CWD: {:?}", rustix::fs::CWD);
                 let file =
                     rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
 
