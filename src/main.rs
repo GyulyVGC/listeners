@@ -1,7 +1,10 @@
 use listeners::hi_cross;
 
 fn main() {
-    hi_cross();
+    let listeners = hi_cross();
+    for listener in listeners {
+        println!("{listener}");
+    }
 }
 
 // fn main() {

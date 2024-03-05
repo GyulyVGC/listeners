@@ -23,9 +23,6 @@ pub(crate) fn hi() -> HashSet<Listener> {
     let processes = get_all_processes();
 
     let socket_inode_process_map = build_inode_process_map(processes);
-    for (inode, process) in &socket_inode_process_map {
-        println!("Inode: {inode} Process: {}", process.name);
-    }
 
     for tcp_listener in get_tcp_table() {
         if let Some(p) = socket_inode_process_map.get(&tcp_listener.inode) {
