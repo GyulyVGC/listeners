@@ -159,27 +159,19 @@ fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Result<u64, 
 
     let link_os = link.to_string_lossy();
 
-    fn strip_first_last(s: &str) -> &str {
-        let mut c = s.chars();
-        // remove the first and last characters
-        let _ = c.next();
-        let _ = c.next_back();
-        c.as_str()
-    }
-
-    return if !link_os.starts_with('/') && link_os.contains(':') {
+    if !link_os.starts_with('/') && link_os.contains(':') {
         let mut s = link_os.split(':');
         let fd_type = s.next().ok_or("Failed to get fd type")?;
         if fd_type == "socket" {
-            let inode_str = s.next().ok_or("Failed to get inode")?;
-            let inode = u64::from_str(strip_first_last(inode_str)).map_err(|e| e.to_string())?;
-            Ok(inode)
-        } else {
-            Err("Not a socket".to_string())
+            let mut inode_str = s.next().ok_or("Failed to get inode")?;
+            inode_str = inode_str.strip_prefix('[').ok_or("Failed to get inode")?;
+            inode_str = inode_str.strip_suffix(']').ok_or("Failed to get inode")?;
+            let inode = u64::from_str(inode_str).map_err(|e| e.to_string())?;
+            return Ok(inode);
         }
-    } else {
-        Err("Not a socket".to_string())
-    };
+    }
+
+    Err("Not a socket inode".to_string())
 }
 
 fn get_tcp_table() -> Result<Vec<TcpListener>, String> {
@@ -187,7 +179,7 @@ fn get_tcp_table() -> Result<Vec<TcpListener>, String> {
     let file = File::open("/proc/net/tcp").map_err(|e| e.to_string())?;
     for line in BufReader::new(file).lines().flatten() {
         if let Ok(l) = TcpListener::from_tcp_table_entry(&line) {
-            table.push(l)
+            table.push(l);
         }
     }
     Ok(table)
