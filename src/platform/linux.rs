@@ -1,13 +1,13 @@
 use once_cell::sync::Lazy;
-use procfs::current_system_info;
 use rustix::fs::{Mode, OFlags};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use crate::Listener;
 
 const ROOT: &str = "/proc";
 
@@ -17,7 +17,9 @@ static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
         .ok()
 });
 
-pub(crate) fn hi() {
+pub(crate) fn hi() -> HashSet<Listener> {
+    let mut listeners = HashSet::new();
+
     let processes = get_all_processes();
 
     let socket_inode_process_map = build_inode_process_map(processes);
@@ -25,12 +27,20 @@ pub(crate) fn hi() {
         println!("Inode: {inode} Process: {}", process.name);
     }
 
-    get_tcp_table();
+    for tcp_listener in get_tcp_table() {
+        if let Some(p) = socket_inode_process_map.get(&tcp_listener.inode) {
+            let listener = Listener {
+                pid: p.pid,
+                pname: p.name.clone(),
+                socket: tcp_listener.local_addr,
+            };
+            listeners.insert(listener);
+        }
+    }
+    listeners
 }
 
 fn get_all_processes() -> Vec<Process> {
-    procfs::net::tcp().unwrap();
-
     let root = Path::new("/proc");
     let dir = rustix::fs::openat(
         rustix::fs::CWD,
@@ -56,7 +66,7 @@ fn get_all_processes() -> Vec<Process> {
                 let file =
                     rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
 
-                let pidres = proc_root
+                let pid_res = proc_root
                     .as_path()
                     .components()
                     .last()
@@ -64,13 +74,13 @@ fn get_all_processes() -> Vec<Process> {
                         std::path::Component::Normal(s) => Some(s),
                         _ => None,
                     })
-                    .and_then(|s| s.to_string_lossy().parse::<i32>().ok())
+                    .and_then(|s| s.to_string_lossy().parse::<u32>().ok())
                     .or_else(|| {
                         rustix::fs::readlinkat(rustix::fs::CWD, &proc_root, Vec::new())
                             .ok()
-                            .and_then(|s| s.to_string_lossy().parse::<i32>().ok())
+                            .and_then(|s| s.to_string_lossy().parse::<u32>().ok())
                     });
-                let pid = pidres.unwrap();
+                let pid = pid_res.unwrap();
 
                 processes.push(Process::new(pid, file, proc_root));
             }
@@ -118,20 +128,20 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
 
 #[derive(Debug)]
 struct Process {
-    pid: i32,
+    pid: u32,
     fd: OwnedFd,
     root: PathBuf,
 }
 
 impl Process {
-    fn new(pid: i32, fd: OwnedFd, root: PathBuf) -> Self {
+    fn new(pid: u32, fd: OwnedFd, root: PathBuf) -> Self {
         Process { pid, fd, root }
     }
 }
 
 #[derive(Clone, Debug)]
 struct PidName {
-    pid: i32,
+    pid: u32,
     name: String,
 }
 
@@ -191,13 +201,15 @@ fn get_socket_inodes<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Option<u64>
     };
 }
 
-fn get_tcp_table() {
+fn get_tcp_table() -> Vec<TcpListener> {
+    let mut table = Vec::new();
     let file = File::open("/proc/net/tcp").unwrap();
     for line in BufReader::new(file).lines().flatten() {
         if let Some(l) = TcpListener::from_line(&line) {
-            println!("{:?}", l);
+            table.push(l)
         }
     }
+    table
 }
 
 #[derive(Debug)]
