@@ -167,7 +167,7 @@ fn get_socket_inodes<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Option<u64>
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
     let flags = match &*KERNEL {
         Some(v) if v < &String::from("3.6.0") => OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Some(_) | None => OFlags::NOFOLLOW | OFlags::CLOEXEC,
+        Some(_) | None => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
     };
     let file = rustix::fs::openat(dir_fd, p, flags, Mode::empty()).unwrap();
     let link = rustix::fs::readlinkat(&file, "", Vec::new()).unwrap();
