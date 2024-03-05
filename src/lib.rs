@@ -8,7 +8,7 @@ pub use platform::hi_cross;
 mod platform;
 
 /// A struct representing a process that is listening on a socket
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, Debug)]
 pub struct Listener {
     /// The process ID of the listener process
     pid: u32,
