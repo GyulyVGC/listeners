@@ -1,4 +1,5 @@
 use once_cell::sync::Lazy;
+use procfs::current_system_info;
 use rustix::fs::{Mode, OFlags};
 use std::collections::HashMap;
 use std::fs::File;
@@ -6,7 +7,6 @@ use std::io::{BufRead, BufReader, Read};
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use procfs::current_system_info;
 
 const ROOT: &str = "/proc";
 
@@ -193,22 +193,31 @@ fn get_socket_inodes<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Option<u64>
 fn get_tcp_table() {
     let file = File::open("/proc/net/tcp").unwrap();
     for line in BufReader::new(file).lines().flatten() {
-        TcpEntry::from_line(&line);
+        if let Some(l) = TcpListener::from_line(&line) {
+            println!("{:?}", l);
+        }
     }
 }
 
-struct TcpEntry {
+#[derive(Debug)]
+struct TcpListener {
     local_address: String,
-    state: String,
     inode: u64,
 }
 
-impl TcpEntry {
-    fn from_line(line: &str) {
+impl TcpListener {
+    const LISTEN_STATE: &'static str = "0A";
+
+    fn from_line(line: &str) -> Option<Self> {
         let mut s = line.trim().split_whitespace();
         let local_address = s.nth(1).unwrap();
-        let state = s.nth(1).unwrap();
+        let Some(Self::LISTEN_STATE) = s.nth(1) else {
+            return None;
+        };
         let inode = s.nth(5).unwrap();
-        println!("Local address: {} State: {} Inode: {}", local_address, state, inode);
+        Some(Self {
+            local_address: local_address.to_string(),
+            inode: u64::from_str(inode).unwrap(),
+        })
     }
 }
