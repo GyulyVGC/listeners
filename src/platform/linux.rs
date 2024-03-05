@@ -206,14 +206,9 @@ struct TcpEntry {
 impl TcpEntry {
     fn from_line(line: &str) {
         let mut s = line.trim().split_whitespace();
-        // let local_address = s.nth(1).unwrap();
-        // let state = s.nth(2).unwrap();
-        // let inode = s.nth(7).unwrap();
-        // println!("Local address: {} State: {} Inode: {}", local_address, state, inode);
-
-        for f in s {
-            println!("{}", f);
-        }
-        println!("-----------------");
+        let local_address = s.nth(1).unwrap();
+        let state = s.nth(1).unwrap();
+        let inode = s.nth(5).unwrap();
+        println!("Local address: {} State: {} Inode: {}", local_address, state, inode);
     }
 }
