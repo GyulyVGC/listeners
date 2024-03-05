@@ -14,7 +14,7 @@ const ROOT: &str = "/proc";
 
 static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
     std::fs::read_to_string("/proc/sys/kernel/osrelease")
-        .and_then(|s| Ok(s.trim().to_owned()))
+        .map(|s| s.trim().to_owned())
         .ok()
 });
 
@@ -50,21 +50,19 @@ fn get_proc_fds() -> Result<Vec<ProcFd>, String> {
     let dir = rustix::fs::Dir::read_from(dir).map_err(|e| e.to_string())?;
 
     let mut proc_fds: Vec<ProcFd> = vec![];
-    for entry in dir {
-        if let Ok(e) = entry {
-            if let Ok(pid) = i32::from_str(&e.file_name().to_string_lossy()) {
-                let proc_root = PathBuf::from(root).join(pid.to_string());
+    for entry in dir.flatten() {
+        if let Ok(pid) = i32::from_str(&entry.file_name().to_string_lossy()) {
+            let proc_root = PathBuf::from(root).join(pid.to_string());
 
-                // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
-                let flags = match &*KERNEL {
-                    Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
-                    Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
-                };
-                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())
-                    .map_err(|e| e.to_string())?;
+            // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
+            let flags = match &*KERNEL {
+                Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
+                Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
+            };
+            let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())
+                .map_err(|e| e.to_string())?;
 
-                proc_fds.push(ProcFd::new(file));
-            }
+            proc_fds.push(ProcFd::new(file));
         }
     }
     Ok(proc_fds)
@@ -205,7 +203,7 @@ impl TcpListener {
     const LISTEN_STATE: &'static str = "0A";
 
     fn from_tcp_table_entry(line: &str) -> Result<Self, String> {
-        let mut s = line.trim().split_whitespace();
+        let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
         let Some(Self::LISTEN_STATE) = s.nth(1) else {
@@ -214,11 +212,10 @@ impl TcpListener {
 
         let local_ip_port = local_addr_hex
             .split(':')
-            .map(|s| u32::from_str_radix(s, 16))
-            .flatten()
+            .flat_map(|s| u32::from_str_radix(s, 16))
             .collect::<Vec<u32>>();
 
-        let ip_n = local_ip_port.get(0).ok_or("Failed to get IP")?;
+        let ip_n = local_ip_port.first().ok_or("Failed to get IP")?;
         let port_n = local_ip_port.get(1).ok_or("Failed to get port")?;
         let ip = Ipv4Addr::from(*ip_n);
         let port = u16::try_from(*port_n).map_err(|e| e.to_string())?;
