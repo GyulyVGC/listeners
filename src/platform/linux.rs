@@ -23,7 +23,7 @@ pub(crate) fn hi() -> HashSet<Listener> {
     let processes = get_all_processes();
 
     let socket_inode_process_map = build_inode_process_map(processes);
-    for (inode, process) in socket_inode_process_map {
+    for (inode, process) in &socket_inode_process_map {
         println!("Inode: {inode} Process: {}", process.name);
     }
 
@@ -60,8 +60,7 @@ fn get_all_processes() -> Vec<Process> {
                 // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
                 let flags = match &*KERNEL {
                     Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
-                    Some(v) => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
-                    None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
+                    Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
                 let file =
                     rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).unwrap();
