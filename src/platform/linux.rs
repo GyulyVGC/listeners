@@ -4,6 +4,7 @@ use rustix::fs::{Mode, OFlags};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -201,7 +202,7 @@ fn get_tcp_table() {
 
 #[derive(Debug)]
 struct TcpListener {
-    local_address: String,
+    local_addr: SocketAddr,
     inode: u64,
 }
 
@@ -210,14 +211,24 @@ impl TcpListener {
 
     fn from_line(line: &str) -> Option<Self> {
         let mut s = line.trim().split_whitespace();
-        let local_address = s.nth(1).unwrap();
+        let local_addr_hex = s.nth(1).unwrap();
         let Some(Self::LISTEN_STATE) = s.nth(1) else {
             return None;
         };
-        let inode = s.nth(5).unwrap();
+
+        let local_ip_port = local_addr_hex
+            .split(':')
+            .map(|s| u32::from_str_radix(s, 0x10).unwrap())
+            .collect::<Vec<u32>>();
+        let ip = Ipv4Addr::from(local_ip_port[0]);
+        let port = u16::from(local_ip_port[1]);
+        let local_addr = SocketAddr::new(IpAddr::V4(ip), port);
+
+        let inode = u64::from_str(s.nth(5).unwrap()).unwrap();
+
         Some(Self {
-            local_address: local_address.to_string(),
-            inode: u64::from_str(inode).unwrap(),
+            local_addr,
+            inode,
         })
     }
 }
