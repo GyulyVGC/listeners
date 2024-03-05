@@ -221,7 +221,7 @@ impl TcpListener {
             .map(|s| u32::from_str_radix(s, 0x10).unwrap())
             .collect::<Vec<u32>>();
         let ip = Ipv4Addr::from(local_ip_port[0]);
-        let port = u16::from(local_ip_port[1]);
+        let port = u16::try_from(local_ip_port[1]).unwrap();
         let local_addr = SocketAddr::new(IpAddr::V4(ip), port);
 
         let inode = u64::from_str(s.nth(5).unwrap()).unwrap();
