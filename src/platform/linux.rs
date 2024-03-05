@@ -1,12 +1,12 @@
 use once_cell::sync::Lazy;
-use rustix::fs::{AtFlags, Mode, OFlags};
+use rustix::fs::{Mode, OFlags};
 use std::collections::HashMap;
 use std::fs::File;
-use std::io;
-use std::io::Read;
+use std::io::{BufRead, BufReader, Read};
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use procfs::current_system_info;
 
 const ROOT: &str = "/proc";
 
@@ -23,10 +23,12 @@ pub(crate) fn hi() {
     for (inode, process) in socket_inode_process_map {
         println!("Inode: {inode} Process: {}", process.name);
     }
+
+    get_tcp_table();
 }
 
 fn get_all_processes() -> Vec<Process> {
-    // procfs::process::all_processes().unwrap();
+    procfs::net::tcp().unwrap();
 
     let root = Path::new("/proc");
     let dir = rustix::fs::openat(
@@ -98,13 +100,10 @@ fn build_inode_process_map(processes: Vec<Process>) -> HashMap<u64, PidName> {
         let mut socket_inodes = Vec::new();
         while let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
-            if let Ok(fd) = RawFd::from_str(&name) {
-                if let Some(socket_inode) =
-                    get_socket_inodes(&proc.root, dir_fd.as_fd(), name.as_ref(), fd)
-                {
+            if RawFd::from_str(&name).is_ok() {
+                if let Some(socket_inode) = get_socket_inodes(dir_fd.as_fd(), name.as_ref()) {
                     socket_inodes.push(socket_inode);
                 }
-            } else {
             }
         }
         if let Some(pid_name) = PidName::from_file(File::from(stat)) {
@@ -156,26 +155,15 @@ impl PidName {
     }
 }
 
-fn get_socket_inodes<P: AsRef<Path>, Q: AsRef<Path>>(
-    base: P,
-    dirfd: BorrowedFd,
-    path: Q,
-    fd: i32,
-) -> Option<u64> {
+fn get_socket_inodes<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Option<u64> {
     let p = path.as_ref();
-    let root = base.as_ref().join(p);
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
     let flags = match &*KERNEL {
         Some(v) if v < &String::from("3.6.0") => OFlags::NOFOLLOW | OFlags::CLOEXEC,
         Some(_) | None => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
     };
-    let file = rustix::fs::openat(dirfd, p, flags, Mode::empty()).unwrap();
-    let link = rustix::fs::readlinkat(&file, "", Vec::new())
-        .map_err(io::Error::from)
-        .unwrap();
-    let md = rustix::fs::statat(&file, "", AtFlags::SYMLINK_NOFOLLOW | AtFlags::EMPTY_PATH)
-        .map_err(io::Error::from)
-        .unwrap();
+    let file = rustix::fs::openat(dir_fd, p, flags, Mode::empty()).unwrap();
+    let link = rustix::fs::readlinkat(&file, "", Vec::new()).unwrap();
 
     let link_os = link.to_string_lossy();
 
@@ -200,4 +188,27 @@ fn get_socket_inodes<P: AsRef<Path>, Q: AsRef<Path>>(
     } else {
         None
     };
+}
+
+fn get_tcp_table() {
+    let file = File::open("/proc/net/tcp").unwrap();
+    for line in BufReader::new(file).lines().flatten() {
+        TcpEntry::from_line(&line);
+    }
+}
+
+struct TcpEntry {
+    local_address: String,
+    state: String,
+    inode: u64,
+}
+
+impl TcpEntry {
+    fn from_line(line: &str) {
+        let mut s = line.trim().split_whitespace();
+        let local_address = s.nth(1).unwrap();
+        let state = s.nth(3).unwrap();
+        let inode = s.nth(11).unwrap();
+        println!("Local address: {} State: {} Inode: {}", local_address, state, inode);
+    }
 }
