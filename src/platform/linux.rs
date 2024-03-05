@@ -2,7 +2,6 @@ use once_cell::sync::Lazy;
 use rustix::fs::{Mode, OFlags};
 use std::collections::{HashMap, HashSet};
 use std::fs::File;
-use std::io;
 use std::io::{BufRead, BufReader, Read};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
@@ -46,7 +45,7 @@ fn get_all_processes() -> Result<Vec<Process>, String> {
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
         Mode::empty(),
     ).map_err(|e| e.to_string())?;
-    let dir = rustix::fs::Dir::read_from(dir)?;
+    let dir = rustix::fs::Dir::read_from(dir).map_err(|e| e.to_string())?;
 
     let mut processes: Vec<Process> = vec![];
     for entry in dir {
@@ -111,7 +110,7 @@ fn build_inode_process_map(processes: Vec<Process>) -> Result<HashMap<u64, PidNa
                 }
             }
         }
-        if let Some(pid_name) = PidName::from_file(File::from(stat)) {
+        if let Ok(pid_name) = PidName::from_file(File::from(stat)) {
             for inode in socket_inodes {
                 map.insert(inode, pid_name.clone());
             }
@@ -231,8 +230,8 @@ impl TcpListener {
 
         let ip_n = local_ip_port.get(0).ok_or("Failed to get IP")?;
         let port_n = local_ip_port.get(1).ok_or("Failed to get port")?;
-        let ip = Ipv4Addr::from(ip_n);
-        let port = u16::try_from(port_n).map_err(|e| e.to_string())?;
+        let ip = Ipv4Addr::from(*ip_n);
+        let port = u16::try_from(*port_n).map_err(|e| e.to_string())?;
         let local_addr = SocketAddr::new(IpAddr::V4(ip), port);
 
         let inode_n = s.nth(5).ok_or("Failed to get inode")?;
