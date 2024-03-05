@@ -1,7 +1,7 @@
 use listeners::hi_cross;
 
 fn main() {
-    let listeners = hi_cross();
+    let listeners = hi_cross().unwrap();
     for listener in listeners {
         println!("{listener:?}");
     }

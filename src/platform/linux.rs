@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+use std::num::ParseIntError;
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
@@ -153,7 +154,7 @@ impl PidName {
         let pid_s = &buf[..start_paren - 1];
         let comm = buf[start_paren + 1..end_paren].to_string();
 
-        let pid = FromStr::from_str(pid_s).map_err(|e| e.to_string())?;
+        let pid = FromStr::from_str(pid_s).map_err(|e: ParseIntError| e.to_string())?;
 
         Ok(PidName { pid, name: comm })
     }
