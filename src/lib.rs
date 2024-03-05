@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 
 // use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
 
-pub use platform::hi_cross;
+pub use platform::get_all;
 
 mod platform;
 

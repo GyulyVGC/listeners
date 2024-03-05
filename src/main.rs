@@ -1,7 +1,5 @@
-use listeners::hi_cross;
-
 fn main() {
-    let listeners = hi_cross().unwrap();
+    let listeners = listeners::get_all().unwrap();
     for listener in listeners {
         println!("{listener:?}");
     }

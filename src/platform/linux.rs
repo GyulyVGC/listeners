@@ -1,3 +1,4 @@
+use crate::Listener;
 use once_cell::sync::Lazy;
 use rustix::fs::{Mode, OFlags};
 use std::collections::{HashMap, HashSet};
@@ -8,7 +9,6 @@ use std::num::ParseIntError;
 use std::os::fd::{AsFd, BorrowedFd, OwnedFd, RawFd};
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
-use crate::Listener;
 
 const ROOT: &str = "/proc";
 
@@ -18,12 +18,12 @@ static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
         .ok()
 });
 
-pub(crate) fn hi() -> Result<HashSet<Listener>, String> {
+pub(crate) fn get_all_listeners() -> Result<HashSet<Listener>, String> {
     let mut listeners = HashSet::new();
 
-    let processes = get_all_processes()?;
+    let processes = get_proc_fds()?;
 
-    let socket_inode_process_map = build_inode_process_map(processes)?;
+    let socket_inode_process_map = build_inode_proc_map(processes)?;
 
     for tcp_listener in get_tcp_table()? {
         if let Some(p) = socket_inode_process_map.get(&tcp_listener.inode) {
@@ -38,17 +38,18 @@ pub(crate) fn hi() -> Result<HashSet<Listener>, String> {
     Ok(listeners)
 }
 
-fn get_all_processes() -> Result<Vec<Process>, String> {
+fn get_proc_fds() -> Result<Vec<ProcFd>, String> {
     let root = Path::new(ROOT);
     let dir = rustix::fs::openat(
         rustix::fs::CWD,
         root,
         OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
         Mode::empty(),
-    ).map_err(|e| e.to_string())?;
+    )
+    .map_err(|e| e.to_string())?;
     let dir = rustix::fs::Dir::read_from(dir).map_err(|e| e.to_string())?;
 
-    let mut processes: Vec<Process> = vec![];
+    let mut proc_fds: Vec<ProcFd> = vec![];
     for entry in dir {
         if let Ok(e) = entry {
             if let Ok(pid) = i32::from_str(&e.file_name().to_string_lossy()) {
@@ -59,47 +60,33 @@ fn get_all_processes() -> Result<Vec<Process>, String> {
                     Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
                     Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
-                let file =
-                    rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty()).map_err(|e| e.to_string())?;
+                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())
+                    .map_err(|e| e.to_string())?;
 
-                let pid_res = proc_root
-                    .as_path()
-                    .components()
-                    .last()
-                    .and_then(|c| match c {
-                        std::path::Component::Normal(s) => Some(s),
-                        _ => None,
-                    })
-                    .and_then(|s| s.to_string_lossy().parse::<u32>().ok())
-                    .or_else(|| {
-                        rustix::fs::readlinkat(rustix::fs::CWD, &proc_root, Vec::new())
-                            .ok()
-                            .and_then(|s| s.to_string_lossy().parse::<u32>().ok())
-                    });
-                let pid = pid_res.ok_or("Failed to parse pid")?;
-
-                processes.push(Process::new(pid, file, proc_root));
+                proc_fds.push(ProcFd::new(file));
             }
         }
     }
-    Ok(processes)
+    Ok(proc_fds)
 }
 
-fn build_inode_process_map(processes: Vec<Process>) -> Result<HashMap<u64, PidName>, String> {
-    let mut map: HashMap<u64, PidName> = HashMap::new();
-    for proc in processes {
+fn build_inode_proc_map(proc_fds: Vec<ProcFd>) -> Result<HashMap<u64, ProcInfo>, String> {
+    let mut map: HashMap<u64, ProcInfo> = HashMap::new();
+    for proc_fd in proc_fds {
         let stat = rustix::fs::openat(
-            &proc.fd,
+            &proc_fd.fd,
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
             Mode::empty(),
-        ).map_err(|e| e.to_string())?;
+        )
+        .map_err(|e| e.to_string())?;
         let dir_fd = rustix::fs::openat(
-            &proc.fd,
+            &proc_fd.fd,
             "fd",
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
-        ).map_err(|e| e.to_string())?;
+        )
+        .map_err(|e| e.to_string())?;
         let mut dir = rustix::fs::Dir::read_from(&dir_fd).map_err(|e| e.to_string())?;
         dir.rewind();
         let mut socket_inodes = Vec::new();
@@ -111,9 +98,9 @@ fn build_inode_process_map(processes: Vec<Process>) -> Result<HashMap<u64, PidNa
                 }
             }
         }
-        if let Ok(pid_name) = PidName::from_file(File::from(stat)) {
+        if let Ok(proc_info) = ProcInfo::from_file(File::from(stat)) {
             for inode in socket_inodes {
-                map.insert(inode, pid_name.clone());
+                map.insert(inode, proc_info.clone());
             }
         }
     }
@@ -121,29 +108,31 @@ fn build_inode_process_map(processes: Vec<Process>) -> Result<HashMap<u64, PidNa
 }
 
 #[derive(Debug)]
-struct Process {
-    pid: u32,
+struct ProcFd {
     fd: OwnedFd,
-    root: PathBuf,
 }
 
-impl Process {
-    fn new(pid: u32, fd: OwnedFd, root: PathBuf) -> Self {
-        Process { pid, fd, root }
+impl ProcFd {
+    fn new(fd: OwnedFd) -> Self {
+        ProcFd { fd }
     }
 }
 
 #[derive(Clone, Debug)]
-struct PidName {
+struct ProcInfo {
     pid: u32,
     name: String,
 }
 
-impl PidName {
-    fn from_file<R: Read>(mut r: R) -> Result<Self, String> {
+impl ProcInfo {
+    fn new(pid: u32, name: String) -> Self {
+        ProcInfo { pid, name }
+    }
+
+    fn from_file(mut file: File) -> Result<Self, String> {
         // read in entire thing, this is only going to be 1 line
         let mut buf = Vec::new();
-        r.read_to_end(&mut buf).map_err(|e| e.to_string())?;
+        file.read_to_end(&mut buf).map_err(|e| e.to_string())?;
 
         let line = String::from_utf8_lossy(&buf);
         let buf = line.trim();
@@ -152,11 +141,11 @@ impl PidName {
         let start_paren = buf.find('(').ok_or("Failed to find opening paren")?;
         let end_paren = buf.rfind(')').ok_or("Failed to find closing paren")?;
         let pid_s = &buf[..start_paren - 1];
-        let comm = buf[start_paren + 1..end_paren].to_string();
+        let name = buf[start_paren + 1..end_paren].to_string();
 
         let pid = FromStr::from_str(pid_s).map_err(|e: ParseIntError| e.to_string())?;
 
-        Ok(PidName { pid, name: comm })
+        Ok(ProcInfo::new(pid, name))
     }
 }
 
@@ -199,7 +188,7 @@ fn get_tcp_table() -> Result<Vec<TcpListener>, String> {
     let mut table = Vec::new();
     let file = File::open("/proc/net/tcp").map_err(|e| e.to_string())?;
     for line in BufReader::new(file).lines().flatten() {
-        if let Ok(l) = TcpListener::from_line(&line) {
+        if let Ok(l) = TcpListener::from_tcp_table_entry(&line) {
             table.push(l)
         }
     }
@@ -215,7 +204,7 @@ struct TcpListener {
 impl TcpListener {
     const LISTEN_STATE: &'static str = "0A";
 
-    fn from_line(line: &str) -> Result<Self, String> {
+    fn from_tcp_table_entry(line: &str) -> Result<Self, String> {
         let mut s = line.trim().split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
@@ -238,9 +227,6 @@ impl TcpListener {
         let inode_n = s.nth(5).ok_or("Failed to get inode")?;
         let inode = u64::from_str(inode_n).map_err(|e| e.to_string())?;
 
-        Ok(Self {
-            local_addr,
-            inode,
-        })
+        Ok(Self { local_addr, inode })
     }
 }
