@@ -36,7 +36,7 @@ impl TcpListener {
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
         let Some(Self::LISTEN_STATE) = s.nth(1) else {
-            return Err("Not a listening socket".to_string()).into();
+            return Err("Not a listening socket".into());
         };
 
         let local_ip_port = local_addr_hex

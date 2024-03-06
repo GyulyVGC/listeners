@@ -76,5 +76,5 @@ fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> crate::Resul
         }
     }
 
-    Err("Not a socket inode".to_string())
+    Err("Not a socket inode".into())
 }
