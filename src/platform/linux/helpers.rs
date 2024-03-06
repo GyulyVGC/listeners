@@ -1,12 +1,14 @@
-use crate::platform::linux::proc_fd::ProcFd;
-use crate::platform::linux::proc_info::ProcInfo;
-use crate::platform::linux::statics::KERNEL;
-use rustix::fs::{Mode, OFlags};
 use std::collections::HashMap;
 use std::fs::File;
 use std::os::fd::{AsFd, BorrowedFd, RawFd};
 use std::path::Path;
 use std::str::FromStr;
+
+use rustix::fs::{Mode, OFlags};
+
+use crate::platform::linux::proc_fd::ProcFd;
+use crate::platform::linux::proc_info::ProcInfo;
+use crate::platform::linux::statics::KERNEL;
 
 pub(super) fn build_inode_proc_map(
     proc_fds: &Vec<ProcFd>,

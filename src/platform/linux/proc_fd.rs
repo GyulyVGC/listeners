@@ -1,8 +1,10 @@
-use crate::platform::linux::statics::{KERNEL, ROOT};
-use rustix::fs::{Mode, OFlags};
 use std::os::fd::OwnedFd;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+
+use rustix::fs::{Mode, OFlags};
+
+use crate::platform::linux::statics::{KERNEL, ROOT};
 
 #[derive(Debug)]
 pub(super) struct ProcFd(OwnedFd);

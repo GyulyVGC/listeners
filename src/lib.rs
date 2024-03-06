@@ -1,9 +1,9 @@
 use std::fmt::Display;
 use std::net::SocketAddr;
 
-// use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
-
 pub use platform::get_all;
+
+// use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
 
 mod platform;
 
@@ -159,6 +159,4 @@ impl Display for Listener {
 // }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-}
+mod tests {}

@@ -1,14 +1,16 @@
+use std::collections::HashSet;
+
+use helpers::build_inode_proc_map;
+use proc_fd::ProcFd;
+use tcp_listener::TcpListener;
+
+use crate::Listener;
+
 mod helpers;
 mod proc_fd;
 mod proc_info;
 mod statics;
 mod tcp_listener;
-
-use crate::Listener;
-use helpers::build_inode_proc_map;
-use proc_fd::ProcFd;
-use std::collections::HashSet;
-use tcp_listener::TcpListener;
 
 pub(crate) fn get_all_listeners() -> Result<HashSet<Listener>, String> {
     let mut listeners = HashSet::new();
