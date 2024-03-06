@@ -1,3 +1,3 @@
-pub(crate) fn get_all_listeners() {
+pub fn get_all() {
     println!("Hi from Windows");
 }
