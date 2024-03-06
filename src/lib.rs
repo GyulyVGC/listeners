@@ -1,4 +1,4 @@
-// use std::fmt::Display;
+use std::fmt::Display;
 use std::net::SocketAddr;
 
 // use netstat2::{get_sockets_info, AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, TcpState};
@@ -17,34 +17,38 @@ pub struct Listener {
     /// The local socket this listener is listening on
     socket: SocketAddr,
 }
-//
-// impl Listener {
-//     #[must_use]
-//     pub fn pid(&self) -> u32 {
-//         self.pid
-//     }
-//
-//     #[must_use]
-//     pub fn pname(&self) -> &str {
-//         &self.pname
-//     }
-//
-//     #[must_use]
-//     pub fn socket(&self) -> &SocketAddr {
-//         &self.socket
-//     }
-// }
-//
-// impl Display for Listener {
-//     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-//         write!(
-//             f,
-//             "PID: {:<10} Process name: {:<20} Socket: {:<26}",
-//             self.pid, self.pname, self.socket
-//         )
-//     }
-// }
-//
+
+impl Listener {
+    fn new(pid: u32, pname: String, socket: SocketAddr) -> Self {
+        Self { pid, pname, socket }
+    }
+
+    #[must_use]
+    pub fn pid(&self) -> u32 {
+        self.pid
+    }
+
+    #[must_use]
+    pub fn pname(&self) -> &str {
+        &self.pname
+    }
+
+    #[must_use]
+    pub fn socket(&self) -> &SocketAddr {
+        &self.socket
+    }
+}
+
+impl Display for Listener {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "PID: {:<10} Process name: {:<25} Socket: {:<25}",
+            self.pid, self.pname, self.socket
+        )
+    }
+}
+
 // #[must_use]
 // pub fn get_all() -> Vec<Listener> {
 //     get_with_filters(
