@@ -4,7 +4,7 @@ use std::str::FromStr;
 
 use rustix::fs::{Mode, OFlags};
 
-use crate::platform::linux::statics::{KERNEL, ROOT};
+use crate::platform::linux::statics::{O_PATH_MAYBE, ROOT};
 
 #[derive(Debug)]
 pub(super) struct ProcFd(OwnedFd);
@@ -33,11 +33,7 @@ impl ProcFd {
             if let Ok(pid) = i32::from_str(&entry.file_name().to_string_lossy()) {
                 let proc_root = PathBuf::from(root).join(pid.to_string());
 
-                // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
-                let flags = match &*KERNEL {
-                    Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
-                    Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
-                };
+                let flags = OFlags::DIRECTORY | OFlags::CLOEXEC | *O_PATH_MAYBE;
                 let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())?;
 
                 proc_fds.push(ProcFd::new(file));

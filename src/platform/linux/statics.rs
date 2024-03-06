@@ -1,9 +1,16 @@
 use once_cell::sync::Lazy;
+use rustix::fs::OFlags;
 
 pub(super) const ROOT: &str = "/proc";
 
-pub(super) static KERNEL: Lazy<Option<String>> = Lazy::new(|| {
-    std::fs::read_to_string("/proc/sys/kernel/osrelease")
+pub(super) static O_PATH_MAYBE: Lazy<OFlags> = Lazy::new(|| {
+    let kernel = std::fs::read_to_string("/proc/sys/kernel/osrelease")
         .map(|s| s.trim().to_owned())
-        .ok()
+        .ok();
+
+    // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
+    match kernel {
+        Some(v) if v < String::from("3.6.0") => OFlags::empty(),
+        Some(_) | None => OFlags::O_PATH,
+    }
 });

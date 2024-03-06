@@ -8,7 +8,7 @@ use rustix::fs::{Mode, OFlags};
 
 use crate::platform::linux::proc_fd::ProcFd;
 use crate::platform::linux::proc_info::ProcInfo;
-use crate::platform::linux::statics::KERNEL;
+use crate::platform::linux::statics::O_PATH_MAYBE;
 
 pub(super) fn build_inode_proc_map(
     proc_fds: &Vec<ProcFd>,
@@ -54,11 +54,8 @@ pub(super) fn build_inode_proc_map(
 
 fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> crate::Result<u64> {
     let p = path.as_ref();
-    // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
-    let flags = match &*KERNEL {
-        Some(v) if v < &String::from("3.6.0") => OFlags::NOFOLLOW | OFlags::CLOEXEC,
-        Some(_) | None => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
-    };
+
+    let flags = OFlags::NOFOLLOW | OFlags::CLOEXEC | *O_PATH_MAYBE;
     let file = rustix::fs::openat(dir_fd, p, flags, Mode::empty())?;
     let link = rustix::fs::readlinkat(&file, "", Vec::new())?;
 
