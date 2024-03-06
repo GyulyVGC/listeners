@@ -20,9 +20,9 @@ impl TcpListener {
         self.inode
     }
 
-    pub(super) fn get_all() -> Result<Vec<TcpListener>, String> {
+    pub(super) fn get_all() -> crate::Result<Vec<TcpListener>> {
         let mut table = Vec::new();
-        let file = File::open("/proc/net/tcp").map_err(|e| e.to_string())?;
+        let file = File::open("/proc/net/tcp")?;
         for line in BufReader::new(file).lines().flatten() {
             if let Ok(l) = TcpListener::from_tcp_table_entry(&line) {
                 table.push(l);
@@ -31,12 +31,12 @@ impl TcpListener {
         Ok(table)
     }
 
-    fn from_tcp_table_entry(line: &str) -> Result<Self, String> {
+    fn from_tcp_table_entry(line: &str) -> crate::Result<Self> {
         let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
         let Some(Self::LISTEN_STATE) = s.nth(1) else {
-            return Err("Not a listening socket".to_string());
+            return Err("Not a listening socket".to_string()).into();
         };
 
         let local_ip_port = local_addr_hex
@@ -47,11 +47,11 @@ impl TcpListener {
         let ip_n = local_ip_port.first().ok_or("Failed to get IP")?;
         let port_n = local_ip_port.get(1).ok_or("Failed to get port")?;
         let ip = Ipv4Addr::from(*ip_n);
-        let port = u16::try_from(*port_n).map_err(|e| e.to_string())?;
+        let port = u16::try_from(*port_n)?;
         let local_addr = SocketAddr::new(IpAddr::V4(ip), port);
 
         let inode_n = s.nth(5).ok_or("Failed to get inode")?;
-        let inode = u64::from_str(inode_n).map_err(|e| e.to_string())?;
+        let inode = u64::from_str(inode_n)?;
 
         Ok(Self { local_addr, inode })
     }

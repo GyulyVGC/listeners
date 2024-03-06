@@ -18,16 +18,15 @@ impl ProcFd {
         &self.0
     }
 
-    pub(super) fn get_all() -> Result<Vec<ProcFd>, String> {
+    pub(super) fn get_all() -> crate::Result<Vec<ProcFd>> {
         let root = Path::new(ROOT);
         let dir = rustix::fs::openat(
             rustix::fs::CWD,
             root,
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
-        )
-        .map_err(|e| e.to_string())?;
-        let dir = rustix::fs::Dir::read_from(dir).map_err(|e| e.to_string())?;
+        )?;
+        let dir = rustix::fs::Dir::read_from(dir)?;
 
         let mut proc_fds: Vec<ProcFd> = vec![];
         for entry in dir.flatten() {
@@ -39,8 +38,7 @@ impl ProcFd {
                     Some(v) if v < &String::from("3.6.0") => OFlags::DIRECTORY | OFlags::CLOEXEC,
                     Some(_) | None => OFlags::PATH | OFlags::DIRECTORY | OFlags::CLOEXEC,
                 };
-                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())
-                    .map_err(|e| e.to_string())?;
+                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())?;
 
                 proc_fds.push(ProcFd::new(file));
             }

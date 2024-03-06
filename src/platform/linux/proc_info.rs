@@ -22,10 +22,10 @@ impl ProcInfo {
         self.name.clone()
     }
 
-    pub(super) fn from_file(mut file: File) -> Result<Self, String> {
+    pub(super) fn from_file(mut file: File) -> crate::Result<Self> {
         // read in entire thing, this is only going to be 1 line
         let mut buf = Vec::new();
-        file.read_to_end(&mut buf).map_err(|e| e.to_string())?;
+        file.read_to_end(&mut buf)?;
 
         let line = String::from_utf8_lossy(&buf);
         let buf = line.trim();
@@ -36,7 +36,7 @@ impl ProcInfo {
         let pid_s = &buf[..start_paren - 1];
         let name = buf[start_paren + 1..end_paren].to_string();
 
-        let pid = FromStr::from_str(pid_s).map_err(|e: ParseIntError| e.to_string())?;
+        let pid = FromStr::from_str(pid_s)?;
 
         Ok(ProcInfo::new(pid, name))
     }

@@ -12,7 +12,7 @@ mod proc_info;
 mod statics;
 mod tcp_listener;
 
-pub fn get_all() -> Result<HashSet<Listener>, String> {
+pub fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
     let proc_fds = ProcFd::get_all()?;

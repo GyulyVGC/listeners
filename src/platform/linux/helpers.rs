@@ -12,7 +12,7 @@ use crate::platform::linux::statics::KERNEL;
 
 pub(super) fn build_inode_proc_map(
     proc_fds: &Vec<ProcFd>,
-) -> Result<HashMap<u64, ProcInfo>, String> {
+) -> crate::Result<HashMap<u64, ProcInfo>> {
     let mut map: HashMap<u64, ProcInfo> = HashMap::new();
 
     for proc_fd in proc_fds {
@@ -21,9 +21,8 @@ pub(super) fn build_inode_proc_map(
             "fd",
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
-        )
-        .map_err(|e| e.to_string())?;
-        let mut dir = rustix::fs::Dir::read_from(&dir_fd).map_err(|e| e.to_string())?;
+        )?;
+        let mut dir = rustix::fs::Dir::read_from(&dir_fd)?;
         dir.rewind();
 
         let mut socket_inodes = Vec::new();
@@ -41,8 +40,7 @@ pub(super) fn build_inode_proc_map(
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
             Mode::empty(),
-        )
-        .map_err(|e| e.to_string())?;
+        )?;
 
         if let Ok(proc_info) = ProcInfo::from_file(File::from(stat)) {
             for inode in socket_inodes {
@@ -54,15 +52,15 @@ pub(super) fn build_inode_proc_map(
     Ok(map)
 }
 
-fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Result<u64, String> {
+fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> crate::Result<u64> {
     let p = path.as_ref();
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
     let flags = match &*KERNEL {
         Some(v) if v < &String::from("3.6.0") => OFlags::NOFOLLOW | OFlags::CLOEXEC,
         Some(_) | None => OFlags::NOFOLLOW | OFlags::PATH | OFlags::CLOEXEC,
     };
-    let file = rustix::fs::openat(dir_fd, p, flags, Mode::empty()).map_err(|e| e.to_string())?;
-    let link = rustix::fs::readlinkat(&file, "", Vec::new()).map_err(|e| e.to_string())?;
+    let file = rustix::fs::openat(dir_fd, p, flags, Mode::empty())?;
+    let link = rustix::fs::readlinkat(&file, "", Vec::new())?;
 
     let link_os = link.to_string_lossy();
 
@@ -73,7 +71,7 @@ fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> Result<u64, 
             let mut inode_str = s.next().ok_or("Failed to get inode")?;
             inode_str = inode_str.strip_prefix('[').ok_or("Failed to get inode")?;
             inode_str = inode_str.strip_suffix(']').ok_or("Failed to get inode")?;
-            let inode = u64::from_str(inode_str).map_err(|e| e.to_string())?;
+            let inode = u64::from_str(inode_str)?;
             return Ok(inode);
         }
     }

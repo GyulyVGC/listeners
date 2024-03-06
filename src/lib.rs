@@ -7,6 +7,8 @@ pub use platform::get_all;
 
 mod platform;
 
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
+
 /// A struct representing a process that is listening on a socket
 #[derive(Eq, PartialEq, Hash, Debug)]
 pub struct Listener {
