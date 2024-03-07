@@ -1,4 +1,4 @@
-use std::os::raw::{c_int, c_void};
+use std::ffi::{c_int, c_void};
 
 extern "C" {
     pub(super) fn proc_listpids(

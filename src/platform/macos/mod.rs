@@ -2,12 +2,6 @@ mod helpers;
 mod pid;
 
 use crate::platform::macos::pid::Pid;
-use crate::Listener;
-use netstat2::error::Error;
-use netstat2::{AddressFamilyFlags, ProtocolFlags, ProtocolSocketInfo, SocketInfo};
-use std::collections::HashSet;
-use std::os::raw::{c_int, c_uint, c_void};
-use std::{io, mem, ptr};
 
 pub fn get_all() {
     // returns: local socket address, socket state, associated PIDs (but NOT process names)
@@ -23,7 +17,7 @@ pub fn get_all() {
 
     let pids = Pid::get_all().unwrap();
 
-    println!("ALL PIDS: {:?}", pids);
+    println!("ALL PIDS: {pids:?}");
 }
 
 // fn get_sockets_info() {

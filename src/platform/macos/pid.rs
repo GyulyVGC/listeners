@@ -1,6 +1,5 @@
 use crate::platform::macos::helpers::proc_listpids;
-use std::ffi::c_int;
-use std::os::raw::{c_uint, c_void};
+use std::ffi::{c_int, c_void};
 use std::{mem, ptr};
 
 #[derive(Debug)]
@@ -13,7 +12,7 @@ impl Pid {
 
     pub(super) fn get_all() -> crate::Result<Vec<Pid>> {
         let number_of_pids;
-        let proc_type_all = 1 as c_uint;
+        let proc_type_all = 1;
 
         unsafe {
             number_of_pids = proc_listpids(proc_type_all, 0, ptr::null_mut(), 0);
@@ -23,15 +22,16 @@ impl Pid {
             return Err("Failed to list processes".into());
         }
 
-        let mut pids: Vec<std::os::raw::c_int> = Vec::new();
+        let mut pids: Vec<c_int> = Vec::new();
+        #[allow(clippy::cast_sign_loss)]
         pids.resize_with(number_of_pids as usize, Default::default);
 
         let return_code = unsafe {
             proc_listpids(
                 proc_type_all,
                 0,
-                pids.as_mut_ptr() as *mut c_void,
-                (pids.len() * mem::size_of::<std::os::raw::c_int>()) as i32,
+                pids.as_mut_ptr().cast::<c_void>(),
+                c_int::try_from(pids.len() * mem::size_of::<c_int>())?,
             )
         };
 
@@ -39,11 +39,6 @@ impl Pid {
             return Err("Failed to list processes".into());
         }
 
-        // Sometimes the OS returns excessive zero elements, so we truncate them.
-        Ok(pids
-            .into_iter()
-            .filter(|f| *f > 0)
-            .map(|n| Pid::new(n))
-            .collect())
+        Ok(pids.into_iter().filter(|f| *f > 0).map(Pid::new).collect())
     }
 }
