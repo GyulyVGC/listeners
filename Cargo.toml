@@ -18,3 +18,4 @@ rustix = {version = "0.38.31", features = ["fs"]}
 
 [target.'cfg(target_os = "macos")'.dependencies]
 #netstat2 = "0.9.1"
+byteorder = "1.5.0"
