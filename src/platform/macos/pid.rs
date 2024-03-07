@@ -1,4 +1,5 @@
-use crate::platform::macos::helpers::proc_listpids;
+use super::helpers::proc_listpids;
+use super::statics::PROC_TYPE_ALL;
 use std::ffi::{c_int, c_void};
 use std::{mem, ptr};
 
@@ -12,10 +13,9 @@ impl Pid {
 
     pub(super) fn get_all() -> crate::Result<Vec<Pid>> {
         let number_of_pids;
-        let proc_type_all = 1;
 
         unsafe {
-            number_of_pids = proc_listpids(proc_type_all, 0, ptr::null_mut(), 0);
+            number_of_pids = proc_listpids(PROC_TYPE_ALL, 0, ptr::null_mut(), 0);
         }
 
         if number_of_pids < 0 {
@@ -28,7 +28,7 @@ impl Pid {
 
         let return_code = unsafe {
             proc_listpids(
-                proc_type_all,
+                PROC_TYPE_ALL,
                 0,
                 pids.as_mut_ptr().cast::<c_void>(),
                 c_int::try_from(pids.len() * mem::size_of::<c_int>())?,

@@ -1,7 +1,8 @@
 mod helpers;
 mod pid;
+mod statics;
 
-use crate::platform::macos::pid::Pid;
+use pid::Pid;
 
 pub fn get_all() {
     // returns: local socket address, socket state, associated PIDs (but NOT process names)
