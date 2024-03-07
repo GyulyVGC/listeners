@@ -1,3 +1,4 @@
+use crate::platform::macos::helpers::proc_listpids;
 use std::ffi::c_int;
 use std::os::raw::{c_uint, c_void};
 use std::{mem, ptr};
@@ -45,13 +46,4 @@ impl Pid {
             .map(|n| Pid::new(n))
             .collect())
     }
-}
-
-extern "C" {
-    fn proc_listpids(
-        type_: u32,
-        typeinfo: u32,
-        buffer: *mut c_void,
-        buffersize: std::os::raw::c_int,
-    ) -> std::os::raw::c_int;
 }
