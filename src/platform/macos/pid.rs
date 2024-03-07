@@ -1,9 +1,9 @@
 use super::helpers::proc_listpids;
-use super::statics::PROC_TYPE_ALL;
+use super::statics::PROC_ALL_PIDS;
 use std::ffi::{c_int, c_void};
 use std::{mem, ptr};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(super) struct Pid(c_int);
 
 impl Pid {
@@ -11,14 +11,18 @@ impl Pid {
         Pid(n)
     }
 
+    pub(super) fn as_c_int(self) -> c_int {
+        self.0
+    }
+
     pub(super) fn get_all() -> crate::Result<Vec<Pid>> {
         let number_of_pids;
 
         unsafe {
-            number_of_pids = proc_listpids(PROC_TYPE_ALL, 0, ptr::null_mut(), 0);
+            number_of_pids = proc_listpids(PROC_ALL_PIDS, 0, ptr::null_mut(), 0);
         }
 
-        if number_of_pids < 0 {
+        if number_of_pids <= 0 {
             return Err("Failed to list processes".into());
         }
 
@@ -28,7 +32,7 @@ impl Pid {
 
         let return_code = unsafe {
             proc_listpids(
-                PROC_TYPE_ALL,
+                PROC_ALL_PIDS,
                 0,
                 pids.as_mut_ptr().cast::<c_void>(),
                 c_int::try_from(pids.len() * mem::size_of::<c_int>())?,

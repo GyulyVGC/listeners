@@ -1,8 +1,16 @@
 mod helpers;
 mod pid;
+mod proc_fd_info;
 mod statics;
 
+// use netstat2::get_sockets_info;
+
+use crate::platform::macos::helpers::proc_pidinfo;
+use crate::platform::macos::proc_fd_info::ProcFdInfo;
+use crate::platform::macos::statics::{FD_TYPE_SOCKET, PROC_PID_LIST_FDS};
 use pid::Pid;
+use std::ffi::c_void;
+use std::{mem, ptr};
 
 pub fn get_all() {
     // returns: local socket address, socket state, associated PIDs (but NOT process names)
@@ -18,11 +26,16 @@ pub fn get_all() {
 
     let pids = Pid::get_all().unwrap();
 
-    println!("ALL PIDS: {pids:?}");
+    for pid in pids {
+        let fds = get_socket_fds_of_pid(pid).unwrap();
+
+        println!("PID: {}", pid.as_c_int());
+        println!("FDS: {fds:?}");
+    }
 }
 
 // fn get_sockets_info() {
-//     let pids = list_pids(ProcType::ProcAllPIDS)?;
+//     let pids = Pid::get_all().unwrap();
 //
 //     let mut results = vec![];
 //
@@ -63,3 +76,41 @@ pub fn get_all() {
 //
 //     Ok(results.into_iter())
 // }
+
+fn get_socket_fds_of_pid(pid: Pid) -> crate::Result<Vec<i32>> {
+    let buffer_size =
+        unsafe { proc_pidinfo(pid.as_c_int(), PROC_PID_LIST_FDS, 0, ptr::null_mut(), 0) };
+
+    if buffer_size <= 0 {
+        return Err("Failed to list file descriptors".into());
+    }
+
+    #[allow(clippy::cast_sign_loss)]
+    let number_of_fds = buffer_size as usize / mem::size_of::<ProcFdInfo>();
+
+    let mut fds: Vec<ProcFdInfo> = Vec::new();
+    fds.resize_with(number_of_fds, || ProcFdInfo {
+        proc_fd: 0,
+        proc_fd_type: 0,
+    });
+
+    let return_code = unsafe {
+        proc_pidinfo(
+            pid.as_c_int(),
+            PROC_PID_LIST_FDS,
+            0,
+            fds.as_mut_ptr().cast::<c_void>(),
+            buffer_size,
+        )
+    };
+
+    if return_code <= 0 {
+        return Err("Failed to list file descriptors".into());
+    }
+
+    Ok(fds
+        .iter()
+        .filter(|fd| fd.proc_fd_type == FD_TYPE_SOCKET)
+        .map(|fd| fd.proc_fd)
+        .collect())
+}
