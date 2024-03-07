@@ -1,8 +1,9 @@
 fn main() {
-    let listeners = listeners::get_all().unwrap();
-    for listener in listeners {
-        println!("{listener}");
-    }
+    listeners::get_all();
+    // let listeners = listeners::get_all().unwrap();
+    // for listener in listeners {
+    //     println!("{listener}");
+    // }
 }
 
 // fn main() {
@@ -23,8 +24,6 @@ fn main() {
 //             .expect("Expected IP address as argument to program"),
 //     )
 //     .expect("The provided IP address is not valid");
-//
-//     hi_cross();
 //
 //     print_title(&format!("get_for_nullnet({ip})"));
 //     for pname in listeners::get_for_nullnet(ip) {
