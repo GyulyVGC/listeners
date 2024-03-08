@@ -1,9 +1,9 @@
 use std::ffi::c_void;
 use std::{mem, ptr};
 
+use crate::platform::macos::c_libproc::proc_pidinfo;
 use crate::platform::macos::c_proc_fd_info::CProcFdInfo;
-use crate::platform::macos::libproc::proc_pidinfo;
-use crate::platform::macos::pid::Pid;
+use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::statics::{FD_TYPE_SOCKET, PROC_PID_LIST_FDS};
 
 pub(super) struct SocketFd(i32);
@@ -17,7 +17,7 @@ impl SocketFd {
         self.0
     }
 
-    pub(super) fn get_all_of_pid(pid: Pid) -> crate::Result<Vec<Self>> {
+    pub(super) fn get_all_of_pid(pid: ProcPid) -> crate::Result<Vec<Self>> {
         let buffer_size =
             unsafe { proc_pidinfo(pid.as_c_int(), PROC_PID_LIST_FDS, 0, ptr::null_mut(), 0) };
 

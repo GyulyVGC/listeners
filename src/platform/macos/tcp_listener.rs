@@ -3,25 +3,25 @@ use std::mem;
 use std::mem::MaybeUninit;
 use std::net::{IpAddr, SocketAddr};
 
+use crate::platform::macos::c_libproc::proc_pidfdinfo;
 use crate::platform::macos::c_socket_fd_info::CSocketFdInfo;
-use crate::platform::macos::libproc::proc_pidfdinfo;
-use crate::platform::macos::pid::Pid;
+use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::socket_fd::SocketFd;
 use crate::platform::macos::statics::PROC_PID_FD_SOCKET_INFO;
 
 #[derive(Debug)]
-pub(super) struct LocalSocket(SocketAddr);
+pub(super) struct TcpListener(SocketAddr);
 
-impl LocalSocket {
+impl TcpListener {
     pub(super) fn new(addr: IpAddr, port: u16) -> Self {
-        LocalSocket(SocketAddr::new(addr, port))
+        TcpListener(SocketAddr::new(addr, port))
     }
 
     pub(super) fn socket_addr(&self) -> SocketAddr {
         self.0
     }
 
-    pub(super) fn from_pid_fd(pid: Pid, fd: &SocketFd) -> crate::Result<Self> {
+    pub(super) fn from_pid_fd(pid: ProcPid, fd: &SocketFd) -> crate::Result<Self> {
         let mut sinfo: MaybeUninit<CSocketFdInfo> = MaybeUninit::uninit();
 
         let return_code = unsafe {
@@ -39,6 +39,6 @@ impl LocalSocket {
         }
 
         let c_socket_fd_info = unsafe { sinfo.assume_init() };
-        c_socket_fd_info.to_local_socket()
+        c_socket_fd_info.to_tcp_listener()
     }
 }

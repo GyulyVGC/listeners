@@ -3,8 +3,8 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use byteorder::{ByteOrder, NetworkEndian};
 
-use crate::platform::macos::local_socket::LocalSocket;
 use crate::platform::macos::statics::SOCKET_STATE_LISTEN;
+use crate::platform::macos::tcp_listener::TcpListener;
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
@@ -13,7 +13,7 @@ pub(super) struct CSocketFdInfo {
 }
 
 impl CSocketFdInfo {
-    pub(super) fn to_local_socket(&self) -> crate::Result<LocalSocket> {
+    pub(super) fn to_tcp_listener(&self) -> crate::Result<TcpListener> {
         let sock_info = self.psi;
         let family = sock_info.soi_family;
 
@@ -27,7 +27,7 @@ impl CSocketFdInfo {
         let lport_bytes: [u8; 4] = i32::to_le_bytes(tcp_sockaddr_in.insi_lport);
         let local_address = Self::get_local_addr(family, tcp_sockaddr_in)?;
 
-        let socket_info = LocalSocket::new(local_address, NetworkEndian::read_u16(&lport_bytes));
+        let socket_info = TcpListener::new(local_address, NetworkEndian::read_u16(&lport_bytes));
 
         Ok(socket_info)
     }

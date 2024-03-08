@@ -1,7 +1,7 @@
 use std::ffi::c_void;
 
-use crate::platform::macos::libproc::proc_name;
-use crate::platform::macos::pid::Pid;
+use crate::platform::macos::c_libproc::proc_name;
+use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::statics::PROC_PID_PATH_INFO_MAXSIZE;
 
 pub(super) struct ProcName(pub(super) String);
@@ -11,7 +11,7 @@ impl ProcName {
         ProcName(name)
     }
 
-    pub(super) fn from_pid(pid: Pid) -> crate::Result<Self> {
+    pub(super) fn from_pid(pid: ProcPid) -> crate::Result<Self> {
         let mut buf: Vec<u8> = Vec::with_capacity(PROC_PID_PATH_INFO_MAXSIZE);
         let buffer_ptr = buf.as_mut_ptr().cast::<c_void>();
         let buffer_size = u32::try_from(buf.capacity())?;

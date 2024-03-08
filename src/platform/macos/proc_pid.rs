@@ -1,15 +1,15 @@
 use std::ffi::{c_int, c_void};
 use std::{mem, ptr};
 
-use super::libproc::proc_listpids;
+use super::c_libproc::proc_listpids;
 use super::statics::PROC_ALL_PIDS;
 
 #[derive(Debug, Copy, Clone)]
-pub(super) struct Pid(c_int);
+pub(super) struct ProcPid(c_int);
 
-impl Pid {
+impl ProcPid {
     fn new(n: c_int) -> Self {
-        Pid(n)
+        ProcPid(n)
     }
 
     pub(super) fn as_c_int(self) -> c_int {
@@ -23,7 +23,7 @@ impl Pid {
         }
     }
 
-    pub(super) fn get_all() -> crate::Result<Vec<Pid>> {
+    pub(super) fn get_all() -> crate::Result<Vec<ProcPid>> {
         let number_of_pids;
 
         unsafe {
@@ -50,6 +50,10 @@ impl Pid {
             return Err("Failed to list processes".into());
         }
 
-        Ok(pids.into_iter().filter(|f| *f > 0).map(Pid::new).collect())
+        Ok(pids
+            .into_iter()
+            .filter(|f| *f > 0)
+            .map(ProcPid::new)
+            .collect())
     }
 }
