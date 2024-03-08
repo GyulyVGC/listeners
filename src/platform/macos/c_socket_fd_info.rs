@@ -1,9 +1,52 @@
+use crate::platform::macos::local_socket::LocalSocket;
+use crate::platform::macos::statics::SOCKET_STATE_LISTEN;
+use byteorder::{ByteOrder, NetworkEndian};
 use std::ffi::{c_char, c_int, c_longlong, c_short, c_uchar, c_uint, c_ushort};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
     pfi: ProcFileinfo,
-    pub(super) psi: SocketInfo,
+    psi: SocketInfo,
+}
+
+impl CSocketFdInfo {
+    pub(super) fn to_local_socket(self) -> crate::Result<LocalSocket> {
+        let sock_info = self.psi;
+        let family = sock_info.soi_family;
+
+        let tcp_in = unsafe { sock_info.soi_proto.pri_tcp };
+
+        if tcp_in.tcpsi_state != SOCKET_STATE_LISTEN {
+            return Err("Socket is not in listen state".into());
+        }
+
+        let tcp_sockaddr_in = tcp_in.tcpsi_ini;
+        let lport_bytes: [u8; 4] = i32::to_le_bytes(tcp_sockaddr_in.insi_lport);
+        let local_address = Self::get_local_addr(family, tcp_sockaddr_in)?;
+
+        let socket_info = LocalSocket::new(local_address, NetworkEndian::read_u16(&lport_bytes));
+
+        Ok(socket_info)
+    }
+
+    fn get_local_addr(family: c_int, saddr: InSockinfo) -> crate::Result<IpAddr> {
+        match family {
+            2 => {
+                // AF_INET
+                let addr = unsafe { saddr.insi_laddr.ina_46.i46a_addr4.s_addr };
+                Ok(IpAddr::V4(Ipv4Addr::from(u32::from_be(addr))))
+            }
+            30 => {
+                // AF_INET6
+                let addr = unsafe { &saddr.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
+                let mut ipv6_addr = [0_u16; 8];
+                NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
+                Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
+            }
+            _ => Err("Unsupported socket family".into()),
+        }
+    }
 }
 
 #[repr(C)]
@@ -16,13 +59,13 @@ struct ProcFileinfo {
 }
 
 #[repr(C)]
-pub(super) struct SocketInfo {
+struct SocketInfo {
     soi_stat: VinfoStat,
     soi_so: u64,
     soi_pcb: u64,
     soi_type: c_int,
     soi_protocol: c_int,
-    pub(super) soi_family: c_int,
+    soi_family: c_int,
     soi_options: c_short,
     soi_linger: c_short,
     soi_state: c_short,
@@ -36,7 +79,7 @@ pub(super) struct SocketInfo {
     soi_snd: SockbufInfo,
     soi_kind: c_int,
     rfu_1: u32,
-    pub(super) soi_proto: SocketInfoBindgenTy1,
+    soi_proto: SocketInfoBindgenTy1,
 }
 
 #[repr(C)]
@@ -76,9 +119,9 @@ struct SockbufInfo {
 }
 
 #[repr(C)]
-pub(super) union SocketInfoBindgenTy1 {
+union SocketInfoBindgenTy1 {
     pri_in: InSockinfo,
-    pub(super) pri_tcp: TcpSockinfo,
+    pri_tcp: TcpSockinfo,
     pri_un: UnSockinfo,
     pri_ndrv: NdrvInfo,
     pri_kern_event: KernEventInfo,
@@ -88,9 +131,9 @@ pub(super) union SocketInfoBindgenTy1 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) struct InSockinfo {
+struct InSockinfo {
     insi_fport: c_int,
-    pub(super) insi_lport: c_int,
+    insi_lport: c_int,
     insi_gencnt: u64,
     insi_flags: u32,
     insi_flow: u32,
@@ -98,7 +141,7 @@ pub(super) struct InSockinfo {
     insi_ip_ttl: u8,
     rfu_1: u32,
     insi_faddr: InSockinfoBindgenTy1,
-    pub(super) insi_laddr: InSockinfoBindgenTy2,
+    insi_laddr: InSockinfoBindgenTy2,
     insi_v4: InSockinfoBindgenTy3,
     insi_v6: InSockinfoBindgenTy4,
 }
@@ -113,9 +156,9 @@ union InSockinfoBindgenTy1 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) union InSockinfoBindgenTy2 {
-    pub(super) ina_46: In4in6Addr,
-    pub(super) ina_6: In6Addr,
+union InSockinfoBindgenTy2 {
+    ina_46: In4in6Addr,
+    ina_6: In6Addr,
     _bindgen_union_align: [u32; 4usize],
 }
 
@@ -136,27 +179,27 @@ struct InSockinfoBindgenTy4 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) struct In4in6Addr {
+struct In4in6Addr {
     i46a_pad32: [c_uint; 3usize],
-    pub(super) i46a_addr4: InAddr,
+    i46a_addr4: InAddr,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) struct InAddr {
-    pub(super) s_addr: c_uint,
+struct InAddr {
+    s_addr: c_uint,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) struct In6Addr {
-    pub(super) __u6_addr: In6AddrBindgenTy1,
+struct In6Addr {
+    __u6_addr: In6AddrBindgenTy1,
 }
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) union In6AddrBindgenTy1 {
-    pub(super) __u6_addr8: [c_uchar; 16usize],
+union In6AddrBindgenTy1 {
+    __u6_addr8: [c_uchar; 16usize],
     __u6_addr16: [c_ushort; 8usize],
     __u6_addr32: [c_uint; 4usize],
     _bindgen_union_align: [u32; 4usize],
@@ -164,9 +207,9 @@ pub(super) union In6AddrBindgenTy1 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
-pub(super) struct TcpSockinfo {
-    pub(super) tcpsi_ini: InSockinfo,
-    pub(super) tcpsi_state: c_int,
+struct TcpSockinfo {
+    tcpsi_ini: InSockinfo,
+    tcpsi_state: c_int,
     tcpsi_timer: [c_int; 4usize],
     tcpsi_mss: c_int,
     tcpsi_flags: u32,

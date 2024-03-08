@@ -5,17 +5,15 @@ use crate::platform::macos::statics::{FD_TYPE_SOCKET, PROC_PID_LIST_FDS};
 use std::ffi::c_void;
 use std::{mem, ptr};
 
-pub(super) struct SocketFd {
-    fd: i32,
-}
+pub(super) struct SocketFd(i32);
 
 impl SocketFd {
-    pub(super) fn new(fd: i32) -> Self {
-        SocketFd { fd }
+    fn new(fd: i32) -> Self {
+        SocketFd(fd)
     }
 
     pub(super) fn fd(&self) -> i32 {
-        self.fd
+        self.0
     }
 
     pub(super) fn get_all_of_pid(pid: Pid) -> crate::Result<Vec<Self>> {
@@ -30,10 +28,7 @@ impl SocketFd {
         let number_of_fds = buffer_size as usize / mem::size_of::<CProcFdInfo>();
 
         let mut fds: Vec<CProcFdInfo> = Vec::new();
-        fds.resize_with(number_of_fds, || CProcFdInfo {
-            proc_fd: 0,
-            proc_fd_type: 0,
-        });
+        fds.resize_with(number_of_fds, || CProcFdInfo::default());
 
         let return_code = unsafe {
             proc_pidinfo(
@@ -51,8 +46,8 @@ impl SocketFd {
 
         Ok(fds
             .iter()
-            .filter(|fd| fd.proc_fd_type == FD_TYPE_SOCKET)
-            .map(|fd| Self::new(fd.proc_fd))
+            .filter(|fd| fd.fd_type() == FD_TYPE_SOCKET)
+            .map(|fd| Self::new(fd.fd()))
             .collect())
     }
 }
