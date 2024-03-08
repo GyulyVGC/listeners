@@ -1,7 +1,8 @@
-use super::libproc::proc_listpids;
-use super::statics::PROC_ALL_PIDS;
 use std::ffi::{c_int, c_void};
 use std::{mem, ptr};
+
+use super::libproc::proc_listpids;
+use super::statics::PROC_ALL_PIDS;
 
 #[derive(Debug, Copy, Clone)]
 pub(super) struct Pid(c_int);

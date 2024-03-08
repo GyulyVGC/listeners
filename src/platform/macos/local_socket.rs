@@ -1,12 +1,13 @@
+use std::ffi::{c_int, c_void};
+use std::mem;
+use std::mem::MaybeUninit;
+use std::net::{IpAddr, SocketAddr};
+
 use crate::platform::macos::c_socket_fd_info::CSocketFdInfo;
 use crate::platform::macos::libproc::proc_pidfdinfo;
 use crate::platform::macos::pid::Pid;
 use crate::platform::macos::socket_fd::SocketFd;
 use crate::platform::macos::statics::PROC_PID_FD_SOCKET_INFO;
-use std::ffi::{c_int, c_void};
-use std::mem;
-use std::mem::MaybeUninit;
-use std::net::{IpAddr, SocketAddr};
 
 #[derive(Debug)]
 pub(super) struct LocalSocket(SocketAddr);

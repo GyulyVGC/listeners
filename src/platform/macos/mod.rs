@@ -1,3 +1,12 @@
+use std::collections::HashSet;
+
+use local_socket::LocalSocket;
+use pid::Pid;
+use proc_name::ProcName;
+use socket_fd::SocketFd;
+
+use crate::Listener;
+
 mod c_proc_fd_info;
 mod c_socket_fd_info;
 mod libproc;
@@ -6,14 +15,6 @@ mod pid;
 mod proc_name;
 mod socket_fd;
 mod statics;
-
-use local_socket::LocalSocket;
-use socket_fd::SocketFd;
-
-use crate::Listener;
-use pid::Pid;
-use proc_name::ProcName;
-use std::collections::HashSet;
 
 pub fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();

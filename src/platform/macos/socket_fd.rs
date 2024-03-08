@@ -1,9 +1,10 @@
+use std::ffi::c_void;
+use std::{mem, ptr};
+
 use crate::platform::macos::c_proc_fd_info::CProcFdInfo;
 use crate::platform::macos::libproc::proc_pidinfo;
 use crate::platform::macos::pid::Pid;
 use crate::platform::macos::statics::{FD_TYPE_SOCKET, PROC_PID_LIST_FDS};
-use std::ffi::c_void;
-use std::{mem, ptr};
 
 pub(super) struct SocketFd(i32);
 

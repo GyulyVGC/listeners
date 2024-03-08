@@ -1,7 +1,8 @@
+use std::ffi::c_void;
+
 use crate::platform::macos::libproc::proc_name;
 use crate::platform::macos::pid::Pid;
 use crate::platform::macos::statics::PROC_PID_PATH_INFO_MAXSIZE;
-use std::ffi::c_void;
 
 pub(super) struct ProcName(pub(super) String);
 

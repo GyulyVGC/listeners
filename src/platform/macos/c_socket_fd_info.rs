@@ -1,8 +1,10 @@
-use crate::platform::macos::local_socket::LocalSocket;
-use crate::platform::macos::statics::SOCKET_STATE_LISTEN;
-use byteorder::{ByteOrder, NetworkEndian};
 use std::ffi::{c_char, c_int, c_longlong, c_short, c_uchar, c_uint, c_ushort};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+use byteorder::{ByteOrder, NetworkEndian};
+
+use crate::platform::macos::local_socket::LocalSocket;
+use crate::platform::macos::statics::SOCKET_STATE_LISTEN;
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
