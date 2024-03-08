@@ -77,7 +77,7 @@ impl TcpListener {
 
         let ip_n = local_ip_port.first().ok_or("Failed to get IP")?;
         let port_n = local_ip_port.get(1).ok_or("Failed to get port")?;
-        let ip = Ipv6Addr::from(*ip_n);
+        let ip = Ipv6Addr::from(u32::to_be(*ip_n));
         let port = u16::try_from(*port_n)?;
         let local_addr = SocketAddr::new(IpAddr::V6(ip), port);
 
