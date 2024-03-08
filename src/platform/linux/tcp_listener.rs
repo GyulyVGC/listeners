@@ -70,7 +70,7 @@ impl TcpListener {
             return Err("Not a listening socket".into());
         };
 
-        let local_ip_port = local_addr_hex.split(':');
+        let mut local_ip_port = local_addr_hex.split(':');
 
         let ip_str = local_ip_port.next().ok_or("Failed to get IP")?;
         let port_str = local_ip_port.next().ok_or("Failed to get port")?;
