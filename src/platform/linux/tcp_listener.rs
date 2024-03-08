@@ -75,7 +75,13 @@ impl TcpListener {
         let ip_str = local_ip_port.next().ok_or("Failed to get IP")?;
         let port_str = local_ip_port.next().ok_or("Failed to get port")?;
 
-        let bytes = ip_str.as_bytes();
+        if ip_str.len() % 2 != 0 {
+            return Err("Invalid IP address".into());
+        }
+        let bytes: Vec<u8> = (0..ip_str.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+            .collect()?;
         let ip_a = u32::to_be(u32::from_ne_bytes(bytes[0..4].try_into()?));
         let ip_b = u32::to_be(u32::from_ne_bytes(bytes[4..8].try_into()?));
         let ip_c = u32::to_be(u32::from_ne_bytes(bytes[8..12].try_into()?));
