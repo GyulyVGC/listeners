@@ -15,9 +15,7 @@ mod tcp_listener;
 pub fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
-    let proc_fds = ProcFd::get_all()?;
-
-    let inode_proc_map = build_inode_proc_map(&proc_fds)?;
+    let inode_proc_map = build_inode_proc_map(ProcFd::get_all()?)?;
 
     for tcp_listener in TcpListener::get_all()? {
         if let Some(p) = inode_proc_map.get(&tcp_listener.inode()) {

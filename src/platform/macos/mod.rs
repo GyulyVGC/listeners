@@ -7,87 +7,37 @@ mod statics;
 
 use crate::platform::macos::c_proc_fd_info::CProcFdInfo;
 use crate::platform::macos::c_socket_fd_info::{CSocketFdInfo, InSockinfo};
-use crate::platform::macos::helpers::{proc_pidfdinfo, proc_pidinfo};
+use crate::platform::macos::helpers::{proc_name, proc_pidfdinfo, proc_pidinfo};
 use crate::platform::macos::local_socket_info::LocalSocketInfo;
 use crate::platform::macos::statics::{
     FD_TYPE_SOCKET, PROC_PID_FD_SOCKET_INFO, PROC_PID_LIST_FDS, SOCKET_STATE_LISTEN,
 };
+use crate::platform::target_os::statics::PROC_PID_PATH_INFO_MAXSIZE;
 use byteorder::{ByteOrder, NetworkEndian};
 use pid::Pid;
 use std::ffi::{c_int, c_void};
 use std::mem::MaybeUninit;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::{mem, ptr};
+use std::collections::HashSet;
+use crate::Listener;
 
-pub fn get_all() {
-    // returns: local socket address, socket state, associated PIDs (but NOT process names)
-    // netstat2::get_sockets_info(
-    //     netstat2::AddressFamilyFlags::IPV4,
-    //     netstat2::ProtocolFlags::TCP,
-    // )
-    // .unwrap_or_default()
-    // .iter()
-    // .for_each(|s| {
-    //     println!("{:?}", s);
-    // });
+pub fn get_all() -> crate::Result<HashSet<Listener>> {
+    let mut listeners = HashSet::new();
 
-    let pids = Pid::get_all().unwrap();
-
-    for pid in pids {
+    for pid in Pid::get_all()? {
         let fds = get_socket_fds_of_pid(pid).unwrap();
         for fd in fds {
             if let Ok(local_socket_info) = get_fd_info(pid, fd) {
-                println!("PID: {}", pid.as_c_int());
-                // println!("FD: {fd}");
-                println!("{local_socket_info:?}", );
-                println!();
+                let proc_name = get_proc_name(pid)?;
+                let listener = Listener::new(pid.as_u_32(), proc_name, local_socket_info.socket_addr());
+                listeners.insert(listener);
             }
         }
     }
-}
 
-// fn get_sockets_info() {
-//     let pids = Pid::get_all().unwrap();
-//
-//     let mut results = vec![];
-//
-//     for pid in pids {
-//         let fds = match list_all_fds_for_pid(pid) {
-//             Ok(fds) => fds,
-//             Err(e) => {
-//                 continue;
-//             }
-//         };
-//
-//         for fd in fds {
-//             if fd.proc_fdtype == ProcFDType::Socket {
-//                 let fd_information = match get_fd_information(pid, fd) {
-//                     Ok(fd_information) => fd_information,
-//                     Err(e) => {
-//                         results.push(Err(e));
-//                         continue;
-//                     }
-//                 };
-//
-//                 match fd_information {
-//                     FDInformation::SocketInfo(sinfo) => {
-//                         if sinfo.psi.soi_protocol == IPPROTO_TCP as i32 {
-//                             if let Some(row) = parse_tcp_socket_info(pid, fd, sinfo) {
-//                                 results.push(Ok(SocketInfo {
-//                                     protocol_socket_info: ProtocolSocketInfo::Tcp(row),
-//                                     associated_pids: vec![pid as u32],
-//                                 }));
-//                             }
-//                         }
-//                     }
-//                     _ => {}
-//                 }
-//             }
-//         }
-//     }
-//
-//     Ok(results.into_iter())
-// }
+    Ok(listeners)
+}
 
 fn get_socket_fds_of_pid(pid: Pid) -> crate::Result<Vec<i32>> {
     let buffer_size =
@@ -148,7 +98,7 @@ pub fn get_fd_info(pid: Pid, fd: i32) -> crate::Result<LocalSocketInfo> {
         Ok(local_socket_info)
     } else {
         Err("Failed to parse TCP socket information".into())
-    }
+    };
 }
 
 fn parse_tcp_socket_info(sinfo: CSocketFdInfo) -> Option<LocalSocketInfo> {
@@ -177,13 +127,37 @@ fn get_local_addr(family: c_int, saddr: InSockinfo) -> crate::Result<IpAddr> {
             let addr = unsafe { saddr.insi_laddr.ina_46.i46a_addr4.s_addr };
             Ok(IpAddr::V4(Ipv4Addr::from(u32::from_be(addr))))
         }
-        // 30 => {
-        //     // AF_INET6
-        //     let addr = unsafe { &saddr.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
-        //     let mut ipv6_addr = [0_u16; 8];
-        //     NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
-        //     Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
-        // }
+        30 => {
+            // AF_INET6
+            let addr = unsafe { &saddr.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
+            let mut ipv6_addr = [0_u16; 8];
+            NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
+            Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
+        }
         _ => Err("Unsupported socket family".into()),
+    }
+}
+
+fn get_proc_name(pid: Pid) -> crate::Result<String> {
+    let mut buf: Vec<u8> = Vec::with_capacity(PROC_PID_PATH_INFO_MAXSIZE);
+    let buffer_ptr = buf.as_mut_ptr().cast::<c_void>();
+    let buffer_size = buf.capacity() as u32;
+
+    let ret;
+    unsafe {
+        ret = proc_name(pid.as_c_int(), buffer_ptr, buffer_size);
+    };
+
+    if ret <= 0 || ret > buffer_size as c_int {
+        return Err("Failed to get process name".into());
+    }
+
+    unsafe {
+        buf.set_len(ret as usize);
+    }
+
+    match String::from_utf8(buf) {
+        Ok(name) => Ok(name),
+        Err(_) => Err("Invalid UTF sequence for process name".into()),
     }
 }

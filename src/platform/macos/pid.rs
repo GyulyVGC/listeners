@@ -15,6 +15,10 @@ impl Pid {
         self.0
     }
 
+    pub(super) fn as_u_32(self) -> u32 {
+        self.0 as u32
+    }
+
     pub(super) fn get_all() -> crate::Result<Vec<Pid>> {
         let number_of_pids;
 
