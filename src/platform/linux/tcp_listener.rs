@@ -76,10 +76,10 @@ impl TcpListener {
         let port_str = local_ip_port.next().ok_or("Failed to get port")?;
 
         let bytes = ip_str.as_bytes();
-        let ip_a = u32::to_be(bytes[0..4].try_into()?);
-        let ip_b = u32::to_be(bytes[4..8].try_into()?);
-        let ip_c = u32::to_be(bytes[8..12].try_into()?);
-        let ip_d = u32::to_be(bytes[12..16].try_into()?);
+        let ip_a = u32::to_be(u32::from_ne_bytes(bytes[0..4]));
+        let ip_b = u32::to_be(u32::from_ne_bytes(bytes[4..8]));
+        let ip_c = u32::to_be(u32::from_ne_bytes(bytes[8..12]));
+        let ip_d = u32::to_be(u32::from_ne_bytes(bytes[12..16]));
         let ip = Ipv6Addr::new(
             ((ip_a >> 16) & 0xffff) as u16,
             (ip_a & 0xffff) as u16,
