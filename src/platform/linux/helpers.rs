@@ -10,9 +10,7 @@ use crate::platform::linux::proc_fd::ProcFd;
 use crate::platform::linux::proc_info::ProcInfo;
 use crate::platform::linux::statics::O_PATH_MAYBE;
 
-pub(super) fn build_inode_proc_map(
-    proc_fds: Vec<ProcFd>,
-) -> crate::Result<HashMap<u64, ProcInfo>> {
+pub(super) fn build_inode_proc_map(proc_fds: Vec<ProcFd>) -> crate::Result<HashMap<u64, ProcInfo>> {
     let mut map: HashMap<u64, ProcInfo> = HashMap::new();
 
     for proc_fd in proc_fds {

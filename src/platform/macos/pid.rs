@@ -1,4 +1,4 @@
-use super::helpers::proc_listpids;
+use super::libproc::proc_listpids;
 use super::statics::PROC_ALL_PIDS;
 use std::ffi::{c_int, c_void};
 use std::{mem, ptr};
