@@ -3,7 +3,7 @@ use crate::platform::macos::libproc::proc_pidfdinfo;
 use crate::platform::macos::pid::Pid;
 use crate::platform::macos::socket_fd::SocketFd;
 use crate::platform::macos::statics::PROC_PID_FD_SOCKET_INFO;
-use std::ffi::c_void;
+use std::ffi::{c_int, c_void};
 use std::mem;
 use std::mem::MaybeUninit;
 use std::net::{IpAddr, SocketAddr};
@@ -20,7 +20,7 @@ impl LocalSocket {
         self.0
     }
 
-    pub(super) fn from_pid_fd(pid: Pid, fd: SocketFd) -> crate::Result<Self> {
+    pub(super) fn from_pid_fd(pid: Pid, fd: &SocketFd) -> crate::Result<Self> {
         let mut sinfo: MaybeUninit<CSocketFdInfo> = MaybeUninit::uninit();
 
         let return_code = unsafe {
@@ -29,7 +29,7 @@ impl LocalSocket {
                 fd.fd(),
                 PROC_PID_FD_SOCKET_INFO,
                 sinfo.as_mut_ptr().cast::<c_void>(),
-                mem::size_of::<CSocketFdInfo>() as i32,
+                c_int::try_from(mem::size_of::<CSocketFdInfo>())?,
             )
         };
 

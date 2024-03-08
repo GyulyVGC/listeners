@@ -15,8 +15,11 @@ impl Pid {
         self.0
     }
 
-    pub(super) fn as_u_32(self) -> u32 {
-        self.0 as u32
+    pub(super) fn as_u_32(self) -> crate::Result<u32> {
+        match u32::try_from(self.0) {
+            Ok(n) => Ok(n),
+            Err(_) => Err("Failed to convert pid to u32".into()),
+        }
     }
 
     pub(super) fn get_all() -> crate::Result<Vec<Pid>> {
@@ -31,8 +34,7 @@ impl Pid {
         }
 
         let mut pids: Vec<c_int> = Vec::new();
-        #[allow(clippy::cast_sign_loss)]
-        pids.resize_with(number_of_pids as usize, Default::default);
+        pids.resize_with(usize::try_from(number_of_pids)?, Default::default);
 
         let return_code = unsafe {
             proc_listpids(

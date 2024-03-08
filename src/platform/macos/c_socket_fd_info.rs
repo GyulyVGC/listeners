@@ -11,7 +11,7 @@ pub(super) struct CSocketFdInfo {
 }
 
 impl CSocketFdInfo {
-    pub(super) fn to_local_socket(self) -> crate::Result<LocalSocket> {
+    pub(super) fn to_local_socket(&self) -> crate::Result<LocalSocket> {
         let sock_info = self.psi;
         let family = sock_info.soi_family;
 
@@ -30,16 +30,16 @@ impl CSocketFdInfo {
         Ok(socket_info)
     }
 
-    fn get_local_addr(family: c_int, saddr: InSockinfo) -> crate::Result<IpAddr> {
+    fn get_local_addr(family: c_int, tcp_sockaddr_in: InSockinfo) -> crate::Result<IpAddr> {
         match family {
             2 => {
                 // AF_INET
-                let addr = unsafe { saddr.insi_laddr.ina_46.i46a_addr4.s_addr };
+                let addr = unsafe { tcp_sockaddr_in.insi_laddr.ina_46.i46a_addr4.s_addr };
                 Ok(IpAddr::V4(Ipv4Addr::from(u32::from_be(addr))))
             }
             30 => {
                 // AF_INET6
-                let addr = unsafe { &saddr.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
+                let addr = unsafe { &tcp_sockaddr_in.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
                 let mut ipv6_addr = [0_u16; 8];
                 NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
                 Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
@@ -50,6 +50,7 @@ impl CSocketFdInfo {
 }
 
 #[repr(C)]
+#[allow(clippy::struct_field_names)]
 struct ProcFileinfo {
     fi_openflags: u32,
     fi_status: u32,
@@ -59,6 +60,7 @@ struct ProcFileinfo {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 struct SocketInfo {
     soi_stat: VinfoStat,
     soi_so: u64,
@@ -83,6 +85,8 @@ struct SocketInfo {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct VinfoStat {
     vst_dev: u32,
     vst_mode: u16,
@@ -108,6 +112,8 @@ struct VinfoStat {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct SockbufInfo {
     sbi_cc: u32,
     sbi_hiwat: u32,
@@ -119,6 +125,7 @@ struct SockbufInfo {
 }
 
 #[repr(C)]
+#[derive(Copy, Clone)]
 union SocketInfoBindgenTy1 {
     pri_in: InSockinfo,
     pri_tcp: TcpSockinfo,
@@ -170,6 +177,7 @@ struct InSockinfoBindgenTy3 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct InSockinfoBindgenTy4 {
     in6_hlim: u8,
     in6_cksum: c_int,
@@ -219,6 +227,7 @@ struct TcpSockinfo {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct UnSockinfo {
     unsi_conn_so: u64,
     unsi_conn_pcb: u64,
@@ -236,6 +245,7 @@ union UnSockinfoBindgenTy1 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct SockaddrUn {
     sun_len: c_uchar,
     sun_family: c_uchar,
@@ -252,6 +262,7 @@ union UnSockinfoBindgenTy2 {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct NdrvInfo {
     ndrvsi_if_family: u32,
     ndrvsi_if_unit: u32,
@@ -260,6 +271,7 @@ struct NdrvInfo {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct KernEventInfo {
     kesi_vendor_code_filter: u32,
     kesi_class_filter: u32,
@@ -268,6 +280,7 @@ struct KernEventInfo {
 
 #[repr(C)]
 #[derive(Copy, Clone)]
+#[allow(clippy::struct_field_names)]
 struct KernCtlInfo {
     kcsi_id: u32,
     kcsi_reg_unit: u32,

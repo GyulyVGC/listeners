@@ -24,11 +24,10 @@ impl SocketFd {
             return Err("Failed to list file descriptors".into());
         }
 
-        #[allow(clippy::cast_sign_loss)]
-        let number_of_fds = buffer_size as usize / mem::size_of::<CProcFdInfo>();
+        let number_of_fds = usize::try_from(buffer_size)? / mem::size_of::<CProcFdInfo>();
 
         let mut fds: Vec<CProcFdInfo> = Vec::new();
-        fds.resize_with(number_of_fds, || CProcFdInfo::default());
+        fds.resize_with(number_of_fds, CProcFdInfo::default);
 
         let return_code = unsafe {
             proc_pidinfo(

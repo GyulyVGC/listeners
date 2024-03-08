@@ -21,9 +21,9 @@ pub fn get_all() -> crate::Result<HashSet<Listener>> {
     for pid in Pid::get_all()? {
         let fds = SocketFd::get_all_of_pid(pid)?;
         for fd in fds {
-            if let Ok(local_socket) = LocalSocket::from_pid_fd(pid, fd) {
+            if let Ok(local_socket) = LocalSocket::from_pid_fd(pid, &fd) {
                 let ProcName(name) = ProcName::from_pid(pid)?;
-                let listener = Listener::new(pid.as_u_32(), name, local_socket.socket_addr());
+                let listener = Listener::new(pid.as_u_32()?, name, local_socket.socket_addr());
                 listeners.insert(listener);
             }
         }
