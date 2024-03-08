@@ -11,6 +11,6 @@ pub(super) static O_PATH_MAYBE: Lazy<OFlags> = Lazy::new(|| {
     // for 2.6.39 <= kernel < 3.6 fstat doesn't support O_PATH see https://github.com/eminence/procfs/issues/265
     match kernel {
         Some(v) if v < String::from("3.6.0") => OFlags::empty(),
-        Some(_) | None => OFlags::O_PATH,
+        Some(_) | None => OFlags::PATH,
     }
 });
