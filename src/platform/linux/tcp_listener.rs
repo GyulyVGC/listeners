@@ -75,7 +75,7 @@ impl TcpListener {
         let ip_str = local_ip_port.next().ok_or("Failed to get IP")?;
         let port_str = local_ip_port.next().ok_or("Failed to get port")?;
 
-        let bytes = ip_part.as_bytes();
+        let bytes = ip_str.as_bytes();
         let ip_a = u32::to_be(bytes[0..4].try_into()?);
         let ip_b = u32::to_be(bytes[4..8].try_into()?);
         let ip_c = u32::to_be(bytes[8..12].try_into()?);
