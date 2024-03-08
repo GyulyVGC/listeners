@@ -70,15 +70,28 @@ impl TcpListener {
             return Err("Not a listening socket".into());
         };
 
-        let local_ip_port = local_addr_hex
-            .split(':')
-            .flat_map(|s| u128::from_str_radix(s, 16))
-            .collect::<Vec<u128>>();
+        let local_ip_port = local_addr_hex.split(':');
 
-        let ip_n = local_ip_port.first().ok_or("Failed to get IP")?;
-        let port_n = local_ip_port.get(1).ok_or("Failed to get port")?;
-        let ip = Ipv6Addr::from(u128::to_be(*ip_n));
-        let port = u16::try_from(*port_n)?;
+        let ip_str = local_ip_port.next().ok_or("Failed to get IP")?;
+        let port_str = local_ip_port.next().ok_or("Failed to get port")?;
+
+        let bytes = ip_part.as_bytes();
+        let ip_a = u32::to_be(bytes[0..4].try_into()?);
+        let ip_b = u32::to_be(bytes[4..8].try_into()?);
+        let ip_c = u32::to_be(bytes[8..12].try_into()?);
+        let ip_d = u32::to_be(bytes[12..16].try_into()?);
+        let ip = Ipv6Addr::new(
+            ((ip_a >> 16) & 0xffff) as u16,
+            (ip_a & 0xffff) as u16,
+            ((ip_b >> 16) & 0xffff) as u16,
+            (ip_b & 0xffff) as u16,
+            ((ip_c >> 16) & 0xffff) as u16,
+            (ip_c & 0xffff) as u16,
+            ((ip_d >> 16) & 0xffff) as u16,
+            (ip_d & 0xffff) as u16,
+        );
+
+        let port = u16::from_str_radix(port_str, 16)?;
         let local_addr = SocketAddr::new(IpAddr::V6(ip), port);
 
         let inode_n = s.nth(5).ok_or("Failed to get inode")?;
