@@ -83,10 +83,10 @@ impl TcpListener {
             .map(|i| u8::from_str_radix(&ip_str[i..i + 2], 16))
             .flatten()
             .collect::<Vec<u8>>();
-        let ip_a = u32::to_be(u32::from_ne_bytes(bytes[0..4].try_into()?));
-        let ip_b = u32::to_be(u32::from_ne_bytes(bytes[4..8].try_into()?));
-        let ip_c = u32::to_be(u32::from_ne_bytes(bytes[8..12].try_into()?));
-        let ip_d = u32::to_be(u32::from_ne_bytes(bytes[12..16].try_into()?));
+        let ip_a = u32::from_be_bytes(bytes[0..4].try_into()?);
+        let ip_b = u32::from_be_bytes(bytes[4..8].try_into()?);
+        let ip_c = u32::from_be_bytes(bytes[8..12].try_into()?);
+        let ip_d = u32::from_be_bytes(bytes[12..16].try_into()?);
         let ip = Ipv6Addr::new(
             ((ip_a >> 16) & 0xffff) as u16,
             (ip_a & 0xffff) as u16,
