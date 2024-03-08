@@ -62,11 +62,11 @@ impl TcpListener {
         Ok(Self { local_addr, inode })
     }
 
-    fn from_tcp6_table_entry(line: &str, is_le: bool) -> crate::Result<Self> {
+    fn from_tcp6_table_entry(line: &str) -> crate::Result<Self> {
         #[cfg(target_endian = "little")]
-        let read_endian =  u32::from_le_bytes;
+        let read_endian = u32::from_le_bytes;
         #[cfg(target_endian = "big")]
-        let read_endian =  u32::from_be_bytes;
+        let read_endian = u32::from_be_bytes;
 
         let mut s = line.split_whitespace();
 
