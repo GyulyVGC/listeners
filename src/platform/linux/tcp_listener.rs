@@ -80,7 +80,7 @@ impl TcpListener {
         }
         let bytes: Vec<u8> = (0..ip_str.len())
             .step_by(2)
-            .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+            .map(|i| u8::from_str_radix(&ip_str[i..i + 2], 16))
             .collect()?;
         let ip_a = u32::to_be(u32::from_ne_bytes(bytes[0..4].try_into()?));
         let ip_b = u32::to_be(u32::from_ne_bytes(bytes[4..8].try_into()?));
