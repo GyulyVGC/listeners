@@ -62,7 +62,12 @@ impl TcpListener {
         Ok(Self { local_addr, inode })
     }
 
-    fn from_tcp6_table_entry(line: &str) -> crate::Result<Self> {
+    fn from_tcp6_table_entry(line: &str, is_le: bool) -> crate::Result<Self> {
+        #[cfg(target_endian = "little")]
+        let read_endian =  u32::from_le_bytes;
+        #[cfg(target_endian = "big")]
+        let read_endian =  u32::from_be_bytes;
+
         let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
@@ -83,10 +88,10 @@ impl TcpListener {
             .map(|i| u8::from_str_radix(&ip_str[i..i + 2], 16))
             .flatten()
             .collect::<Vec<u8>>();
-        let ip_a = u32::from_le_bytes(bytes[0..4].try_into()?);
-        let ip_b = u32::from_le_bytes(bytes[4..8].try_into()?);
-        let ip_c = u32::from_le_bytes(bytes[8..12].try_into()?);
-        let ip_d = u32::from_le_bytes(bytes[12..16].try_into()?);
+        let ip_a = read_endian(bytes[0..4].try_into()?);
+        let ip_b = read_endian(bytes[4..8].try_into()?);
+        let ip_c = read_endian(bytes[8..12].try_into()?);
+        let ip_d = read_endian(bytes[12..16].try_into()?);
         let ip = Ipv6Addr::new(
             ((ip_a >> 16) & 0xffff) as u16,
             (ip_a & 0xffff) as u16,
