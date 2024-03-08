@@ -78,10 +78,10 @@ impl TcpListener {
         if ip_str.len() % 2 != 0 {
             return Err("Invalid IP address".into());
         }
-        let bytes: Vec<u8> = (0..ip_str.len())
+        let bytes = (0..ip_str.len())
             .step_by(2)
             .map(|i| u8::from_str_radix(&ip_str[i..i + 2], 16))
-            .collect()?;
+            .collect::<Vec<u8>>();
         let ip_a = u32::to_be(u32::from_ne_bytes(bytes[0..4].try_into()?));
         let ip_b = u32::to_be(u32::from_ne_bytes(bytes[4..8].try_into()?));
         let ip_c = u32::to_be(u32::from_ne_bytes(bytes[8..12].try_into()?));
