@@ -7,9 +7,9 @@ mod windows;
 use windows as target_os;
 
 /* ----------- macos ----------- */
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
+#[cfg(target_os = "macos")]
 mod macos;
-#[cfg(any(target_os = "macos", target_os = "freebsd"))]
+#[cfg(target_os = "macos")]
 use macos as target_os;
 
 /* ----------- linux ----------- */
@@ -17,3 +17,9 @@ use macos as target_os;
 mod linux;
 #[cfg(target_os = "linux")]
 use linux as target_os;
+
+/* ---------- freebsd ---------- */
+#[cfg(target_os = "freebsd")]
+mod bsd;
+#[cfg(target_os = "freebsd")]
+use bsd as target_os;
