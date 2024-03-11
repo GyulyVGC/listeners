@@ -13,6 +13,6 @@ pub fn get_all() {
                 .collect(),
         )
         .unwrap();
-        println!("Name: {name:<15} PID: {:<10}", p.info.pid);
+        println!("Name: {name:<25} PID: {:<10}", p.info.pid);
     }
 }
