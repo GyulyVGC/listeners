@@ -4,6 +4,7 @@ use crate::platform::macos::c_libproc::proc_name;
 use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::statics::PROC_PID_PATH_INFO_MAXSIZE;
 
+#[derive(Default)]
 pub(super) struct ProcName(pub(super) String);
 
 impl ProcName {

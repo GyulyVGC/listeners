@@ -19,11 +19,10 @@ mod tcp_listener;
 pub fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
-    for pid in ProcPid::get_all()? {
-        let fds = SocketFd::get_all_of_pid(pid)?;
-        for fd in fds {
-            if let Ok(tcp_listener) = TcpListener::from_pid_fd(pid, &fd) {
-                let ProcName(name) = ProcName::from_pid(pid)?;
+    for pid in ProcPid::get_all().into_iter().flatten() {
+        for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
+            if let Ok(tcp_listener) = TcpListener::from_pid_fd(pid, fd) {
+                let ProcName(name) = ProcName::from_pid(pid).unwrap_or_default();
                 let listener = Listener::new(pid.as_u_32()?, name, tcp_listener.socket_addr());
                 listeners.insert(listener);
             }
@@ -31,4 +30,21 @@ pub fn get_all() -> crate::Result<HashSet<Listener>> {
     }
 
     Ok(listeners)
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn test_get_all() {
+        let listeners = crate::get_all().unwrap();
+        assert!(!listeners.is_empty());
+
+        // let out = std::process::Command::new("netstat")
+        //     .args(["-p", "tcp", "-van"])
+        //     .output()
+        //     .unwrap();
+        // for l in String::from_utf8(out.stdout).unwrap().lines().filter(|l| l.contains("LISTEN")) {
+        //     println!("{}", l);
+        // }
+    }
 }

@@ -1,7 +1,7 @@
-use bsd_kvm::{Access, KernProc};
+use bsd_kvm::{Access, KernProc, Kvm};
 
 pub fn get_all() {
-    let mut kvm = bsd_kvm::Kvm::open::<&str>(None, None, Access::ReadOnly).unwrap();
+    let mut kvm = Kvm::open::<&str>(None, None, Access::ReadOnly).unwrap();
     let procs = kvm.get_process(KernProc::All, 0);
     for p in procs {
         let name = String::from_utf8(

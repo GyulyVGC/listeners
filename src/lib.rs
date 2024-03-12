@@ -159,6 +159,3 @@ impl Display for Listener {
 //     #[allow(clippy::cast_possible_wrap)]
 //     proc_pid::name(pid as i32).ok()
 // }
-
-#[cfg(test)]
-mod tests {}
