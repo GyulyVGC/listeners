@@ -23,13 +23,13 @@ impl TcpListener {
     pub(super) fn get_all() -> crate::Result<Vec<TcpListener>> {
         let mut table = Vec::new();
         let tcp_table = File::open("/proc/net/tcp")?;
-        for line in BufReader::new(tcp_table).lines().flatten() {
+        for line in BufReader::new(tcp_table).lines().map_while(Result::ok) {
             if let Ok(l) = TcpListener::from_tcp_table_entry(&line) {
                 table.push(l);
             }
         }
         let tcp6_table = File::open("/proc/net/tcp6")?;
-        for line in BufReader::new(tcp6_table).lines().flatten() {
+        for line in BufReader::new(tcp6_table).lines().map_while(Result::ok) {
             if let Ok(l) = TcpListener::from_tcp6_table_entry(&line) {
                 table.push(l);
             }
@@ -85,8 +85,7 @@ impl TcpListener {
         }
         let bytes = (0..ip_str.len())
             .step_by(2)
-            .map(|i| u8::from_str_radix(&ip_str[i..i + 2], 16))
-            .flatten()
+            .flat_map(|i| u8::from_str_radix(&ip_str[i..i + 2], 16))
             .collect::<Vec<u8>>();
         let ip_a = read_endian(bytes[0..4].try_into()?);
         let ip_b = read_endian(bytes[4..8].try_into()?);
