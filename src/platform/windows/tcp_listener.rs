@@ -51,7 +51,7 @@ impl TcpListener {
         let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
 
         let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-        process.dwSize = size_of::<PROCESSENTRY32>() as u32;
+        process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
 
         if unsafe { Process32First(h, &mut process) }.is_ok() {
             loop {
@@ -71,9 +71,9 @@ impl TcpListener {
         let name = process.szExeFile;
         let len = name.iter().position(|&x| x == 0)?;
 
-        Some(String::from_utf8(
+        String::from_utf8(
             name[0..len].iter().map(|e| *e as u8).collect(),
-        ).ok()?)
+        ).ok()
     }
 
     pub(super) fn to_listener(&self) -> Option<Listener> {

@@ -21,18 +21,18 @@ impl SocketTable for TcpTable {
     }
 
     fn get_rows_count(table: &[u8]) -> usize {
-        let table = unsafe { &*(table.as_ptr() as *const TcpTable) };
+        let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
         table.rows_count as usize
     }
 
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
-        let table = unsafe { &*(table.as_ptr() as *const TcpTable) };
-        let rows_ptr = &table.rows[0] as *const TcpRow;
+        let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
+        let rows_ptr = std::ptr::addr_of!(&table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         if row.state == LISTEN {
             Some(TcpListener::new(
                 IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
-                u16::from_be(row.local_port as u16),
+                u16::from_be(u16::try_from(row.local_port).ok()?),
                 row.owning_pid,
             ))
         } else {
@@ -47,18 +47,18 @@ impl SocketTable for Tcp6Table {
     }
 
     fn get_rows_count(table: &[u8]) -> usize {
-        let table = unsafe { &*(table.as_ptr() as *const Tcp6Table) };
+        let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
         table.rows_count as usize
     }
 
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
-        let table = unsafe { &*(table.as_ptr() as *const Tcp6Table) };
-        let rows_ptr = &table.rows[0] as *const Tcp6Row;
+        let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
+        let rows_ptr = std::ptr::addr_of!(&table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         if row.state == LISTEN {
             Some(TcpListener::new(
                 IpAddr::V6(Ipv6Addr::from(row.local_addr)),
-                u16::from_be(row.local_port as u16),
+                u16::from_be(u16::try_from(row.local_port).ok()?),
                 row.owning_pid,
             ))
         } else {
@@ -85,7 +85,7 @@ fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
         table = Vec::<u8>::with_capacity(table_size as usize);
         err_code = unsafe {
             GetExtendedTcpTable(
-                table.as_mut_ptr() as *mut c_void,
+                table.as_mut_ptr().cast::<c_void>(),
                 &mut table_size,
                 FALSE,
                 address_family,
