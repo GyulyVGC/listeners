@@ -1,4 +1,4 @@
-use crate::platform::target_os::c_iphlpapi::get_extended_tcp_table;
+use crate::platform::target_os::c_iphlpapi::GetExtendedTcpTable;
 use crate::platform::target_os::statics::FALSE;
 use crate::platform::target_os::tcp_listener::TcpListener;
 use crate::platform::windows::statics::{
@@ -41,7 +41,7 @@ impl SocketTable for TcpTable {
 fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     let mut table_size: c_ulong = 0;
     let mut err_code = unsafe {
-        get_extended_tcp_table(
+        GetExtendedTcpTable(
             std::ptr::null_mut(),
             &mut table_size,
             FALSE,
@@ -55,7 +55,7 @@ fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     while err_code == ERROR_INSUFFICIENT_BUFFER {
         table = Vec::<u8>::with_capacity(table_size as usize);
         err_code = unsafe {
-            get_extended_tcp_table(
+            GetExtendedTcpTable(
                 table.as_mut_ptr() as *mut c_void,
                 &mut table_size,
                 FALSE,
