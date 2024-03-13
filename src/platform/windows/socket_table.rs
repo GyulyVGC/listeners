@@ -21,11 +21,13 @@ impl SocketTable for TcpTable {
     }
 
     fn get_rows_count(table: &[u8]) -> usize {
+        #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
         table.rows_count as usize
     }
 
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
+        #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
@@ -47,11 +49,13 @@ impl SocketTable for Tcp6Table {
     }
 
     fn get_rows_count(table: &[u8]) -> usize {
+        #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
         table.rows_count as usize
     }
 
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
+        #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
