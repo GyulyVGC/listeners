@@ -19,8 +19,8 @@ fn entries<Table: SocketTable>() -> crate::Result<()> {
     let table = Table::get_table()?;
     for i in 0..Table::get_rows_count(&table) {
         if let Some(tcp_listener) = Table::get_tcp_listener(&table, i) {
-            tcp_listeners.push(tcp_listener);
             println!("{:?}", tcp_listener);
+            tcp_listeners.push(tcp_listener);
         }
     }
     Ok(())
