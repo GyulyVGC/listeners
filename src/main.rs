@@ -1,5 +1,6 @@
 fn main() {
-    for listener in listeners::get_all().iter().flatten() {
-        println!("{listener}");
+    let listeners = listeners::get_all().unwrap();
+    for l in listeners {
+        println!("{l}");
     }
 }
