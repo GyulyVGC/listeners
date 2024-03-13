@@ -9,12 +9,12 @@ mod tcp_table;
 
 pub fn get_all() {
     // let sis = netstat2::get_sockets_info().unwrap();
-    let mut iterators = Vec::with_capacity(2);
+    // let mut iterators = Vec::with_capacity(2);
     // iterators.push(SocketTableIterator::new::<MIB_TCPTABLE_OWNER_PID>()?);
     entries::<TcpTable>();
 }
 
-fn entries<Table: SocketTable>() {
+fn entries<Table: SocketTable>() -> crate::Result<()> {
     let mut tcp_listeners = Vec::new();
     let table = Table::get_table()?;
     for i in 0..Table::get_rows_count(&table) {
@@ -23,6 +23,7 @@ fn entries<Table: SocketTable>() {
             println!("{:?}", tcp_listener);
         }
     }
+    Ok(())
 }
 
 fn get_name_from_pid(pid: u32) -> Option<String> {
