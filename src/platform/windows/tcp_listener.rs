@@ -4,15 +4,15 @@ use std::net::IpAddr;
 pub(super) struct TcpListener {
     local_addr: IpAddr,
     local_port: u16,
-    pids: Vec<u32>,
+    pid: u32,
 }
 
 impl TcpListener {
-    pub(super) fn new(local_addr: IpAddr, local_port: u16, pids: Vec<u32>) -> Self {
+    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32) -> Self {
         Self {
             local_addr,
             local_port,
-            pids,
+            pid,
         }
     }
 
@@ -24,7 +24,7 @@ impl TcpListener {
         self.local_port
     }
 
-    pub(super) fn pids(&self) -> &[u32] {
-        &self.pids
+    pub(super) fn pids(&self) -> u32 {
+        self.pid
     }
 }

@@ -1,5 +1,6 @@
 use std::ffi::{c_int, c_ulong, c_void};
 
+#[allow(non_snake_case)]
 #[link(name = "iphlpapi")]
 extern "system" {
     pub fn GetExtendedTcpTable(

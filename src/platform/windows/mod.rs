@@ -4,6 +4,7 @@ use crate::platform::windows::tcp_table::TcpTable;
 mod c_iphlpapi;
 mod socket_table;
 mod statics;
+mod tcp6_table;
 mod tcp_listener;
 mod tcp_table;
 
