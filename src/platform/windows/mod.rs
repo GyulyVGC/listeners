@@ -1,4 +1,5 @@
 use crate::platform::windows::socket_table::SocketTable;
+use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
 
 mod c_iphlpapi;
@@ -13,6 +14,7 @@ pub fn get_all() {
     // let mut iterators = Vec::with_capacity(2);
     // iterators.push(SocketTableIterator::new::<MIB_TCPTABLE_OWNER_PID>()?);
     entries::<TcpTable>();
+    entries::<Tcp6Table>();
 }
 
 fn entries<Table: SocketTable>() -> crate::Result<()> {
