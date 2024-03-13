@@ -1,5 +1,8 @@
-use std::net::{IpAddr, SocketAddr};
+use crate::platform::windows::socket_table::SocketTable;
+use crate::platform::windows::tcp6_table::Tcp6Table;
+use crate::platform::windows::tcp_table::TcpTable;
 use crate::Listener;
+use std::net::{IpAddr, SocketAddr};
 
 #[derive(Debug)]
 pub(super) struct TcpListener {
@@ -9,6 +12,25 @@ pub(super) struct TcpListener {
 }
 
 impl TcpListener {
+    pub(super) fn get_all() -> Vec<TcpListener> {
+        Self::table_entries::<TcpTable>()
+            .into_iter()
+            .flatten()
+            .chain(Self::table_entries::<Tcp6Table>().into_iter().flatten())
+            .collect()
+    }
+
+    fn table_entries<Table: SocketTable>() -> crate::Result<Vec<Self>> {
+        let mut tcp_listeners = Vec::new();
+        let table = Table::get_table()?;
+        for i in 0..Table::get_rows_count(&table) {
+            if let Some(tcp_listener) = Table::get_tcp_listener(&table, i) {
+                tcp_listeners.push(tcp_listener);
+            }
+        }
+        Ok(tcp_listeners)
+    }
+
     pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32) -> Self {
         Self {
             local_addr,
@@ -17,24 +39,13 @@ impl TcpListener {
         }
     }
 
-    pub(super) fn local_addr(&self) -> IpAddr {
-        self.local_addr
-    }
-
-    pub(super) fn local_port(&self) -> u16 {
-        self.local_port
-    }
-
-    pub(super) fn pid(&self) -> u32 {
-        self.pid
-    }
-
-    pub(super) fn pname(&self) -> Option<String> {
+    fn pname(&self) -> Option<String> {
         use std::mem::size_of;
         use std::mem::zeroed;
         use windows::Win32::Foundation::CloseHandle;
         use windows::Win32::System::Diagnostics::ToolHelp::{
-            CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
+            CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32,
+            TH32CS_SNAPPROCESS,
         };
 
         let pid = self.pid;

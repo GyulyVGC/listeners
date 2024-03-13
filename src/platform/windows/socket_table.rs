@@ -9,48 +9,10 @@ use crate::platform::windows::tcp_table::{TcpRow, TcpTable};
 use std::ffi::{c_ulong, c_void};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-pub trait SocketTable {
+pub(super) trait SocketTable {
     fn get_table() -> crate::Result<Vec<u8>>;
     fn get_rows_count(table: &[u8]) -> usize;
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener>;
-}
-
-fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
-    let mut table_size: c_ulong = 0;
-    let mut err_code = unsafe {
-        GetExtendedTcpTable(
-            std::ptr::null_mut(),
-            &mut table_size,
-            FALSE,
-            address_family,
-            TCP_TABLE_OWNER_PID_ALL,
-            0,
-        )
-    };
-    let mut table = Vec::<u8>::new();
-    let mut iterations = 0;
-    while err_code == ERROR_INSUFFICIENT_BUFFER {
-        table = Vec::<u8>::with_capacity(table_size as usize);
-        err_code = unsafe {
-            GetExtendedTcpTable(
-                table.as_mut_ptr() as *mut c_void,
-                &mut table_size,
-                FALSE,
-                address_family,
-                TCP_TABLE_OWNER_PID_ALL,
-                0,
-            )
-        };
-        iterations += 1;
-        if iterations > 100 {
-            return Err("Failed to allocate buffer".into());
-        }
-    }
-    if err_code == NO_ERROR {
-        Ok(table)
-    } else {
-        Err("Failed to get TCP table".into())
-    }
 }
 
 impl SocketTable for TcpTable {
@@ -102,5 +64,43 @@ impl SocketTable for Tcp6Table {
         } else {
             None
         }
+    }
+}
+
+fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
+    let mut table_size: c_ulong = 0;
+    let mut err_code = unsafe {
+        GetExtendedTcpTable(
+            std::ptr::null_mut(),
+            &mut table_size,
+            FALSE,
+            address_family,
+            TCP_TABLE_OWNER_PID_ALL,
+            0,
+        )
+    };
+    let mut table = Vec::<u8>::new();
+    let mut iterations = 0;
+    while err_code == ERROR_INSUFFICIENT_BUFFER {
+        table = Vec::<u8>::with_capacity(table_size as usize);
+        err_code = unsafe {
+            GetExtendedTcpTable(
+                table.as_mut_ptr() as *mut c_void,
+                &mut table_size,
+                FALSE,
+                address_family,
+                TCP_TABLE_OWNER_PID_ALL,
+                0,
+            )
+        };
+        iterations += 1;
+        if iterations > 100 {
+            return Err("Failed to allocate buffer".into());
+        }
+    }
+    if err_code == NO_ERROR {
+        Ok(table)
+    } else {
+        Err("Failed to get TCP table".into())
     }
 }

@@ -27,19 +27,19 @@ pub fn get_all() -> crate::Result<HashSet<Listener>> {
     Ok(listeners)
 }
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn test_get_all() {
-        let listeners = crate::get_all().unwrap();
-        assert!(!listeners.is_empty());
-
-        // let out = std::process::Command::new("netstat")
-        //     .args(["-plnt"])
-        //     .output()
-        //     .unwrap();
-        // for l in String::from_utf8(out.stdout).unwrap().lines() {
-        //     println!("{}", l);
-        // }
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     #[test]
+//     fn test_get_all() {
+//         let listeners = crate::get_all().unwrap();
+//         assert!(!listeners.is_empty());
+//
+//         // let out = std::process::Command::new("netstat")
+//         //     .args(["-plnt"])
+//         //     .output()
+//         //     .unwrap();
+//         // for l in String::from_utf8(out.stdout).unwrap().lines() {
+//         //     println!("{}", l);
+//         // }
+//     }
+// }

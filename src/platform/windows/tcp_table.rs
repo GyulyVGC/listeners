@@ -2,18 +2,18 @@ use std::ffi::c_ulong;
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
-pub struct TcpTable {
-    pub rows_count: c_ulong,
-    pub rows: [TcpRow; 1],
+pub(super) struct TcpTable {
+    pub(super) rows_count: c_ulong,
+    pub(super) rows: [TcpRow; 1],
 }
 
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
-pub struct TcpRow {
-    pub state: c_ulong,
-    pub local_addr: c_ulong,
-    pub local_port: c_ulong,
-    pub remote_addr: c_ulong,
-    pub remote_port: c_ulong,
-    pub owning_pid: c_ulong,
+pub(super) struct TcpRow {
+    pub(super) state: c_ulong,
+    pub(super) local_addr: c_ulong,
+    pub(super) local_port: c_ulong,
+    remote_addr: c_ulong,
+    remote_port: c_ulong,
+    pub(super) owning_pid: c_ulong,
 }
