@@ -22,9 +22,10 @@ pub fn get_all() -> crate::Result<HashSet<Listener>> {
     for pid in ProcPid::get_all().into_iter().flatten() {
         for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
             if let Ok(tcp_listener) = TcpListener::from_pid_fd(pid, fd) {
-                let ProcName(name) = ProcName::from_pid(pid).unwrap_or_default();
-                let listener = Listener::new(pid.as_u_32()?, name, tcp_listener.socket_addr());
-                listeners.insert(listener);
+                if let Ok(ProcName(name)) = ProcName::from_pid(pid) {
+                    let listener = Listener::new(pid.as_u_32()?, name, tcp_listener.socket_addr());
+                    listeners.insert(listener);
+                }
             }
         }
     }

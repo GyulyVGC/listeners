@@ -2,7 +2,13 @@ use crate::platform::windows::socket_table::SocketTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
 use crate::Listener;
+use std::mem::size_of;
+use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
+use windows::Win32::Foundation::CloseHandle;
+use windows::Win32::System::Diagnostics::ToolHelp::{
+    CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
+};
 
 #[derive(Debug)]
 pub(super) struct TcpListener {
@@ -40,17 +46,9 @@ impl TcpListener {
     }
 
     fn pname(&self) -> Option<String> {
-        use std::mem::size_of;
-        use std::mem::zeroed;
-        use windows::Win32::Foundation::CloseHandle;
-        use windows::Win32::System::Diagnostics::ToolHelp::{
-            CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32,
-            TH32CS_SNAPPROCESS,
-        };
-
         let pid = self.pid;
 
-        let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).unwrap() };
+        let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0)? };
 
         let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
         process.dwSize = size_of::<PROCESSENTRY32>() as u32;
@@ -68,16 +66,14 @@ impl TcpListener {
             }
         }
 
-        unsafe { CloseHandle(h).unwrap() };
+        unsafe { CloseHandle(h)? };
 
         let name = process.szExeFile;
-        let mut temp: Vec<u8> = vec![];
-        let len = name.iter().position(|&x| x == 0).unwrap();
+        let len = name.iter().position(|&x| x == 0)?;
 
-        for i in name.iter() {
-            temp.push(*i as u8);
-        }
-        Some(String::from_utf8(temp[0..len].to_vec()).unwrap_or_default())
+        Some(String::from_utf8(
+            name[0..len].iter().map(|e| *e as u8).collect(),
+        )?)
     }
 
     pub(super) fn to_listener(&self) -> Option<Listener> {
