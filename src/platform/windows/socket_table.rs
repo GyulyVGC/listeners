@@ -4,8 +4,8 @@ use crate::platform::target_os::tcp_listener::TcpListener;
 use crate::platform::windows::statics::{
     AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, LISTEN, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
 };
-use crate::platform::windows::tcp6_table::{Tcp6Row, Tcp6Table};
-use crate::platform::windows::tcp_table::{TcpRow, TcpTable};
+use crate::platform::windows::tcp6_table::Tcp6Table;
+use crate::platform::windows::tcp_table::TcpTable;
 use std::ffi::{c_ulong, c_void};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
@@ -27,7 +27,7 @@ impl SocketTable for TcpTable {
 
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
         let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
-        let rows_ptr = std::ptr::addr_of!(&table.rows[0]);
+        let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         if row.state == LISTEN {
             Some(TcpListener::new(
@@ -53,7 +53,7 @@ impl SocketTable for Tcp6Table {
 
     fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
         let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
-        let rows_ptr = std::ptr::addr_of!(&table.rows[0]);
+        let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         if row.state == LISTEN {
             Some(TcpListener::new(

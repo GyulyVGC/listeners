@@ -71,9 +71,7 @@ impl TcpListener {
         let name = process.szExeFile;
         let len = name.iter().position(|&x| x == 0)?;
 
-        String::from_utf8(
-            name[0..len].iter().map(|e| *e as u8).collect(),
-        ).ok()
+        String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
     }
 
     pub(super) fn to_listener(&self) -> Option<Listener> {
