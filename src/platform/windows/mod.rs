@@ -1,5 +1,4 @@
 use crate::Listener;
-use socket_table::SocketTable;
 use std::collections::HashSet;
 use tcp_listener::TcpListener;
 
