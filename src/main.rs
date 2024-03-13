@@ -1,8 +1,9 @@
 fn main() {
-    let listeners = listeners::get_all().unwrap();
-    for listener in listeners {
-        println!("{listener}");
-    }
+    listeners::get_all();
+    // let listeners = listeners::get_all().unwrap();
+    // for listener in listeners {
+    //     println!("{listener}");
+    // }
 }
 
 // fn main() {

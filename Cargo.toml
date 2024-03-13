@@ -21,3 +21,4 @@ byteorder = "1.5.0"
 
 [target.'cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
 bsd-kvm = "0.1.5"
+sysctl = "0.5.5"

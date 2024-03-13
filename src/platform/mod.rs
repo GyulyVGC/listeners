@@ -19,7 +19,15 @@ mod linux;
 use linux as target_os;
 
 /* ----------- other ----------- */
-#[cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))]
+#[cfg(all(
+    not(target_os = "linux"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
 mod bsd;
-#[cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))]
+#[cfg(all(
+    not(target_os = "linux"),
+    not(target_os = "macos"),
+    not(target_os = "windows")
+))]
 use bsd as target_os;
