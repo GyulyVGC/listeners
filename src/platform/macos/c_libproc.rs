@@ -30,5 +30,5 @@ extern "C" {
 }
 
 extern "C" {
-    pub fn proc_name(pid: c_int, buffer: *mut c_void, buffersize: u32) -> c_int;
+    pub(super) fn proc_name(pid: c_int, buffer: *mut c_void, buffersize: u32) -> c_int;
 }
