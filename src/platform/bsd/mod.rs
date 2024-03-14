@@ -1,7 +1,9 @@
-use bsd_kvm::{Access, KernProc, Kvm};
+use std::collections::HashSet;
+// use bsd_kvm::{Access, KernProc, Kvm};
+use crate::Listener;
 
-pub fn get_all() {
-    todo!("Implement get_all for BSD");
+pub fn get_all() -> crate::Result<HashSet<Listener>> {
+    Err("Not implemented yet".into())
     // let mut kvm = Kvm::open::<&str>(None, None, Access::ReadOnly).unwrap();
     // let procs = kvm.get_process(KernProc::All, 0);
     // for p in procs {
