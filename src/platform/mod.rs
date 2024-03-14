@@ -1,4 +1,4 @@
-pub use target_os::get_all;
+pub(crate) use target_os::get_all;
 
 /* ---------- windows ---------- */
 #[cfg(target_os = "windows")]
