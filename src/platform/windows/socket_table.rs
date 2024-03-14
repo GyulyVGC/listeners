@@ -1,3 +1,6 @@
+use std::ffi::{c_ulong, c_void};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
 use crate::platform::target_os::c_iphlpapi::GetExtendedTcpTable;
 use crate::platform::target_os::statics::FALSE;
 use crate::platform::target_os::tcp_listener::TcpListener;
@@ -6,8 +9,6 @@ use crate::platform::windows::statics::{
 };
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
-use std::ffi::{c_ulong, c_void};
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 pub(super) trait SocketTable {
     fn get_table() -> crate::Result<Vec<u8>>;

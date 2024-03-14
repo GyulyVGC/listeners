@@ -1,14 +1,16 @@
-use crate::platform::windows::socket_table::SocketTable;
-use crate::platform::windows::tcp6_table::Tcp6Table;
-use crate::platform::windows::tcp_table::TcpTable;
-use crate::Listener;
 use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
+
 use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
 };
+
+use crate::platform::windows::socket_table::SocketTable;
+use crate::platform::windows::tcp6_table::Tcp6Table;
+use crate::platform::windows::tcp_table::TcpTable;
+use crate::Listener;
 
 #[derive(Debug)]
 pub(super) struct TcpListener {
