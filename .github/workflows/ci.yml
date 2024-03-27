@@ -46,4 +46,4 @@ jobs:
       - name: clippy
         run: cargo clippy -- -D warnings
       - name: test
-        run: cargo test --verbose -- --nocapture
+        run: sudo cargo test --verbose -- --nocapture

@@ -179,10 +179,11 @@ mod tests {
     #[test]
     #[cfg(not(target_os = "windows"))]
     fn test_get_all() {
+        println!("----- test_get_all() -----");
+
         let listeners = crate::get_all().unwrap();
         assert!(!listeners.is_empty());
 
-        println!("----- test_get_all() -----");
         for l in listeners {
             println!("{l}");
         }
