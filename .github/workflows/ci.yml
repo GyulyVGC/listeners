@@ -37,7 +37,9 @@ jobs:
 
       - name: Launch sshd on macOS
         if: matrix.os == 'macos'
-        run: sudo systemsetup -setremotelogin on
+        run: |
+          sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
+          sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
 
       - name: fmt
         run: cargo fmt --all -- --check
