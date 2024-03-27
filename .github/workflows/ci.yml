@@ -31,6 +31,14 @@ jobs:
         with:
           components: rustfmt, clippy
 
+      - name: Launch sshd on Linux
+        if: matrix.os == 'ubuntu'
+        run: sudo systemctl start ssh
+
+      - name: Launch sshd on macOS
+        if: matrix.os == 'macos'
+        run: sudo systemsetup -setremotelogin on
+
       - name: fmt
         run: cargo fmt --all -- --check
       - name: build
