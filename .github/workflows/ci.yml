@@ -45,11 +45,5 @@ jobs:
         run: cargo build --verbose
       - name: clippy
         run: cargo clippy -- -D warnings
-
-      - name: test (macOS)
-        if: matrix.os == 'macos'
-        run: sudo -E cargo test --verbose -- --nocapture
-
-      - name: test (windows)
-        if: matrix.os == 'windows'
+      - name: test
         run: cargo test --verbose -- --nocapture
