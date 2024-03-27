@@ -19,7 +19,7 @@ Some examples of existing libraries:
 This library wants to fill this gap, and it aims to be: 
 - **Cross-platform**: it currently supports Windows, Linux and macOS
 - **Performant**: it internally uses low-level system APIs
-- **Simple**: it exposes a single API to get all the listening processes
+- **Simple**: it exposes intuitive APIs to get details about the listening processes
 - **Lightweight**: it has only the strictly necessary dependencies
 
 ## Roadmap
@@ -41,7 +41,7 @@ Add this to your `Cargo.toml`:
 listeners = "0.1"
 ```
 
-Get the listening processes:
+Get all the listening processes:
 
 ``` rust
 if let Ok(listeners) = listeners::get_all() {
@@ -61,3 +61,6 @@ PID: 160        Process name: mysqld                    Socket: [::]:3306
 PID: 460        Process name: rapportd                  Socket: 0.0.0.0:50928
 PID: 460        Process name: rapportd                  Socket: [::]:50928 
 ```
+ 
+For more examples of usage, including how to get listening processes in a more granular way,
+check the [`examples`](https://github.com/GyulyVGC/listeners/tree/main/examples) folder.
