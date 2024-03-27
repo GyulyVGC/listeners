@@ -9,7 +9,7 @@ repository = "https://github.com/GyulyVGC/listeners"
 license = "MIT"
 keywords = ["tcp", "listen", "port", "process"]
 categories = ["network-programming"]
-include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md, examples/**/*"]
+include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
