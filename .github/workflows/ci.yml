@@ -18,7 +18,7 @@ jobs:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
     strategy:
-      fail-fast: true
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu
@@ -31,25 +31,31 @@ jobs:
         with:
           components: rustfmt, clippy
 
+#      - name: Launch sshd (Linux)
+#        if: matrix.os == 'ubuntu'
+#        run: sudo systemctl start ssh
+#
+#      - name: Launch sshd (macOS)
+#        if: matrix.os == 'macos'
+#        run: sudo systemsetup -setremotelogin on
+#
+#      - name: Launch sshd (Windows)
+#        if: matrix.os == 'windows'
+#        run: |
+#          Get-Service -Name ssh-agent | Set-Service -StartupType Manual
+#          Start-Service ssh-agent
+
       - name: fmt
         run: cargo fmt --all -- --check
       - name: build
         run: cargo build --verbose
       - name: clippy
         run: cargo clippy -- -D warnings
-      - name: test
-        run: cargo test --verbose -- --nocapture
 
-#      - name: Install cargo-llvm-cov
-#        if: matrix.os == 'ubuntu'
-#        uses: taiki-e/install-action@cargo-llvm-cov
-#      - name: Generate code coverage
-#        if: matrix.os == 'ubuntu'
-#        run: cargo llvm-cov --all-features --workspace --lcov --output-path lcov.info
-#      - name: Upload coverage to Codecov
-#        if: matrix.os == 'ubuntu'
-#        uses: codecov/codecov-action@v4
-#        with:
-#          files: lcov.info
-#          fail_ci_if_error: false
-#          token: ${{ secrets.CODECOV_IO }}
+      - name: test (macOS)
+        if: matrix.os == 'macos'
+        run: sudo cargo test --verbose -- --nocapture
+
+      - name: test (Linux & Windows)
+        if: matrix.os == 'ubuntu' || matrix.os == 'windows'
+        run: cargo test --verbose -- --nocapture
