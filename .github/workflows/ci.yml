@@ -52,7 +52,7 @@ jobs:
 
       - name: test (macOS)
         if: matrix.os == 'macos'
-        run: sudo -E cargo test --verbose -- --nocapture
+        run: sudo cargo test --verbose -- --nocapture
 
       - name: test (windows)
         if: matrix.os == 'windows'
