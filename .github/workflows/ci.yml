@@ -41,7 +41,7 @@ jobs:
 
       - name: Launch sshd on Windows
         if: matrix.os == 'windows'
-        run: Start-Service -Name "sshd"
+        run: Start-Service sshd
 
       - name: fmt
         run: cargo fmt --all -- --check
