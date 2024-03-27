@@ -41,7 +41,9 @@ jobs:
 
       - name: Launch sshd on Windows
         if: matrix.os == 'windows'
-        run: Start-Service sshd
+        run: |
+          Get-Service -Name ssh-agent | Set-Service -StartupType Manual
+          Start-Service ssh-agent
 
       - name: fmt
         run: cargo fmt --all -- --check
