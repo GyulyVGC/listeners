@@ -37,9 +37,7 @@ jobs:
 
       - name: Launch sshd on macOS
         if: matrix.os == 'macos'
-        run: |
-          sudo launchctl unload /System/Library/LaunchDaemons/ssh.plist
-          sudo launchctl load -w /System/Library/LaunchDaemons/ssh.plist
+        run: sudo systemsetup -setremotelogin on
 
       - name: fmt
         run: cargo fmt --all -- --check
@@ -47,5 +45,11 @@ jobs:
         run: cargo build --verbose
       - name: clippy
         run: cargo clippy -- -D warnings
-      - name: test
+
+      - name: test (macOS)
+        if: matrix.os == 'macos'
         run: sudo -E cargo test --verbose -- --nocapture
+
+      - name: test (windows)
+        if: matrix.os == 'windows'
+        run: cargo test --verbose -- --nocapture
