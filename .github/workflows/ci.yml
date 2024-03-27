@@ -48,7 +48,7 @@ jobs:
 
       - name: test (Linux)
         if: matrix.os == 'ubuntu'
-        run: sudo -E /home/.cargo/bin/cargo test --verbose -- --nocapture
+        run: sudo /home/.cargo/bin/cargo test --verbose -- --nocapture
 
       - name: test (macOS)
         if: matrix.os == 'macos'
