@@ -13,7 +13,7 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub struct Listener {
     /// The listening process.
     pub process: Process,
-    /// The TCP socket used by the listener.
+    /// The TCP socket this listener is listening on.
     pub socket: SocketAddr,
 }
 
@@ -26,7 +26,7 @@ pub struct Process {
     pub name: String,
 }
 
-/// Returns all the listeners.
+/// Returns all the [Listener]s.
 ///
 /// # Errors
 ///
@@ -51,7 +51,7 @@ pub fn get_all() -> Result<HashSet<Listener>> {
     platform::get_all()
 }
 
-/// Returns the list of processes listening on a given TCP port.
+/// Returns the list of [Process]es listening on a given TCP port.
 ///
 /// # Arguments
 ///
@@ -175,24 +175,6 @@ impl Display for Process {
 mod tests {
     use crate::{Listener, Process};
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-
-    // #[test]
-    // fn test_get_processes_by_port() {
-    //     let processes = get_processes_by_port(3306).unwrap();
-    //     assert!(!processes.is_empty());
-    // }
-    //
-    // #[test]
-    // fn test_get_ports_by_pid() {
-    //     let ports = get_ports_by_pid(160).unwrap();
-    //     assert!(!ports.is_empty());
-    // }
-    //
-    // #[test]
-    // fn test_get_ports_by_process_name() {
-    //     let ports = get_ports_by_process_name("mysqld").unwrap();
-    //     assert!(!ports.is_empty());
-    // }
 
     #[test]
     fn test_v4_listener_to_string() {

@@ -8,6 +8,9 @@ All releases with the relative changes are documented in this file.
   - `get_ports_by_pid`
   - `get_ports_by_process_name`
   - `get_processes_by_port`
+- New `Process` struct to represent a process identified by its PID and name
+### Changed
+- `Listener` struct now has a `process` field of type `Process`, which takes place of the old fields `pid` and `name`
 
 ## [0.1.0] - 2024-03-14
 ### Added
