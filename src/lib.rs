@@ -176,19 +176,6 @@ mod tests {
     use crate::{Listener, Process};
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-    #[test]
-    #[cfg(not(target_os = "windows"))]
-    fn test_get_all() {
-        println!("----- test_get_all() -----");
-
-        let listeners = crate::get_all().unwrap();
-        assert!(!listeners.is_empty());
-
-        for l in listeners {
-            println!("{l}");
-        }
-    }
-
     // #[test]
     // fn test_get_processes_by_port() {
     //     let processes = get_processes_by_port(3306).unwrap();

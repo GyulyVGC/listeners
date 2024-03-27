@@ -18,7 +18,6 @@ jobs:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
     strategy:
-      fail-fast: true
       matrix:
         include:
           - os: ubuntu
