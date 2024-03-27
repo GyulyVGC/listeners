@@ -26,20 +26,16 @@ pub struct Process {
     pub name: String,
 }
 
-/// Returns the list of all processes listening on a TCP port.
+/// Returns all the listeners.
 ///
 /// # Errors
 ///
-/// This function returns an error if it fails to get the list of processes for the current platform.
+/// This function returns an error if it fails to retrieve listeners for the current platform.
 ///
 /// # Example
 ///
 ///  ``` rust
-/// if let Ok(listeners) = listeners::get_all() {
-///     for l in listeners {
-///         println!("{l}");
-///     }
-/// }
+#[doc = include_str!("../examples/get_all.rs")]
 /// ```
 ///
 /// Output:
@@ -53,6 +49,86 @@ pub struct Process {
 /// ```
 pub fn get_all() -> Result<HashSet<Listener>> {
     platform::get_all()
+}
+
+/// Returns the list of processes listening on a given TCP port.
+///
+/// # Errors
+///
+/// This function returns an error if it fails to retrieve listeners for the current platform.
+///
+/// # Example
+///
+///  ``` rust
+#[doc = include_str!("../examples/get_processes_by_port.rs")]
+/// ```
+///
+/// Output:
+/// ``` text
+/// PID: 160        Process name: mysqld
+/// ```
+pub fn get_processes_by_port(port: u16) -> Result<HashSet<Process>> {
+    platform::get_all().map(|listeners| {
+        listeners
+            .into_iter()
+            .filter(|listener| listener.socket.port() == port)
+            .map(|listener| listener.process)
+            .collect()
+    })
+}
+
+/// Returns the list of ports listened to by a process given its PID.
+///
+/// # Errors
+///
+/// This function returns an error if it fails to retrieve listeners for the current platform.
+///
+/// # Example
+///
+///  ``` rust
+#[doc = include_str!("../examples/get_ports_by_pid.rs")]
+/// ```
+///
+/// Output:
+/// ``` text
+/// 3306
+/// 33060
+/// ```
+pub fn get_ports_by_pid(pid: u32) -> Result<HashSet<u16>> {
+    platform::get_all().map(|listeners| {
+        listeners
+            .into_iter()
+            .filter(|listener| listener.process.pid == pid)
+            .map(|listener| listener.socket.port())
+            .collect()
+    })
+}
+
+/// Returns the list of ports listened to by a process given its name.
+///
+/// # Errors
+///
+/// This function returns an error if it fails to retrieve listeners for the current platform.
+///
+/// # Example
+///
+///  ``` rust
+#[doc = include_str!("../examples/get_ports_by_process_name.rs")]
+/// ```
+///
+/// Output:
+/// ``` text
+/// 3306
+/// 33060
+/// ```
+pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
+    platform::get_all().map(|listeners| {
+        listeners
+            .into_iter()
+            .filter(|listener| listener.process.name == name)
+            .map(|listener| listener.socket.port())
+            .collect()
+    })
 }
 
 impl Listener {
@@ -80,10 +156,6 @@ impl Display for Listener {
 
 impl Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "PID: {:<10} Process name: {:<25}",
-            self.pid, self.name
-        )
+        write!(f, "PID: {:<10} Process name: {:<25}", self.pid, self.name)
     }
 }
