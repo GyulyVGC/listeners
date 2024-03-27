@@ -34,7 +34,7 @@ pub struct Process {
 ///
 /// # Example
 ///
-///  ``` rust
+///  ```
 #[doc = include_str!("../examples/get_all.rs")]
 /// ```
 ///
@@ -53,13 +53,17 @@ pub fn get_all() -> Result<HashSet<Listener>> {
 
 /// Returns the list of processes listening on a given TCP port.
 ///
+/// # Arguments
+///
+/// * `port` - The TCP port to look for.
+///
 /// # Errors
 ///
 /// This function returns an error if it fails to retrieve listeners for the current platform.
 ///
 /// # Example
 ///
-///  ``` rust
+///  ``` no_run
 #[doc = include_str!("../examples/get_processes_by_port.rs")]
 /// ```
 ///
@@ -79,13 +83,17 @@ pub fn get_processes_by_port(port: u16) -> Result<HashSet<Process>> {
 
 /// Returns the list of ports listened to by a process given its PID.
 ///
+/// # Arguments
+///
+/// * `pid` - The PID of the process.
+///
 /// # Errors
 ///
 /// This function returns an error if it fails to retrieve listeners for the current platform.
 ///
 /// # Example
 ///
-///  ``` rust
+///  ``` no_run
 #[doc = include_str!("../examples/get_ports_by_pid.rs")]
 /// ```
 ///
@@ -106,13 +114,17 @@ pub fn get_ports_by_pid(pid: u32) -> Result<HashSet<u16>> {
 
 /// Returns the list of ports listened to by a process given its name.
 ///
+/// # Arguments
+///
+/// * `name` - The name of the process.
+///
 /// # Errors
 ///
 /// This function returns an error if it fails to retrieve listeners for the current platform.
 ///
 /// # Example
 ///
-///  ``` rust
+///  ``` no_run
 #[doc = include_str!("../examples/get_ports_by_process_name.rs")]
 /// ```
 ///
@@ -146,16 +158,14 @@ impl Process {
 
 impl Display for Listener {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "PID: {:<10} Process name: {:<25} Socket: {}",
-            self.process.pid, self.process.name, self.socket
-        )
+        let Listener { process, socket } = self;
+        write!(f, "{process} Socket: {socket}",)
     }
 }
 
 impl Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "PID: {:<10} Process name: {:<25}", self.pid, self.name)
+        let Process { pid, name } = self;
+        write!(f, "PID: {pid:<10} Process name: {name:<25}")
     }
 }
