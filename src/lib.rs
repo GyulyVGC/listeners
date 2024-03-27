@@ -159,13 +159,79 @@ impl Process {
 impl Display for Listener {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Listener { process, socket } = self;
-        write!(f, "{process} Socket: {socket}",)
+        let process = process.to_string();
+        write!(f, "{process:<55} Socket: {socket}",)
     }
 }
 
 impl Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Process { pid, name } = self;
-        write!(f, "PID: {pid:<10} Process name: {name:<25}")
+        write!(f, "PID: {pid:<10} Process name: {name}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Listener, Process};
+    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+
+    // #[test]
+    // fn test_get_all() {
+    //     let listeners = get_all().unwrap();
+    //     assert!(!listeners.is_empty());
+    // }
+    //
+    // #[test]
+    // fn test_get_processes_by_port() {
+    //     let processes = get_processes_by_port(3306).unwrap();
+    //     assert!(!processes.is_empty());
+    // }
+    //
+    // #[test]
+    // fn test_get_ports_by_pid() {
+    //     let ports = get_ports_by_pid(160).unwrap();
+    //     assert!(!ports.is_empty());
+    // }
+    //
+    // #[test]
+    // fn test_get_ports_by_process_name() {
+    //     let ports = get_ports_by_process_name("mysqld").unwrap();
+    //     assert!(!ports.is_empty());
+    // }
+
+    #[test]
+    fn test_v4_listener_to_string() {
+        let listener = Listener::new(
+            455,
+            "rapportd".to_string(),
+            SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 51189),
+        );
+        assert_eq!(
+            listener.to_string(),
+            "PID: 455        Process name: rapportd                  Socket: 0.0.0.0:51189"
+        );
+    }
+
+    #[test]
+    fn test_v6_listener_to_string() {
+        let listener = Listener::new(
+            160,
+            "mysqld".to_string(),
+            SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 3306),
+        );
+        assert_eq!(
+            listener.to_string(),
+            "PID: 160        Process name: mysqld                    Socket: [::]:3306"
+        );
+    }
+
+    #[test]
+    fn test_process_to_string() {
+        let process = Process::new(611, "Microsoft SharePoint".to_string());
+        assert_eq!(
+            process.to_string(),
+            "PID: 611        Process name: Microsoft SharePoint"
+        );
     }
 }
