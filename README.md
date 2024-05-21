@@ -1,6 +1,7 @@
 # Listene*rs*
 
 [![Crates](https://img.shields.io/crates/v/listeners?&logo=rust)](https://crates.io/crates/listeners)
+[![Downloads](https://img.shields.io/crates/d/listeners.svg)](https://crates.io/crates/listeners)
 [![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
 
