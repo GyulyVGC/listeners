@@ -4,7 +4,7 @@ use std::os::fd::{AsFd, BorrowedFd, RawFd};
 use std::path::Path;
 use std::str::FromStr;
 
-use rustix::fs::{Mode, OFlags};
+use rustix::fs::{Access, AtFlags, Mode, OFlags};
 
 use crate::platform::linux::proc_fd::ProcFd;
 use crate::platform::linux::proc_info::ProcInfo;
@@ -14,9 +14,14 @@ pub(super) fn build_inode_proc_map(proc_fds: Vec<ProcFd>) -> crate::Result<HashM
     let mut map: HashMap<u64, ProcInfo> = HashMap::new();
 
     for proc_fd in proc_fds {
+        let dirfd = proc_fd.as_fd();
+        let path = "fd";
+        if rustix::fs::accessat(dirfd, path, Access::READ_OK, AtFlags::empty()).is_err() {
+            continue;
+        }
         let dir_fd = rustix::fs::openat(
-            proc_fd.as_fd(),
-            "fd",
+            dirfd,
+            path,
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
         )?;
