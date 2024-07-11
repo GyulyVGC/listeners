@@ -45,12 +45,12 @@ fn test_linux() {
     let test_server_port = test_server.port();
 
     // get process by port
-    let processes = listeners::get_processes_by_port(test_server.port()).unwrap();
+    let processes = listeners::get_processes_by_port(test_server_port).unwrap();
     assert_eq!(processes.len(), 1);
 
     // get port by process
     let pid = processes.into_iter().next().unwrap().pid;
     let ports = listeners::get_ports_by_pid(pid).unwrap();
     assert_eq!(ports.len(), 1);
-    assert_eq!(ports.into_iter().next().unwrap(), test_server.port());
+    assert_eq!(ports.into_iter().next().unwrap(), test_server_port);
 }
