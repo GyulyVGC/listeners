@@ -31,31 +31,11 @@ jobs:
         with:
           components: rustfmt, clippy
 
-#      - name: Launch sshd (Linux)
-#        if: matrix.os == 'ubuntu'
-#        run: sudo systemctl start ssh
-#
-#      - name: Launch sshd (macOS)
-#        if: matrix.os == 'macos'
-#        run: sudo systemsetup -setremotelogin on
-#
-#      - name: Launch sshd (Windows)
-#        if: matrix.os == 'windows'
-#        run: |
-#          Get-Service -Name ssh-agent | Set-Service -StartupType Manual
-#          Start-Service ssh-agent
-
       - name: fmt
         run: cargo fmt --all -- --check
       - name: build
         run: cargo build --verbose
       - name: clippy
         run: cargo clippy -- -D warnings
-
-      - name: test (macOS)
-        if: matrix.os == 'macos'
-        run: sudo cargo test --verbose -- --nocapture
-
-      - name: test (Linux & Windows)
-        if: matrix.os == 'ubuntu' || matrix.os == 'windows'
+      - name: test
         run: cargo test --verbose -- --nocapture

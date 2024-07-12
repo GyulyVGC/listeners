@@ -26,6 +26,7 @@ rustix = {version = "0.38.31", features = ["fs"]}
 #[target.'cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
 #bsd-kvm = "0.1.5"
 #sysctl = "0.5.5"
-[target.'cfg(target_os = "linux")'.dev-dependencies]
-http-test-server = "2.1.1"
 
+[dev-dependencies]
+http-test-server = "2.1.1"
+serial_test = "3.1.1"
