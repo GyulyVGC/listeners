@@ -7,6 +7,9 @@ use std::str::FromStr;
 #[test]
 #[serial]
 fn test_consistency() {
+    // starts test server
+    let _test = TestServer::new().unwrap();
+
     // retrieve all listeners and check that the set is not empty
     let listeners = listeners::get_all().unwrap();
     assert!(!listeners.is_empty());
