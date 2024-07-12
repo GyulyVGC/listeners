@@ -2,6 +2,10 @@
 
 All releases with the relative changes are documented in this file.
 
+## [0.2.1] - 2024-07-12
+### Fixed
+- Linux permission denied issue ([#10](https://github.com/GyulyVGC/listeners/pull/10) — fixes [#9](https://github.com/GyulyVGC/listeners/issues/9))
+
 ## [0.2.0] - 2024-03-27
 ### Added
 - New APIs to get the listening processes in a more granular way
