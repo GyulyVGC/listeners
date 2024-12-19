@@ -173,8 +173,9 @@ impl Display for Process {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Listener, Process};
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+
+    use crate::{Listener, Process};
 
     #[test]
     fn test_v4_listener_to_string() {

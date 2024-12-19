@@ -1,8 +1,10 @@
-use http_test_server::TestServer;
-use listeners::{Listener, Process};
-use serial_test::serial;
 use std::net::SocketAddr;
 use std::str::FromStr;
+
+use http_test_server::TestServer;
+use serial_test::serial;
+
+use listeners::{Listener, Process};
 
 #[test]
 #[serial]
