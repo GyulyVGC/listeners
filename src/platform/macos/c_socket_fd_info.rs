@@ -6,7 +6,7 @@ use byteorder::{ByteOrder, NetworkEndian};
 use crate::platform::macos::tcp_listener::TcpListener;
 use crate::Protocol;
 
-use super::statics::{IPPROT_TCP, IPPROT_UDP, SOCKET_STATE_CLOSED};
+use super::statics::{IPPROTO_TCP, IPPROTO_UDP};
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
@@ -18,10 +18,15 @@ impl CSocketFdInfo {
     pub(super) fn to_tcp_listener(&self) -> crate::Result<TcpListener> {
         let sock_info = self.psi;
         let family = sock_info.soi_family;
-        let ip_protocol = sock_info.soi_protocol;
+        let transport_protocol = sock_info.soi_protocol;
         
-        let general_sock_info = unsafe {sock_info.soi_proto.pri_in};
-        let tcp_in = unsafe { sock_info.soi_proto.pri_tcp };
+        let general_sock_info = unsafe {
+            match transport_protocol{
+                IPPROTO_TCP => sock_info.soi_proto.pri_tcp.tcpsi_ini,
+                IPPROTO_UDP => sock_info.soi_proto.pri_in,
+                _ => Err("Unsupported protocol".into())?
+            }
+        };
 
         // if tcp, do not filter on state (get em all)
         // if tcp_in.tcpsi_state != SOCKET_STATE_LISTEN && ip_protocol == IPPROT_TCP {
@@ -31,7 +36,7 @@ impl CSocketFdInfo {
         // let tcp_sockaddr_in = tcp_in.tcpsi_ini;
         let lport_bytes: [u8; 4] = i32::to_le_bytes(general_sock_info.insi_lport);
         let local_address = Self::get_local_addr(family, general_sock_info)?;
-        let protocol = Self::get_protocol(family, ip_protocol)?;
+        let protocol = Self::get_protocol(family, transport_protocol)?;
 
         let socket_info = TcpListener::new(local_address, NetworkEndian::read_u16(&lport_bytes), protocol);
 
@@ -58,10 +63,10 @@ impl CSocketFdInfo {
 
     fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {
         match (family,ip_protocol) {
-            (2,IPPROT_TCP) => Ok(Protocol::TCP),
-            (30,IPPROT_TCP) => Ok(Protocol::TCP6),
-            (2,IPPROT_UDP) => Ok(Protocol::UDP),
-            (30,IPPROT_UDP) => Ok(Protocol::UDP6),
+            (2,IPPROTO_TCP) => Ok(Protocol::TCP),
+            (30,IPPROTO_TCP) => Ok(Protocol::TCP6),
+            (2,IPPROTO_UDP) => Ok(Protocol::UDP),
+            (30,IPPROTO_UDP) => Ok(Protocol::UDP6),
             (_,_) => Err("unsupported protocol".into()),
         }
     }
