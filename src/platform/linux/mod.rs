@@ -19,7 +19,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 
     for tcp_listener in TcpListener::get_all()? {
         if let Some(p) = inode_proc_map.get(&tcp_listener.inode()) {
-            let listener = Listener::new(p.pid(), p.name(), tcp_listener.local_addr());
+            let listener = Listener::new(p.pid(), p.name(), tcp_listener.local_addr(), tcp_listener.protocol());
             listeners.insert(listener);
         }
     }

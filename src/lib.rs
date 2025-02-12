@@ -15,6 +15,7 @@ pub struct Listener {
     pub process: Process,
     /// The TCP socket this listener is listening on.
     pub socket: SocketAddr,
+    pub protocol: Protocol,
 }
 
 /// A process, characterized by its PID and name.
@@ -26,6 +27,13 @@ pub struct Process {
     pub name: String,
 }
 
+#[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
+pub enum Protocol{
+    TCP,
+    TCP6,
+    UDP,
+    UDP6
+}
 /// Returns all the [Listener]s.
 ///
 /// # Errors
@@ -144,9 +152,9 @@ pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
 }
 
 impl Listener {
-    fn new(pid: u32, name: String, socket: SocketAddr) -> Self {
+    fn new(pid: u32, name: String, socket: SocketAddr, protocol: Protocol) -> Self {
         let process = Process::new(pid, name);
-        Self { process, socket }
+        Self { process, socket, protocol }
     }
 }
 
@@ -158,9 +166,9 @@ impl Process {
 
 impl Display for Listener {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Listener { process, socket } = self;
+        let Listener { process, socket, protocol} = self;
         let process = process.to_string();
-        write!(f, "{process:<55} Socket: {socket}",)
+        write!(f, "{process:<55} Socket: {socket:<30} Protocol: {protocol}",)
     }
 }
 
@@ -171,11 +179,22 @@ impl Display for Process {
     }
 }
 
+impl Display for Protocol{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self{
+            Protocol::TCP => write!(f,"TCP"),
+            Protocol::TCP6 => write!(f,"TCP6"),
+            Protocol::UDP => write!(f,"UDP"),
+            Protocol::UDP6 => write!(f,"UDP6"),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-    use crate::{Listener, Process};
+    use crate::{Listener, Process, Protocol};
 
     #[test]
     fn test_v4_listener_to_string() {
@@ -183,10 +202,11 @@ mod tests {
             455,
             "rapportd".to_string(),
             SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 51189),
+            Protocol::TCP
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 455        Process name: rapportd                  Socket: 0.0.0.0:51189"
+            "PID: 455        Process name: rapportd                  Socket: 0.0.0.0:51189                  Protocol: TCP"
         );
     }
 
@@ -196,10 +216,11 @@ mod tests {
             160,
             "mysqld".to_string(),
             SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 3306),
+            Protocol::TCP6
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 160        Process name: mysqld                    Socket: [::]:3306"
+            "PID: 160        Process name: mysqld                    Socket: [::]:3306                      Protocol: TCP6"
         );
     }
 

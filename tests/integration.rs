@@ -4,7 +4,7 @@ use std::str::FromStr;
 use http_test_server::TestServer;
 use serial_test::serial;
 
-use listeners::{Listener, Process};
+use listeners::{Listener, Process, Protocol};
 
 #[test]
 #[serial]
@@ -73,7 +73,22 @@ fn test_http_server() {
                 pid: http_server_pid,
                 name: http_server_name
             },
-            socket: SocketAddr::from_str(&format!("127.0.0.1:{http_server_port}")).unwrap()
+            socket: SocketAddr::from_str(&format!("127.0.0.1:{http_server_port}")).unwrap(),
+            protocol: Protocol::TCP
         }
     );
+}
+
+#[test]
+#[serial]
+fn test_dns_udp() {
+
+    let dns_port = 53;
+    let all = listeners::get_all().unwrap();
+    for a in &all {
+        println!("{}",a);
+    }
+    let found = all.iter().any(|l| l.socket.port() == dns_port && l.protocol == Protocol::UDP);
+    assert_eq!(found,true);
+
 }
