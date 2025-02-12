@@ -23,10 +23,10 @@ impl CSocketFdInfo {
         let general_sock_info = unsafe {sock_info.soi_proto.pri_in};
         let tcp_in = unsafe { sock_info.soi_proto.pri_tcp };
 
-        // get all possible states for tcp
-        if tcp_in.tcpsi_state != SOCKET_STATE_CLOSED && ip_protocol == IPPROT_TCP {
-            return Err("Socket is closed".into());
-        }
+        // if tcp, do not filter on state (get em all)
+        // if tcp_in.tcpsi_state != SOCKET_STATE_LISTEN && ip_protocol == IPPROT_TCP {
+        //     return Err("Socket is not in listening state".into());
+        // }
 
         // let tcp_sockaddr_in = tcp_in.tcpsi_ini;
         let lport_bytes: [u8; 4] = i32::to_le_bytes(general_sock_info.insi_lport);
