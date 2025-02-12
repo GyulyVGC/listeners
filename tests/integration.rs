@@ -85,9 +85,6 @@ fn test_dns_udp() {
 
     let dns_port = 53;
     let all = listeners::get_all().unwrap();
-    for a in &all {
-        println!("{}",a);
-    }
     let found = all.iter().any(|l| l.socket.port() == dns_port && l.protocol == Protocol::UDP);
     assert_eq!(found,true);
 
