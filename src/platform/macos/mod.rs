@@ -23,7 +23,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
         for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
             if let Ok(tcp_listener) = TcpListener::from_pid_fd(pid, fd) {
                 if let Ok(ProcName(name)) = ProcName::from_pid(pid) {
-                    let listener = Listener::new(pid.as_u_32()?, name, tcp_listener.socket_addr());
+                    let listener = Listener::new(pid.as_u_32()?, name, tcp_listener.socket_addr(), tcp_listener.protocol());
                     listeners.insert(listener);
                 }
             }

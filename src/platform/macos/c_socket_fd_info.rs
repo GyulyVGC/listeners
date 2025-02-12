@@ -3,8 +3,10 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use byteorder::{ByteOrder, NetworkEndian};
 
-use crate::platform::macos::statics::SOCKET_STATE_LISTEN;
 use crate::platform::macos::tcp_listener::TcpListener;
+use crate::Protocol;
+
+use super::statics::{IPPROT_TCP, IPPROT_UDP, SOCKET_STATE_CLOSED};
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
@@ -16,18 +18,22 @@ impl CSocketFdInfo {
     pub(super) fn to_tcp_listener(&self) -> crate::Result<TcpListener> {
         let sock_info = self.psi;
         let family = sock_info.soi_family;
-
+        let ip_protocol = sock_info.soi_protocol;
+        
+        let general_sock_info = unsafe {sock_info.soi_proto.pri_in};
         let tcp_in = unsafe { sock_info.soi_proto.pri_tcp };
 
-        if tcp_in.tcpsi_state != SOCKET_STATE_LISTEN {
-            return Err("Socket is not in listen state".into());
+        // get all possible states for tcp
+        if tcp_in.tcpsi_state != SOCKET_STATE_CLOSED && ip_protocol == IPPROT_TCP {
+            return Err("Socket is closed".into());
         }
 
-        let tcp_sockaddr_in = tcp_in.tcpsi_ini;
-        let lport_bytes: [u8; 4] = i32::to_le_bytes(tcp_sockaddr_in.insi_lport);
-        let local_address = Self::get_local_addr(family, tcp_sockaddr_in)?;
+        // let tcp_sockaddr_in = tcp_in.tcpsi_ini;
+        let lport_bytes: [u8; 4] = i32::to_le_bytes(general_sock_info.insi_lport);
+        let local_address = Self::get_local_addr(family, general_sock_info)?;
+        let protocol = Self::get_protocol(family, ip_protocol)?;
 
-        let socket_info = TcpListener::new(local_address, NetworkEndian::read_u16(&lport_bytes));
+        let socket_info = TcpListener::new(local_address, NetworkEndian::read_u16(&lport_bytes), protocol);
 
         Ok(socket_info)
     }
@@ -47,6 +53,16 @@ impl CSocketFdInfo {
                 Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
             }
             _ => Err("Unsupported socket family".into()),
+        }
+    }
+
+    fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {
+        match (family,ip_protocol) {
+            (2,IPPROT_TCP) => Ok(Protocol::TCP),
+            (30,IPPROT_TCP) => Ok(Protocol::TCP6),
+            (2,IPPROT_UDP) => Ok(Protocol::UDP),
+            (30,IPPROT_UDP) => Ok(Protocol::UDP6),
+            (_,_) => Err("unsupported protocol".into()),
         }
     }
 }
