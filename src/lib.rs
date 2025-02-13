@@ -54,7 +54,15 @@ pub enum Protocol{
 /// PID: 460        Process name: rapportd                  Socket: [::]:50928
 /// ```
 pub fn get_all() -> Result<HashSet<Listener>> {
-    platform::get_all()
+    let mut all_listeners = platform::get_all()?;
+    // give precedence for tcp listeners over udp if same socket is found with tcp and udp
+    let all_tcp_socket_addrs = all_listeners.iter()
+                                                                .filter(|l| l.protocol == Protocol::TCP)
+                                                                .map(|l| l.socket)
+                                                                .collect::<HashSet<SocketAddr>>();
+    
+    all_listeners.retain(|l| !(l.protocol == Protocol::UDP && all_tcp_socket_addrs.contains(&l.socket)));
+    Ok(all_listeners)
 }
 
 /// Returns the list of [Process]es listening on a given TCP port.
