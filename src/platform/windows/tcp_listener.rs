@@ -11,12 +11,17 @@ use crate::platform::windows::socket_table::SocketTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
 use crate::Listener;
+use crate::Protocol;
+
+use super::udp6_table::Udp6Table;
+use super::udp_table::UdpTable;
 
 #[derive(Debug)]
 pub(super) struct TcpListener {
     local_addr: IpAddr,
     local_port: u16,
     pid: u32,
+    protocol: Protocol
 }
 
 impl TcpListener {
@@ -25,6 +30,8 @@ impl TcpListener {
             .into_iter()
             .flatten()
             .chain(Self::table_entries::<Tcp6Table>().into_iter().flatten())
+            .chain(Self::table_entries::<UdpTable>().into_iter().flatten())
+            .chain(Self::table_entries::<Udp6Table>().into_iter().flatten())
             .collect()
     }
 
@@ -39,11 +46,12 @@ impl TcpListener {
         Ok(tcp_listeners)
     }
 
-    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32) -> Self {
+    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol:Protocol) -> Self {
         Self {
             local_addr,
             local_port,
             pid,
+            protocol
         }
     }
 
@@ -79,6 +87,6 @@ impl TcpListener {
     pub(super) fn to_listener(&self) -> Option<Listener> {
         let socket = SocketAddr::new(self.local_addr, self.local_port);
         let pname = self.pname()?;
-        Some(Listener::new(self.pid, pname, socket))
+        Some(Listener::new(self.pid, pname, socket, self.protocol))
     }
 }
