@@ -14,9 +14,9 @@ use macos as target_os;
 
 /* ----------- linux ----------- */
 #[cfg(target_os = "linux")]
-mod macos;
+mod linux;
 #[cfg(target_os = "linux")]
-use macos as target_os;
+use linux as target_os;
 
 /* ----------- other ----------- */
 #[cfg(all(
