@@ -116,7 +116,7 @@ impl SocketTable for Udp6Table {
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         Some(TcpListener::new(
-            IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
+            IpAddr::V4(Ipv6Addr::from(u32::from_be(row.local_addr))),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
             Protocol::UDP,

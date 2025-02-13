@@ -234,7 +234,7 @@ mod tests {
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 160        Process name: mysqld                    Socket: [::]:3306                      Protocol: TCP6"
+            "PID: 160        Process name: mysqld                    Socket: [::]:3306                      Protocol: TCP"
         );
     }
 

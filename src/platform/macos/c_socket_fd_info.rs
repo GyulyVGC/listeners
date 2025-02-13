@@ -24,7 +24,7 @@ impl CSocketFdInfo {
             match transport_protocol {
                 IPPROTO_TCP => sock_info.soi_proto.pri_tcp.tcpsi_ini,
                 IPPROTO_UDP => sock_info.soi_proto.pri_in,
-                _ => Err("Unsupported protocol".into())?,
+                _ => return Err("Unsupported protocol".into()),
             }
         };
 
