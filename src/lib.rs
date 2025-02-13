@@ -30,9 +30,7 @@ pub struct Process {
 #[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
 pub enum Protocol{
     TCP,
-    TCP6,
     UDP,
-    UDP6
 }
 /// Returns all the [Listener]s.
 ///
@@ -183,9 +181,7 @@ impl Display for Protocol{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match *self{
             Protocol::TCP => write!(f,"TCP"),
-            Protocol::TCP6 => write!(f,"TCP6"),
             Protocol::UDP => write!(f,"UDP"),
-            Protocol::UDP6 => write!(f,"UDP6"),
         }
     }
 }
@@ -216,7 +212,7 @@ mod tests {
             160,
             "mysqld".to_string(),
             SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 3306),
-            Protocol::TCP6
+            Protocol::TCP
         );
         assert_eq!(
             listener.to_string(),

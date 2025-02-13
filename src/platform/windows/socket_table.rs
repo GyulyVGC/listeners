@@ -71,7 +71,7 @@ impl SocketTable for Tcp6Table {
                 IpAddr::V6(Ipv6Addr::from(row.local_addr)),
                 u16::from_be(u16::try_from(row.local_port).ok()?),
                 row.owning_pid,
-                Protocol::TCP6
+                Protocol::TCP
         ))
     }
 }
@@ -121,7 +121,7 @@ impl SocketTable for Udp6Table {
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
-            Protocol::UDP6
+            Protocol::UDP
         ))
     }
 }

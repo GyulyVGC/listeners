@@ -63,10 +63,8 @@ impl CSocketFdInfo {
 
     fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {
         match (family,ip_protocol) {
-            (2,IPPROTO_TCP) => Ok(Protocol::TCP),
-            (30,IPPROTO_TCP) => Ok(Protocol::TCP6),
-            (2,IPPROTO_UDP) => Ok(Protocol::UDP),
-            (30,IPPROTO_UDP) => Ok(Protocol::UDP6),
+            (2 | 30,IPPROTO_TCP) => Ok(Protocol::TCP),
+            (2 | 30,IPPROTO_UDP) => Ok(Protocol::UDP),
             (_,_) => Err("unsupported protocol".into()),
         }
     }

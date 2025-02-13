@@ -38,7 +38,7 @@ impl TcpListener {
         
         let tcp6_table = File::open("/proc/net/tcp6")?;
         for line in BufReader::new(tcp6_table).lines().map_while(Result::ok) {
-            if let Ok(l) = TcpListener::from_protocolv6_table_entry(&line,Protocol::TCP6) {
+            if let Ok(l) = TcpListener::from_protocolv6_table_entry(&line,Protocol::TCP) {
                 table.push(l);
             }
         }
@@ -54,7 +54,7 @@ impl TcpListener {
         let udp_table = File::open("/proc/net/udp6")?;
         for line in BufReader::new(udp_table).lines().map_while(Result::ok){
             // the lines/fields for tcp and udp are identical as far as Listeners is concerend
-            if let Ok(l) = TcpListener::from_protocolv6_table_entry(&line,Protocol::UDP6){
+            if let Ok(l) = TcpListener::from_protocolv6_table_entry(&line,Protocol::UDP){
                 table.push(l)
             }
         }
