@@ -5,7 +5,7 @@ use crate::platform::target_os::c_iphlpapi::GetExtendedTcpTable;
 use crate::platform::target_os::statics::FALSE;
 use crate::platform::target_os::tcp_listener::TcpListener;
 use crate::platform::windows::statics::{
-    AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, LISTEN, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
+    AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
 };
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
