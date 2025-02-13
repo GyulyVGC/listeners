@@ -21,7 +21,7 @@ impl TcpListener {
     pub(super) fn new(addr: IpAddr, port: u16, protocol: Protocol) -> Self {
         TcpListener {
             local_addr: SocketAddr::new(addr, port),
-            protocol: protocol,
+            protocol,
         }
     }
 
