@@ -8,11 +8,10 @@ mod c_iphlpapi;
 mod socket_table;
 mod statics;
 mod tcp6_table;
-mod udp6_table;
 mod tcp_listener;
-mod udp_table;
 mod tcp_table;
-
+mod udp6_table;
+mod udp_table;
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();

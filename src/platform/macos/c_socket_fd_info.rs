@@ -19,12 +19,12 @@ impl CSocketFdInfo {
         let sock_info = self.psi;
         let family = sock_info.soi_family;
         let transport_protocol = sock_info.soi_protocol;
-        
+
         let general_sock_info = unsafe {
-            match transport_protocol{
+            match transport_protocol {
                 IPPROTO_TCP => sock_info.soi_proto.pri_tcp.tcpsi_ini,
                 IPPROTO_UDP => sock_info.soi_proto.pri_in,
-                _ => Err("Unsupported protocol".into())?
+                _ => Err("Unsupported protocol".into())?,
             }
         };
 
@@ -38,7 +38,11 @@ impl CSocketFdInfo {
         let local_address = Self::get_local_addr(family, general_sock_info)?;
         let protocol = Self::get_protocol(family, transport_protocol)?;
 
-        let socket_info = TcpListener::new(local_address, NetworkEndian::read_u16(&lport_bytes), protocol);
+        let socket_info = TcpListener::new(
+            local_address,
+            NetworkEndian::read_u16(&lport_bytes),
+            protocol,
+        );
 
         Ok(socket_info)
     }
@@ -62,10 +66,10 @@ impl CSocketFdInfo {
     }
 
     fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {
-        match (family,ip_protocol) {
-            (2 | 30,IPPROTO_TCP) => Ok(Protocol::TCP),
-            (2 | 30,IPPROTO_UDP) => Ok(Protocol::UDP),
-            (_,_) => Err("unsupported protocol".into()),
+        match (family, ip_protocol) {
+            (2 | 30, IPPROTO_TCP) => Ok(Protocol::TCP),
+            (2 | 30, IPPROTO_UDP) => Ok(Protocol::UDP),
+            (_, _) => Err("unsupported protocol".into()),
         }
     }
 }

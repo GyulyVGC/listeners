@@ -27,8 +27,8 @@ pub struct Process {
     pub name: String,
 }
 
-#[derive(Debug,Clone,Copy,PartialEq,Eq,Hash)]
-pub enum Protocol{
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Protocol {
     TCP,
     UDP,
 }
@@ -56,12 +56,14 @@ pub enum Protocol{
 pub fn get_all() -> Result<HashSet<Listener>> {
     let mut all_listeners = platform::get_all()?;
     // give precedence for tcp listeners over udp if same socket is found with tcp and udp
-    let all_tcp_socket_addrs = all_listeners.iter()
-                                                                .filter(|l| l.protocol == Protocol::TCP)
-                                                                .map(|l| l.socket)
-                                                                .collect::<HashSet<SocketAddr>>();
-    
-    all_listeners.retain(|l| !(l.protocol == Protocol::UDP && all_tcp_socket_addrs.contains(&l.socket)));
+    let all_tcp_socket_addrs = all_listeners
+        .iter()
+        .filter(|l| l.protocol == Protocol::TCP)
+        .map(|l| l.socket)
+        .collect::<HashSet<SocketAddr>>();
+
+    all_listeners
+        .retain(|l| !(l.protocol == Protocol::UDP && all_tcp_socket_addrs.contains(&l.socket)));
     Ok(all_listeners)
 }
 
@@ -160,7 +162,11 @@ pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
 impl Listener {
     fn new(pid: u32, name: String, socket: SocketAddr, protocol: Protocol) -> Self {
         let process = Process::new(pid, name);
-        Self { process, socket, protocol }
+        Self {
+            process,
+            socket,
+            protocol,
+        }
     }
 }
 
@@ -172,7 +178,11 @@ impl Process {
 
 impl Display for Listener {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Listener { process, socket, protocol} = self;
+        let Listener {
+            process,
+            socket,
+            protocol,
+        } = self;
         let process = process.to_string();
         write!(f, "{process:<55} Socket: {socket:<30} Protocol: {protocol}",)
     }
@@ -185,11 +195,11 @@ impl Display for Process {
     }
 }
 
-impl Display for Protocol{
+impl Display for Protocol {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match *self{
-            Protocol::TCP => write!(f,"TCP"),
-            Protocol::UDP => write!(f,"UDP"),
+        match *self {
+            Protocol::TCP => write!(f, "TCP"),
+            Protocol::UDP => write!(f, "UDP"),
         }
     }
 }
@@ -206,7 +216,7 @@ mod tests {
             455,
             "rapportd".to_string(),
             SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 51189),
-            Protocol::TCP
+            Protocol::TCP,
         );
         assert_eq!(
             listener.to_string(),
@@ -220,7 +230,7 @@ mod tests {
             160,
             "mysqld".to_string(),
             SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 3306),
-            Protocol::TCP
+            Protocol::TCP,
         );
         assert_eq!(
             listener.to_string(),

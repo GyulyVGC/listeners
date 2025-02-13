@@ -21,7 +21,7 @@ pub(super) struct TcpListener {
     local_addr: IpAddr,
     local_port: u16,
     pid: u32,
-    protocol: Protocol
+    protocol: Protocol,
 }
 
 impl TcpListener {
@@ -46,12 +46,12 @@ impl TcpListener {
         Ok(tcp_listeners)
     }
 
-    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol:Protocol) -> Self {
+    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol: Protocol) -> Self {
         Self {
             local_addr,
             local_port,
             pid,
-            protocol
+            protocol,
         }
     }
 

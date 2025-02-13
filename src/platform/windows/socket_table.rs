@@ -9,14 +9,12 @@ use crate::platform::windows::statics::{
 };
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
-use crate::platform::windows::udp_table::UdpTable;
 use crate::platform::windows::udp6_table::Udp6Table;
+use crate::platform::windows::udp_table::UdpTable;
 use crate::Protocol;
 
 use super::c_iphlpapi::GetExtendedUdpTable;
 use super::statics::UDP_TABLE_OWNER_PID;
-
-
 
 pub(super) trait SocketTable {
     fn get_table() -> crate::Result<Vec<u8>>;
@@ -42,12 +40,12 @@ impl SocketTable for TcpTable {
         let row = unsafe { &*rows_ptr.add(index) };
         // if row.state == LISTEN { // get all states
         Some(TcpListener::new(
-                IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
-                u16::from_be(u16::try_from(row.local_port).ok()?),
-                row.owning_pid,
-                Protocol::TCP
-            ))
-        }
+            IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
+            u16::from_be(u16::try_from(row.local_port).ok()?),
+            row.owning_pid,
+            Protocol::TCP,
+        ))
+    }
 }
 
 impl SocketTable for Tcp6Table {
@@ -66,12 +64,12 @@ impl SocketTable for Tcp6Table {
         let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
-        // if row.state == LISTEN { 
+        // if row.state == LISTEN {
         Some(TcpListener::new(
-                IpAddr::V6(Ipv6Addr::from(row.local_addr)),
-                u16::from_be(u16::try_from(row.local_port).ok()?),
-                row.owning_pid,
-                Protocol::TCP
+            IpAddr::V6(Ipv6Addr::from(row.local_addr)),
+            u16::from_be(u16::try_from(row.local_port).ok()?),
+            row.owning_pid,
+            Protocol::TCP,
         ))
     }
 }
@@ -96,7 +94,7 @@ impl SocketTable for UdpTable {
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
-            Protocol::UDP
+            Protocol::UDP,
         ))
     }
 }
@@ -121,11 +119,10 @@ impl SocketTable for Udp6Table {
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
-            Protocol::UDP
+            Protocol::UDP,
         ))
     }
 }
-
 
 // fn get_protocol_table(address_family: c_ulong, protocol: Protocol) -> crate::Result<Vec<u8>> {
 //     match protocol {

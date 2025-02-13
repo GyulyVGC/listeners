@@ -82,10 +82,10 @@ fn test_http_server() {
 #[test]
 #[serial]
 fn test_dns() {
-
     let dns_port = 53;
     let all = listeners::get_all().unwrap();
-    let found = all.iter().any(|l| l.socket.port() == dns_port && l.protocol == Protocol::UDP || l.protocol == Protocol::TCP);
-    assert_eq!(found,true);
-
+    let found = all.iter().any(|l| {
+        l.socket.port() == dns_port && l.protocol == Protocol::UDP || l.protocol == Protocol::TCP
+    });
+    assert_eq!(found, true);
 }
