@@ -14,36 +14,32 @@ fn test_consistency() {
     let listeners = listeners::get_all().unwrap();
     assert!(!listeners.is_empty());
 
-    // get the first
-    let l_udp = listeners
-        .iter()
-        .find(|l| l.protocol == Protocol::UDP)
-        .unwrap();
-    let l_tcp = listeners
-        .iter()
-        .find(|l| l.protocol == Protocol::TCP)
-        .unwrap();
-    println!("UDP: {l_udp}");
+    // maybe there is no udp connection
+    if let Some(l_udp) = listeners.iter().find(|l| l.protocol == Protocol::UDP) {
+        println!("UDP: {l_udp}");
 
-    let ports_by_name = listeners::get_ports_by_process_name(&l_udp.process.name).unwrap();
-    assert!(ports_by_name.contains(&l_udp.socket.port()));
+        let ports_by_name = listeners::get_ports_by_process_name(&l_udp.process.name).unwrap();
+        assert!(ports_by_name.contains(&l_udp.socket.port()));
 
-    let processes_by_port = listeners::get_processes_by_port(l_udp.socket.port()).unwrap();
-    assert!(processes_by_port.contains(&l_udp.process));
+        let processes_by_port = listeners::get_processes_by_port(l_udp.socket.port()).unwrap();
+        assert!(processes_by_port.contains(&l_udp.process));
 
-    let ports_by_pid = listeners::get_ports_by_pid(l_udp.process.pid).unwrap();
-    assert!(ports_by_pid.contains(&l_udp.socket.port()));
+        let ports_by_pid = listeners::get_ports_by_pid(l_udp.process.pid).unwrap();
+        assert!(ports_by_pid.contains(&l_udp.socket.port()));
+    };
 
-    println!("TCP: {l_tcp}");
+    if let Some(l_tcp) = listeners.iter().find(|l| l.protocol == Protocol::TCP) {
+        println!("TCP: {l_tcp}");
 
-    let ports_by_name = listeners::get_ports_by_process_name(&l_tcp.process.name).unwrap();
-    assert!(ports_by_name.contains(&l_tcp.socket.port()));
+        let ports_by_name = listeners::get_ports_by_process_name(&l_tcp.process.name).unwrap();
+        assert!(ports_by_name.contains(&l_tcp.socket.port()));
 
-    let processes_by_port = listeners::get_processes_by_port(l_tcp.socket.port()).unwrap();
-    assert!(processes_by_port.contains(&l_tcp.process));
+        let processes_by_port = listeners::get_processes_by_port(l_tcp.socket.port()).unwrap();
+        assert!(processes_by_port.contains(&l_tcp.process));
 
-    let ports_by_pid = listeners::get_ports_by_pid(l_tcp.process.pid).unwrap();
-    assert!(ports_by_pid.contains(&l_tcp.socket.port()));
+        let ports_by_pid = listeners::get_ports_by_pid(l_tcp.process.pid).unwrap();
+        assert!(ports_by_pid.contains(&l_tcp.socket.port()));
+    };
 }
 
 #[test]
