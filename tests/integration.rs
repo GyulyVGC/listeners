@@ -1,10 +1,7 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, TcpStream, UdpSocket};
-use std::str::FromStr;
-use std::thread::sleep;
-use std::time::Duration;
-
 use http_test_server::TestServer;
 use serial_test::serial;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
+use std::str::FromStr;
 
 use listeners::{Listener, Process, Protocol};
 
@@ -154,7 +151,7 @@ fn test_tcp6() {
     let mut opened_ports: Vec<u16> = Vec::new();
     let mut sockets: Vec<TcpListener> = Vec::new();
 
-    let ip_addr = IpAddr::V6(Ipv6Addr::new(0,0,0,0,0,0,0,1));
+    let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
     let mut current_port = 5600;
     let num_sockets = 10;
 
@@ -182,7 +179,7 @@ fn test_udp6() {
     let mut opened_ports: Vec<u16> = Vec::new();
     let mut sockets: Vec<UdpSocket> = Vec::new();
 
-    let ip_addr = IpAddr::V6(Ipv6Addr::new(0,0,0,0,0,0,0,1));
+    let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
     let mut current_port = 5600;
     let num_sockets = 10;
 
