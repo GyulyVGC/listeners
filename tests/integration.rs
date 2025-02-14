@@ -96,7 +96,7 @@ fn test_udp() {
     let mut sockets: Vec<UdpSocket> = Vec::new();
 
     let ip_addr = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
-    let mut current_port = 720;
+    let mut current_port = 1500;
     let num_sockets = 10;
 
     for _ in 0..num_sockets {
