@@ -12,3 +12,16 @@ extern "system" {
         Reserved: c_ulong,
     ) -> c_ulong;
 }
+
+#[allow(non_snake_case)]
+#[link(name = "iphlpapi")]
+extern "system" {
+    pub(super) fn GetExtendedUdpTable(
+        pUdpTable: *mut c_void,
+        pdwSize: *mut c_ulong,
+        bOrder: c_int,
+        ulAf: c_ulong,
+        TableClass: c_ulong,
+        Reserved: c_ulong,
+    ) -> c_ulong;
+}
