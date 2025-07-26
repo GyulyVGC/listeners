@@ -1,16 +1,18 @@
+use crate::Protocol;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::str::FromStr;
 
 #[derive(Debug)]
-pub(super) struct TcpListener {
+pub(super) struct ProtoListener {
     local_addr: SocketAddr,
     inode: u64,
+    protocol: Protocol,
 }
 
-impl TcpListener {
-    const LISTEN_STATE: &'static str = "0A";
+impl ProtoListener {
+    // const LISTEN_STATE: &'static str = "0A";
 
     pub(super) fn local_addr(&self) -> SocketAddr {
         self.local_addr
@@ -20,30 +22,50 @@ impl TcpListener {
         self.inode
     }
 
-    pub(super) fn get_all() -> crate::Result<Vec<TcpListener>> {
+    pub(super) fn protocol(&self) -> Protocol {
+        self.protocol
+    }
+
+    pub(super) fn get_all() -> crate::Result<Vec<ProtoListener>> {
         let mut table = Vec::new();
         let tcp_table = File::open("/proc/net/tcp")?;
         for line in BufReader::new(tcp_table).lines().map_while(Result::ok) {
-            if let Ok(l) = TcpListener::from_tcp_table_entry(&line) {
+            if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::TCP) {
                 table.push(l);
             }
         }
+
         let tcp6_table = File::open("/proc/net/tcp6")?;
         for line in BufReader::new(tcp6_table).lines().map_while(Result::ok) {
-            if let Ok(l) = TcpListener::from_tcp6_table_entry(&line) {
+            if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::TCP) {
                 table.push(l);
+            }
+        }
+
+        let udp_table = File::open("/proc/net/udp")?;
+        for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
+            // the lines/fields for tcp and udp are identical as far as Listeners is concerend
+            if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::UDP) {
+                table.push(l)
+            }
+        }
+
+        let udp_table = File::open("/proc/net/udp6")?;
+        for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
+            // the lines/fields for tcp and udp are identical as far as Listeners is concerend
+            if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::UDP) {
+                table.push(l)
             }
         }
         Ok(table)
     }
 
-    fn from_tcp_table_entry(line: &str) -> crate::Result<Self> {
+    fn from_protocol_table_entry(line: &str, protocol: Protocol) -> crate::Result<Self> {
         let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
-        let Some(Self::LISTEN_STATE) = s.nth(1) else {
-            return Err("Not a listening socket".into());
-        };
+        // consider all states
+        let _ = s.nth(1).ok_or("Failed to get state")?;
 
         let local_ip_port = local_addr_hex
             .split(':')
@@ -59,10 +81,14 @@ impl TcpListener {
         let inode_n = s.nth(5).ok_or("Failed to get inode")?;
         let inode = u64::from_str(inode_n)?;
 
-        Ok(Self { local_addr, inode })
+        Ok(Self {
+            local_addr,
+            inode,
+            protocol,
+        })
     }
 
-    fn from_tcp6_table_entry(line: &str) -> crate::Result<Self> {
+    fn from_protocolv6_table_entry(line: &str, protocol: Protocol) -> crate::Result<Self> {
         #[cfg(target_endian = "little")]
         let read_endian = u32::from_le_bytes;
         #[cfg(target_endian = "big")]
@@ -71,9 +97,8 @@ impl TcpListener {
         let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
-        let Some(Self::LISTEN_STATE) = s.nth(1) else {
-            return Err("Not a listening socket".into());
-        };
+        // consider all states
+        let _ = s.nth(1).ok_or("Failed to get state")?;
 
         let mut local_ip_port = local_addr_hex.split(':');
 
@@ -108,6 +133,10 @@ impl TcpListener {
         let inode_n = s.nth(5).ok_or("Failed to get inode")?;
         let inode = u64::from_str(inode_n)?;
 
-        Ok(Self { local_addr, inode })
+        Ok(Self {
+            local_addr,
+            inode,
+            protocol,
+        })
     }
 }

@@ -11,39 +11,47 @@ use crate::platform::windows::socket_table::SocketTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
 use crate::Listener;
+use crate::Protocol;
+
+use super::udp6_table::Udp6Table;
+use super::udp_table::UdpTable;
 
 #[derive(Debug)]
-pub(super) struct TcpListener {
+pub(super) struct ProtoListener {
     local_addr: IpAddr,
     local_port: u16,
     pid: u32,
+    protocol: Protocol,
 }
 
-impl TcpListener {
-    pub(super) fn get_all() -> Vec<TcpListener> {
+impl ProtoListener {
+    pub(super) fn get_all() -> Vec<ProtoListener> {
         Self::table_entries::<TcpTable>()
             .into_iter()
             .flatten()
             .chain(Self::table_entries::<Tcp6Table>().into_iter().flatten())
+            .chain(Self::table_entries::<UdpTable>().into_iter().flatten())
+            .chain(Self::table_entries::<Udp6Table>().into_iter().flatten())
             .collect()
     }
 
     fn table_entries<Table: SocketTable>() -> crate::Result<Vec<Self>> {
-        let mut tcp_listeners = Vec::new();
+        let mut proto_listeners = Vec::new();
         let table = Table::get_table()?;
         for i in 0..Table::get_rows_count(&table) {
-            if let Some(tcp_listener) = Table::get_tcp_listener(&table, i) {
-                tcp_listeners.push(tcp_listener);
+            if let Some(proto_listener) = Table::get_proto_listener(&table, i) {
+                proto_listeners.push(proto_listener);
             }
         }
-        Ok(tcp_listeners)
+        Ok(proto_listeners)
     }
 
-    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32) -> Self {
+    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol: Protocol) -> Self {
         Self {
             local_addr,
             local_port,
             pid,
+            protocol,
         }
     }
 
@@ -79,6 +87,6 @@ impl TcpListener {
     pub(super) fn to_listener(&self) -> Option<Listener> {
         let socket = SocketAddr::new(self.local_addr, self.local_port);
         let pname = self.pname()?;
-        Some(Listener::new(self.pid, pname, socket))
+        Some(Listener::new(self.pid, pname, socket, self.protocol))
     }
 }

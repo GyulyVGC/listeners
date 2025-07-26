@@ -8,13 +8,15 @@ mod platform;
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-/// A process listening on a TCP socket.
+/// A process listening on a socket.
 #[derive(Eq, PartialEq, Hash, Debug)]
 pub struct Listener {
     /// The listening process.
     pub process: Process,
-    /// The TCP socket this listener is listening on.
+    /// The socket this listener is listening on.
     pub socket: SocketAddr,
+    /// The protocol used.
+    pub protocol: Protocol,
 }
 
 /// A process, characterized by its PID and name.
@@ -24,6 +26,15 @@ pub struct Process {
     pub pid: u32,
     /// Process name.
     pub name: String,
+}
+
+/// The protocol used by the listener.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Protocol {
+    /// Transmission Control Protocol.
+    TCP,
+    /// User Datagram Protocol.
+    UDP,
 }
 
 /// Returns all the [Listener]s.
@@ -40,22 +51,29 @@ pub struct Process {
 ///
 /// Output:
 /// ``` text
-/// PID: 1088       Process name: rustrover                 Socket: [::7f00:1]:63342
-/// PID: 609        Process name: Microsoft SharePoint      Socket: [::1]:42050
-/// PID: 160        Process name: mysqld                    Socket: [::]:33060
-/// PID: 160        Process name: mysqld                    Socket: [::]:3306
-/// PID: 460        Process name: rapportd                  Socket: 0.0.0.0:50928
-/// PID: 460        Process name: rapportd                  Socket: [::]:50928
+/// PID: 440        Process name: ControlCenter             Socket: 0.0.0.0:0                      Protocol: UDP
+/// PID: 456        Process name: rapportd                  Socket: [::]:49158                     Protocol: TCP
+/// PID: 456        Process name: rapportd                  Socket: 0.0.0.0:49158                  Protocol: TCP
+/// PID: 456        Process name: rapportd                  Socket: 0.0.0.0:0                      Protocol: UDP
+/// PID: 485        Process name: sharingd                  Socket: 0.0.0.0:0                      Protocol: UDP
+/// PID: 516        Process name: WiFiAgent                 Socket: 0.0.0.0:0                      Protocol: UDP
+/// PID: 1480       Process name: rustrover                 Socket: [::7f00:1]:63342               Protocol: TCP
+/// PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49659            Protocol: TCP
+/// PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49656            Protocol: TCP
+/// PID: 2156       Process name: Google Chrome             Socket: 0.0.0.0:0                      Protocol: UDP
+/// PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:60834            Protocol: UDP
+/// PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:53220            Protocol: UDP
+/// PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:59216            Protocol: UDP
 /// ```
 pub fn get_all() -> Result<HashSet<Listener>> {
     platform::get_all()
 }
 
-/// Returns the list of [Process]es listening on a given TCP port.
+/// Returns the list of [Process]es listening on a given port.
 ///
 /// # Arguments
 ///
-/// * `port` - The TCP port to look for.
+/// * `port` - The port to look for.
 ///
 /// # Errors
 ///
@@ -69,7 +87,7 @@ pub fn get_all() -> Result<HashSet<Listener>> {
 ///
 /// Output:
 /// ``` text
-/// PID: 160        Process name: mysqld
+/// PID: 2123       Process name: Telegram
 /// ```
 pub fn get_processes_by_port(port: u16) -> Result<HashSet<Process>> {
     platform::get_all().map(|listeners| {
@@ -144,9 +162,13 @@ pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
 }
 
 impl Listener {
-    fn new(pid: u32, name: String, socket: SocketAddr) -> Self {
+    fn new(pid: u32, name: String, socket: SocketAddr, protocol: Protocol) -> Self {
         let process = Process::new(pid, name);
-        Self { process, socket }
+        Self {
+            process,
+            socket,
+            protocol,
+        }
     }
 }
 
@@ -158,9 +180,13 @@ impl Process {
 
 impl Display for Listener {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Listener { process, socket } = self;
+        let Listener {
+            process,
+            socket,
+            protocol,
+        } = self;
         let process = process.to_string();
-        write!(f, "{process:<55} Socket: {socket}",)
+        write!(f, "{process:<55} Socket: {socket:<30} Protocol: {protocol}",)
     }
 }
 
@@ -171,11 +197,20 @@ impl Display for Process {
     }
 }
 
+impl Display for Protocol {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match *self {
+            Protocol::TCP => write!(f, "TCP"),
+            Protocol::UDP => write!(f, "UDP"),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-    use crate::{Listener, Process};
+    use crate::{Listener, Process, Protocol};
 
     #[test]
     fn test_v4_listener_to_string() {
@@ -183,10 +218,11 @@ mod tests {
             455,
             "rapportd".to_string(),
             SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 51189),
+            Protocol::TCP,
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 455        Process name: rapportd                  Socket: 0.0.0.0:51189"
+            "PID: 455        Process name: rapportd                  Socket: 0.0.0.0:51189                  Protocol: TCP"
         );
     }
 
@@ -196,10 +232,11 @@ mod tests {
             160,
             "mysqld".to_string(),
             SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 3306),
+            Protocol::UDP,
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 160        Process name: mysqld                    Socket: [::]:3306"
+            "PID: 160        Process name: mysqld                    Socket: [::]:3306                      Protocol: UDP"
         );
     }
 

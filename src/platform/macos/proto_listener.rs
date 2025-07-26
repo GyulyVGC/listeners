@@ -9,16 +9,28 @@ use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::socket_fd::SocketFd;
 use crate::platform::macos::statics::PROC_PID_FD_SOCKET_INFO;
 
-#[derive(Debug)]
-pub(super) struct TcpListener(SocketAddr);
+use crate::Protocol;
 
-impl TcpListener {
-    pub(super) fn new(addr: IpAddr, port: u16) -> Self {
-        TcpListener(SocketAddr::new(addr, port))
+#[derive(Debug)]
+pub(super) struct ProtoListener {
+    local_addr: SocketAddr,
+    protocol: Protocol,
+}
+
+impl ProtoListener {
+    pub(super) fn new(addr: IpAddr, port: u16, protocol: Protocol) -> Self {
+        ProtoListener {
+            local_addr: SocketAddr::new(addr, port),
+            protocol,
+        }
     }
 
     pub(super) fn socket_addr(&self) -> SocketAddr {
-        self.0
+        self.local_addr
+    }
+
+    pub(super) fn protocol(&self) -> Protocol {
+        self.protocol
     }
 
     pub(super) fn from_pid_fd(pid: ProcPid, fd: &SocketFd) -> crate::Result<Self> {
@@ -39,6 +51,6 @@ impl TcpListener {
         }
 
         let c_socket_fd_info = unsafe { sinfo.assume_init() };
-        c_socket_fd_info.to_tcp_listener()
+        c_socket_fd_info.to_proto_listener()
     }
 }

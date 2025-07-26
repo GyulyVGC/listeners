@@ -5,12 +5,12 @@
 [![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
 
-**Rust library to get processes listening on a TCP port in a cross-platform way.**
+**Cross-platform Rust library to get info about processes using network sockets.**
 
 ## Motivation
 
 Despite some Rust libraries to get process information already exist,
-none of them satisfies the need to get process ID and name of TCP listeners in a cross-platform way.
+none of them correlates process ID and name to active network sockets in a cross-platform way.
 
 Some examples of existing libraries:
 - [netstat2](https://crates.io/crates/netstat2): doesn't provide the process name (and it's unmaintained)
@@ -39,7 +39,7 @@ Add this to your `Cargo.toml`:
 ``` toml
 [dependencies]
 
-listeners = "0.2"
+listeners = "0.3"
 ```
 
 Get all the listening processes:
@@ -55,12 +55,19 @@ if let Ok(listeners) = listeners::get_all() {
 Output:
 
 ``` text
-PID: 1088       Process name: rustrover                 Socket: [::7f00:1]:63342
-PID: 609        Process name: Microsoft SharePoint      Socket: [::1]:42050
-PID: 160        Process name: mysqld                    Socket: [::]:33060
-PID: 160        Process name: mysqld                    Socket: [::]:3306
-PID: 460        Process name: rapportd                  Socket: 0.0.0.0:50928
-PID: 460        Process name: rapportd                  Socket: [::]:50928 
+PID: 440        Process name: ControlCenter             Socket: 0.0.0.0:0                      Protocol: UDP
+PID: 456        Process name: rapportd                  Socket: [::]:49158                     Protocol: TCP
+PID: 456        Process name: rapportd                  Socket: 0.0.0.0:49158                  Protocol: TCP
+PID: 456        Process name: rapportd                  Socket: 0.0.0.0:0                      Protocol: UDP
+PID: 485        Process name: sharingd                  Socket: 0.0.0.0:0                      Protocol: UDP   
+PID: 516        Process name: WiFiAgent                 Socket: 0.0.0.0:0                      Protocol: UDP
+PID: 1480       Process name: rustrover                 Socket: [::7f00:1]:63342               Protocol: TCP
+PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49659            Protocol: TCP
+PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49656            Protocol: TCP
+PID: 2156       Process name: Google Chrome             Socket: 0.0.0.0:0                      Protocol: UDP
+PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:60834            Protocol: UDP
+PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:53220            Protocol: UDP
+PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:59216            Protocol: UDP 
 ```
  
 For more examples of usage, including how to get listening processes in a more granular way,
