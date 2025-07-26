@@ -219,6 +219,7 @@ mod tests {
         let listener = Listener::new(
             455,
             "rapportd".to_string(),
+            "path/to/rapportd".to_string(),
             SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 51189),
             Protocol::TCP,
         );
@@ -233,6 +234,7 @@ mod tests {
         let listener = Listener::new(
             160,
             "mysqld".to_string(),
+            "path/to/mysqld".to_string(),
             SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 3306),
             Protocol::UDP,
         );
@@ -244,7 +246,11 @@ mod tests {
 
     #[test]
     fn test_process_to_string() {
-        let process = Process::new(611, "Microsoft SharePoint".to_string());
+        let process = Process::new(
+            611,
+            "Microsoft SharePoint".to_string(),
+            "path/to/sharepoint".to_string(),
+        );
         assert_eq!(
             process.to_string(),
             "PID: 611        Process name: Microsoft SharePoint"
