@@ -58,6 +58,10 @@ fn test_http_server() {
     let http_server_pid = http_server_process.pid;
     let http_server_path = http_server_process.path;
 
+    // assert that the http server process name and path are not empty
+    assert!(!http_server_name.is_empty());
+    assert!(!http_server_path.is_empty());
+
     // get the http server port by its process name
     // and check that it is the same as the one of the http server
     let ports = listeners::get_ports_by_process_name(&http_server_name).unwrap();
@@ -98,6 +102,9 @@ fn test_dns() {
     let dns_port = 53;
     let all = listeners::get_all().unwrap();
     let found = all.iter().any(|l| {
+        // assert that the process name and path are not empty
+        assert!(!l.process.name.is_empty());
+        assert!(!l.process.path.is_empty());
         l.socket.port() == dns_port && l.protocol == Protocol::UDP || l.protocol == Protocol::TCP
     });
     assert!(found);
