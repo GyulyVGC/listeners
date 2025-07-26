@@ -26,6 +26,8 @@ pub struct Process {
     pub pid: u32,
     /// Process name.
     pub name: String,
+    /// Process path.
+    pub path: String,
 }
 
 /// The protocol used by the listener.
@@ -162,8 +164,8 @@ pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
 }
 
 impl Listener {
-    fn new(pid: u32, name: String, socket: SocketAddr, protocol: Protocol) -> Self {
-        let process = Process::new(pid, name);
+    fn new(pid: u32, name: String, path: String, socket: SocketAddr, protocol: Protocol) -> Self {
+        let process = Process::new(pid, name, path);
         Self {
             process,
             socket,
@@ -173,8 +175,8 @@ impl Listener {
 }
 
 impl Process {
-    fn new(pid: u32, name: String) -> Self {
-        Self { pid, name }
+    fn new(pid: u32, name: String, path: String) -> Self {
+        Self { pid, name, path }
     }
 }
 
@@ -192,7 +194,7 @@ impl Display for Listener {
 
 impl Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let Process { pid, name } = self;
+        let Process { pid, name, .. } = self;
         write!(f, "PID: {pid:<10} Process name: {name}")
     }
 }
