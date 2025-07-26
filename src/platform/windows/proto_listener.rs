@@ -84,9 +84,35 @@ impl ProtoListener {
         String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
     }
 
+    fn ppath(&self) -> Option<String> {
+        let pid = self.pid;
+
+        unsafe {
+            let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            if handle.is_invalid() {
+                return None;
+            }
+
+            let mut buffer: [u16; 1024] = [0; 1024];
+            let mut size = buffer.len() as u32;
+
+            let success =
+                QueryFullProcessImageNameW(handle, 0, &mut buffer[0], &mut size).as_bool();
+            CloseHandle(handle);
+
+            if !success {
+                return None;
+            }
+
+            let path = OsString::from_wide(&buffer[..size as usize]);
+            Some(path.to_string_lossy().into_owned())
+        }
+    }
+
     pub(super) fn to_listener(&self) -> Option<Listener> {
         let socket = SocketAddr::new(self.local_addr, self.local_port);
         let pname = self.pname()?;
-        Some(Listener::new(self.pid, pname, socket, self.protocol))
+        let ppath = self.ppath()?;
+        Some(Listener::new(self.pid, pname, ppath, socket, self.protocol))
     }
 }
