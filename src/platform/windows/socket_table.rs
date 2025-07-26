@@ -2,8 +2,8 @@ use std::ffi::{c_ulong, c_void};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use crate::platform::target_os::c_iphlpapi::GetExtendedTcpTable;
+use crate::platform::target_os::proto_listener::ProtoListener;
 use crate::platform::target_os::statics::FALSE;
-use crate::platform::target_os::tcp_listener::TcpListener;
 use crate::platform::windows::statics::{
     AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
 };
@@ -19,7 +19,7 @@ use super::statics::UDP_TABLE_OWNER_PID;
 pub(super) trait SocketTable {
     fn get_table() -> crate::Result<Vec<u8>>;
     fn get_rows_count(table: &[u8]) -> usize;
-    fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener>;
+    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener>;
 }
 
 impl SocketTable for TcpTable {
@@ -33,13 +33,13 @@ impl SocketTable for TcpTable {
         table.rows_count as usize
     }
 
-    fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
+    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         // if row.state == LISTEN { // get all states
-        Some(TcpListener::new(
+        Some(ProtoListener::new(
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
@@ -59,13 +59,13 @@ impl SocketTable for Tcp6Table {
         table.rows_count as usize
     }
 
-    fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
+    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
         // if row.state == LISTEN {
-        Some(TcpListener::new(
+        Some(ProtoListener::new(
             IpAddr::V6(Ipv6Addr::from(row.local_addr)),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
@@ -85,12 +85,12 @@ impl SocketTable for UdpTable {
         table.rows_count as usize
     }
 
-    fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
+    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<UdpTable>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
-        Some(TcpListener::new(
+        Some(ProtoListener::new(
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,
@@ -110,12 +110,12 @@ impl SocketTable for Udp6Table {
         table.rows_count as usize
     }
 
-    fn get_tcp_listener(table: &[u8], index: usize) -> Option<TcpListener> {
+    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<Udp6Table>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
-        Some(TcpListener::new(
+        Some(ProtoListener::new(
             IpAddr::V6(Ipv6Addr::from(row.local_addr)),
             u16::from_be(u16::try_from(row.local_port).ok()?),
             row.owning_pid,

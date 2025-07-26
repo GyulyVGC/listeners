@@ -12,14 +12,14 @@ use crate::platform::macos::statics::PROC_PID_FD_SOCKET_INFO;
 use crate::Protocol;
 
 #[derive(Debug)]
-pub(super) struct TcpListener {
+pub(super) struct ProtoListener {
     local_addr: SocketAddr,
     protocol: Protocol,
 }
 
-impl TcpListener {
+impl ProtoListener {
     pub(super) fn new(addr: IpAddr, port: u16, protocol: Protocol) -> Self {
-        TcpListener {
+        ProtoListener {
             local_addr: SocketAddr::new(addr, port),
             protocol,
         }
@@ -51,6 +51,6 @@ impl TcpListener {
         }
 
         let c_socket_fd_info = unsafe { sinfo.assume_init() };
-        c_socket_fd_info.to_tcp_listener()
+        c_socket_fd_info.to_proto_listener()
     }
 }

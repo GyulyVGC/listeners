@@ -3,7 +3,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use byteorder::{ByteOrder, NetworkEndian};
 
-use crate::platform::macos::tcp_listener::TcpListener;
+use crate::platform::macos::proto_listener::ProtoListener;
 use crate::Protocol;
 
 use super::statics::{IPPROTO_TCP, IPPROTO_UDP};
@@ -15,7 +15,7 @@ pub(super) struct CSocketFdInfo {
 }
 
 impl CSocketFdInfo {
-    pub(super) fn to_tcp_listener(&self) -> crate::Result<TcpListener> {
+    pub(super) fn to_proto_listener(&self) -> crate::Result<ProtoListener> {
         let sock_info = self.psi;
         let family = sock_info.soi_family;
         let transport_protocol = sock_info.soi_protocol;
@@ -38,7 +38,7 @@ impl CSocketFdInfo {
         let local_address = Self::get_local_addr(family, general_sock_info)?;
         let protocol = Self::get_protocol(family, transport_protocol)?;
 
-        let socket_info = TcpListener::new(
+        let socket_info = ProtoListener::new(
             local_address,
             NetworkEndian::read_u16(&lport_bytes),
             protocol,
