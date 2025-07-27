@@ -1,9 +1,8 @@
-use once_cell::sync::Lazy;
 use rustix::fs::OFlags;
 
 pub(super) const ROOT: &str = "/proc";
 
-pub(super) static O_PATH_MAYBE: Lazy<OFlags> = Lazy::new(|| {
+pub(super) static O_PATH_MAYBE: std::sync::LazyLock<OFlags> = std::sync::LazyLock::new(|| {
     let kernel = std::fs::read_to_string("/proc/sys/kernel/osrelease")
         .map(|s| s.trim().to_owned())
         .ok();
