@@ -14,14 +14,13 @@ include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.61.1", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading"] }
+windows = { version = "0.61.3", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 byteorder = "1.5.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-once_cell = "1.20.2"
-rustix = {version = "1.0.7", features = ["fs"]}
+rustix = {version = "1.0.8", features = ["fs"]}
 
 #[target.'cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
 #bsd-kvm = "0.1.5"
