@@ -91,7 +91,7 @@ impl ProtoListener {
         let pid = self.pid;
 
         unsafe {
-            let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
+            let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
             if handle.is_invalid() {
                 return None;
             }
@@ -99,13 +99,8 @@ impl ProtoListener {
             let mut buffer: [u16; 1024] = [0; 1024];
             let mut size = buffer.len() as u32;
 
-            let success =
-                QueryFullProcessImageNameW(handle, 0, &mut buffer[0], &mut size).as_bool();
-            CloseHandle(handle);
-
-            if !success {
-                return None;
-            }
+            QueryFullProcessImageNameW(handle, 0, &mut buffer[0], &mut size).ok()?;
+            CloseHandle(h).ok()?;
 
             let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
             Some(path.to_string_lossy().into_owned())
