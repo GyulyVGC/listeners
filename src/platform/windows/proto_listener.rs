@@ -2,12 +2,12 @@ use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
 use std::os::windows::ffi::OsStringExt;
-use windows::Win32::Foundation::CloseHandle;
+use windows::Win32::Foundation::{CloseHandle, PWSTR};
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
 };
 use windows::Win32::System::Threading::{
-    OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, QueryFullProcessImageNameW, PROCESS_QUERY_LIMITED_INFORMATION, PROCESS_NAME_FORMAT,
 };
 
 use crate::platform::windows::socket_table::SocketTable;
@@ -99,8 +99,8 @@ impl ProtoListener {
             let mut buffer: [u16; 1024] = [0; 1024];
             let mut size = buffer.len() as u32;
 
-            QueryFullProcessImageNameW(handle, 0, &mut buffer[0], &mut size).ok()?;
-            CloseHandle(h).ok()?;
+            QueryFullProcessImageNameW(handle, PROCESS_NAME_FORMAT(0), PWSTR(buffer.as_mut_ptr()), &mut size).ok()?;
+            CloseHandle(handle).ok()?;
 
             let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
             Some(path.to_string_lossy().into_owned())
