@@ -6,6 +6,9 @@ use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
 };
+use windows::Win32::System::Threading::{
+    OpenProcess, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
+};
 
 use crate::platform::windows::socket_table::SocketTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
@@ -104,7 +107,7 @@ impl ProtoListener {
                 return None;
             }
 
-            let path = OsString::from_wide(&buffer[..size as usize]);
+            let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
             Some(path.to_string_lossy().into_owned())
         }
     }
