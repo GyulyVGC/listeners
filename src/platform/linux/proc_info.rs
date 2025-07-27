@@ -1,3 +1,4 @@
+use std::fs;
 use std::fs::File;
 use std::io::Read;
 use std::str::FromStr;
@@ -6,11 +7,12 @@ use std::str::FromStr;
 pub(super) struct ProcInfo {
     pid: u32,
     name: String,
+    path: String,
 }
 
 impl ProcInfo {
-    fn new(pid: u32, name: String) -> Self {
-        ProcInfo { pid, name }
+    fn new(pid: u32, name: String, path: String) -> Self {
+        ProcInfo { pid, name, path }
     }
 
     pub(super) fn pid(&self) -> u32 {
@@ -19,6 +21,10 @@ impl ProcInfo {
 
     pub(super) fn name(&self) -> String {
         self.name.clone()
+    }
+
+    pub(super) fn path(&self) -> String {
+        self.path.clone()
     }
 
     pub(super) fn from_file(mut file: File) -> crate::Result<Self> {
@@ -35,8 +41,11 @@ impl ProcInfo {
         let pid_s = &buf[..start_paren - 1];
         let name = buf[start_paren + 1..end_paren].to_string();
 
+        let exe_path = format!("/proc/{pid_s}/exe");
+        let path = fs::read_link(exe_path)?.to_string_lossy().to_string();
+
         let pid = FromStr::from_str(pid_s)?;
 
-        Ok(ProcInfo::new(pid, name))
+        Ok(ProcInfo::new(pid, name, path))
     }
 }

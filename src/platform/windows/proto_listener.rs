@@ -1,10 +1,14 @@
 use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
-
+use std::os::windows::ffi::OsStringExt;
+use windows::core::PWSTR;
 use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
+};
+use windows::Win32::System::Threading::{
+    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
 };
 
 use crate::platform::windows::socket_table::SocketTable;
@@ -84,9 +88,36 @@ impl ProtoListener {
         String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
     }
 
+    fn ppath(&self) -> Option<String> {
+        let pid = self.pid;
+
+        unsafe {
+            let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+            if handle.is_invalid() {
+                return None;
+            }
+
+            let mut buffer: [u16; 1024] = [0; 1024];
+            let mut size = buffer.len() as u32;
+
+            QueryFullProcessImageNameW(
+                handle,
+                PROCESS_NAME_FORMAT(0),
+                PWSTR(buffer.as_mut_ptr()),
+                &mut size,
+            )
+            .ok()?;
+            CloseHandle(handle).ok()?;
+
+            let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
+            Some(path.to_string_lossy().into_owned())
+        }
+    }
+
     pub(super) fn to_listener(&self) -> Option<Listener> {
         let socket = SocketAddr::new(self.local_addr, self.local_port);
         let pname = self.pname()?;
-        Some(Listener::new(self.pid, pname, socket, self.protocol))
+        let ppath = self.ppath()?;
+        Some(Listener::new(self.pid, pname, ppath, socket, self.protocol))
     }
 }

@@ -22,6 +22,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
             let listener = Listener::new(
                 p.pid(),
                 p.name(),
+                p.path(),
                 proto_listener.local_addr(),
                 proto_listener.protocol(),
             );
