@@ -2,7 +2,8 @@ use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
 use std::os::windows::ffi::OsStringExt;
-use windows::Win32::Foundation::{CloseHandle, PWSTR};
+use windows::Win32::Foundation::CloseHandle;
+use windows::core::PWSTR;
 use windows::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
 };
