@@ -1,17 +1,15 @@
 [package]
 name = "listeners"
-version = "0.2.1"
-edition = "2021"
+version = "0.3.0"
+edition = "2024"
 authors = ["Giuliano Bellini <gyulyvgc99@gmail.com>"]
-description = "Get processes listening on a TCP port in a cross-platform way"
+description = "Cross-platform library to find out processes listening on network sockets"
 readme = "README.md"
 repository = "https://github.com/GyulyVGC/listeners"
 license = "MIT"
-keywords = ["tcp", "listen", "port", "process"]
+keywords = ["listen", "port", "process", "socket", "pid"]
 categories = ["network-programming"]
 include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.61.3", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading"] }

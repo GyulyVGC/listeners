@@ -3,8 +3,8 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use byteorder::{ByteOrder, NetworkEndian};
 
-use crate::platform::macos::proto_listener::ProtoListener;
 use crate::Protocol;
+use crate::platform::macos::proto_listener::ProtoListener;
 
 use super::statics::{IPPROTO_TCP, IPPROTO_UDP};
 

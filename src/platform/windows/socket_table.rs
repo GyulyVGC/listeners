@@ -1,17 +1,17 @@
 use std::ffi::{c_ulong, c_void};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
+use crate::Protocol;
 use crate::platform::target_os::c_iphlpapi::GetExtendedTcpTable;
 use crate::platform::target_os::proto_listener::ProtoListener;
 use crate::platform::target_os::statics::FALSE;
 use crate::platform::windows::statics::{
     AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
 };
-use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::tcp_table::TcpTable;
-use crate::platform::windows::udp6_table::Udp6Table;
+use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::udp_table::UdpTable;
-use crate::Protocol;
+use crate::platform::windows::udp6_table::Udp6Table;
 
 use super::c_iphlpapi::GetExtendedUdpTable;
 use super::statics::UDP_TABLE_OWNER_PID;

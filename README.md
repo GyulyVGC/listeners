@@ -5,7 +5,7 @@
 [![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
 
-**Cross-platform library for Rust to find out process listening on network sockets.**
+**Cross-platform library for Rust to find out processes listening on network sockets.**
 
 ## Motivation
 

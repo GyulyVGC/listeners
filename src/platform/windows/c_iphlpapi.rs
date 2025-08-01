@@ -2,7 +2,7 @@ use std::ffi::{c_int, c_ulong, c_void};
 
 #[allow(non_snake_case)]
 #[link(name = "iphlpapi")]
-extern "system" {
+unsafe extern "system" {
     pub(super) fn GetExtendedTcpTable(
         pTcpTable: *mut c_void,
         pdwSize: *mut c_ulong,
@@ -15,7 +15,7 @@ extern "system" {
 
 #[allow(non_snake_case)]
 #[link(name = "iphlpapi")]
-extern "system" {
+unsafe extern "system" {
     pub(super) fn GetExtendedUdpTable(
         pUdpTable: *mut c_void,
         pdwSize: *mut c_ulong,

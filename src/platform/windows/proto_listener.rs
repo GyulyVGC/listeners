@@ -2,23 +2,23 @@ use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
 use std::os::windows::ffi::OsStringExt;
-use windows::core::PWSTR;
 use windows::Win32::Foundation::CloseHandle;
 use windows::Win32::System::Diagnostics::ToolHelp::{
-    CreateToolhelp32Snapshot, Process32First, Process32Next, PROCESSENTRY32, TH32CS_SNAPPROCESS,
+    CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next, TH32CS_SNAPPROCESS,
 };
 use windows::Win32::System::Threading::{
-    OpenProcess, QueryFullProcessImageNameW, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION,
+    OpenProcess, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
 };
+use windows::core::PWSTR;
 
-use crate::platform::windows::socket_table::SocketTable;
-use crate::platform::windows::tcp6_table::Tcp6Table;
-use crate::platform::windows::tcp_table::TcpTable;
 use crate::Listener;
 use crate::Protocol;
+use crate::platform::windows::socket_table::SocketTable;
+use crate::platform::windows::tcp_table::TcpTable;
+use crate::platform::windows::tcp6_table::Tcp6Table;
 
-use super::udp6_table::Udp6Table;
 use super::udp_table::UdpTable;
+use super::udp6_table::Udp6Table;
 
 #[derive(Debug)]
 pub(super) struct ProtoListener {

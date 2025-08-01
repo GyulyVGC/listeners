@@ -5,8 +5,8 @@ use proc_pid::ProcPid;
 use proto_listener::ProtoListener;
 use socket_fd::SocketFd;
 
-use crate::platform::macos::proc_path::ProcPath;
 use crate::Listener;
+use crate::platform::macos::proc_path::ProcPath;
 
 mod c_libproc;
 mod c_proc_fd_info;
