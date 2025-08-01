@@ -80,7 +80,9 @@ impl ProtoListener {
             }
         }
 
-        unsafe { CloseHandle(h).ok()? };
+        unsafe {
+            let _ = CloseHandle(h);
+        };
 
         let name = process.szExeFile;
         let len = name.iter().position(|&x| x == 0)?;
@@ -88,11 +90,13 @@ impl ProtoListener {
         String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
     }
 
-    fn ppath(&self) -> Option<String> {
+    fn ppath(&self) -> String {
         let pid = self.pid;
 
         unsafe {
-            let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
+            let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
+                return String::new();
+            };
             if handle.is_invalid() {
                 return None;
             }
@@ -100,14 +104,13 @@ impl ProtoListener {
             let mut buffer: [u16; 1024] = [0; 1024];
             let mut size = buffer.len() as u32;
 
-            QueryFullProcessImageNameW(
+            let _ = QueryFullProcessImageNameW(
                 handle,
                 PROCESS_NAME_FORMAT(0),
                 PWSTR(buffer.as_mut_ptr()),
                 &mut size,
-            )
-            .ok()?;
-            CloseHandle(handle).ok()?;
+            );
+            let _ = CloseHandle(handle);
 
             let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
             Some(path.to_string_lossy().into_owned())
@@ -117,7 +120,7 @@ impl ProtoListener {
     pub(super) fn to_listener(&self) -> Option<Listener> {
         let socket = SocketAddr::new(self.local_addr, self.local_port);
         let pname = self.pname()?;
-        let ppath = self.ppath()?;
+        let ppath = self.ppath();
         Some(Listener::new(self.pid, pname, ppath, socket, self.protocol))
     }
 }
