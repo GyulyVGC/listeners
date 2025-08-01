@@ -15,7 +15,7 @@ impl ProcName {
     pub(super) fn from_pid(pid: ProcPid) -> crate::Result<Self> {
         let mut buf: Vec<u8> = Vec::with_capacity(PROC_PID_PATH_INFO_MAXSIZE);
         let buffer_ptr = buf.as_mut_ptr().cast::<c_void>();
-        let buffer_size = u32::try_from(buf.capacity())?;
+        let buffer_size = u32::try_from(buf.capacity()).unwrap_or(4096);
 
         let ret;
         unsafe {

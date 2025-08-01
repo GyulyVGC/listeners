@@ -12,10 +12,10 @@ impl ProcPath {
         ProcPath(path)
     }
 
-    pub(super) fn from_pid(pid: ProcPid) -> crate::Result<Self> {
+    pub(super) fn from_pid(pid: ProcPid) -> Self {
         let mut buf: Vec<u8> = Vec::with_capacity(PROC_PID_PATH_INFO_MAXSIZE);
         let buffer_ptr = buf.as_mut_ptr().cast::<c_void>();
-        let buffer_size = u32::try_from(buf.capacity())?;
+        let buffer_size = u32::try_from(buf.capacity()).unwrap_or(4096);
 
         let ret;
         unsafe {
@@ -23,16 +23,16 @@ impl ProcPath {
         };
 
         if ret <= 0 {
-            return Err("Failed to get process path".into());
+            return Self(String::new());
         }
 
         unsafe {
-            buf.set_len(usize::try_from(ret)?);
+            buf.set_len(usize::try_from(ret).unwrap_or_default());
         }
 
         match String::from_utf8(buf) {
-            Ok(path) => Ok(Self::new(path)),
-            Err(_) => Err("Invalid UTF sequence for process path".into()),
+            Ok(path) => Self::new(path),
+            Err(_) => Self(String::new()),
         }
     }
 }

@@ -18,6 +18,7 @@ mod proto_listener;
 mod socket_fd;
 mod statics;
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
@@ -25,16 +26,18 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
         for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
             if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd) {
                 if let Ok(ProcName(name)) = ProcName::from_pid(pid) {
-                    if let Ok(ProcPath(path)) = ProcPath::from_pid(pid) {
-                        let listener = Listener::new(
-                            pid.as_u_32()?,
-                            name,
-                            path,
-                            proto_listener.socket_addr(),
-                            proto_listener.protocol(),
-                        );
-                        listeners.insert(listener);
-                    }
+                    let ProcPath(path) = ProcPath::from_pid(pid);
+                    let Ok(pid_u_32) = pid.as_u_32() else {
+                        continue;
+                    };
+                    let listener = Listener::new(
+                        pid_u_32,
+                        name,
+                        path,
+                        proto_listener.socket_addr(),
+                        proto_listener.protocol(),
+                    );
+                    listeners.insert(listener);
                 }
             }
         }

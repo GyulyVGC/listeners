@@ -35,7 +35,10 @@ impl ProcPid {
         }
 
         let mut pids: Vec<c_int> = Vec::new();
-        pids.resize_with(usize::try_from(number_of_pids)?, Default::default);
+        pids.resize_with(
+            usize::try_from(number_of_pids).unwrap_or(4096),
+            Default::default,
+        );
 
         let return_code = unsafe {
             proc_listpids(
