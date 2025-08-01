@@ -98,7 +98,7 @@ impl ProtoListener {
                 return String::new();
             };
             if handle.is_invalid() {
-                return None;
+                return String::new();
             }
 
             let mut buffer: [u16; 1024] = [0; 1024];
@@ -113,7 +113,7 @@ impl ProtoListener {
             let _ = CloseHandle(handle);
 
             let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
-            Some(path.to_string_lossy().into_owned())
+            path.to_string_lossy().into_owned()
         }
     }
 
