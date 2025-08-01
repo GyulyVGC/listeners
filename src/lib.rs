@@ -19,7 +19,7 @@ pub struct Listener {
     pub protocol: Protocol,
 }
 
-/// A process, characterized by its PID and name.
+/// An active process.
 #[derive(Eq, PartialEq, Hash, Debug)]
 pub struct Process {
     /// Process ID.
@@ -30,7 +30,7 @@ pub struct Process {
     pub path: String,
 }
 
-/// The protocol used by the listener.
+/// The network protocol used by a socket.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Protocol {
     /// Transmission Control Protocol.
