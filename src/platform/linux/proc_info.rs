@@ -1,6 +1,7 @@
 use std::fs;
 use std::fs::File;
 use std::io::Read;
+use std::path::PathBuf;
 use std::str::FromStr;
 
 #[derive(Clone, Debug)]
@@ -42,7 +43,10 @@ impl ProcInfo {
         let name = buf[start_paren + 1..end_paren].to_string();
 
         let exe_path = format!("/proc/{pid_s}/exe");
-        let path = fs::read_link(exe_path)?.to_string_lossy().to_string();
+        let path = fs::read_link(exe_path)
+            .unwrap_or(PathBuf::new())
+            .to_string_lossy()
+            .to_string();
 
         let pid = FromStr::from_str(pid_s)?;
 

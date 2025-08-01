@@ -16,16 +16,17 @@ pub(super) fn build_inode_proc_map(proc_fds: Vec<ProcFd>) -> crate::Result<HashM
     for proc_fd in proc_fds {
         let dirfd = proc_fd.as_fd();
         let path = "fd";
-        if rustix::fs::accessat(dirfd, path, Access::READ_OK, AtFlags::empty()).is_err() {
-            continue;
-        }
-        let dir_fd = rustix::fs::openat(
+        let Ok(dir_fd) = rustix::fs::openat(
             dirfd,
             path,
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
-        )?;
-        let mut dir = rustix::fs::Dir::read_from(&dir_fd)?;
+        ) else {
+            continue;
+        };
+        let Ok(mut dir) = rustix::fs::Dir::read_from(&dir_fd) else {
+            continue;
+        };
         dir.rewind();
 
         let mut socket_inodes = Vec::new();
@@ -38,12 +39,14 @@ pub(super) fn build_inode_proc_map(proc_fds: Vec<ProcFd>) -> crate::Result<HashM
             }
         }
 
-        let stat = rustix::fs::openat(
+        let Ok(stat) = rustix::fs::openat(
             proc_fd.as_fd(),
             "stat",
             OFlags::RDONLY | OFlags::CLOEXEC,
             Mode::empty(),
-        )?;
+        ) else {
+            continue;
+        };
 
         if let Ok(proc_info) = ProcInfo::from_file(File::from(stat)) {
             for inode in socket_inodes {

@@ -34,7 +34,11 @@ impl ProcFd {
                 let proc_root = PathBuf::from(root).join(pid.to_string());
 
                 let flags = OFlags::DIRECTORY | OFlags::CLOEXEC | *O_PATH_MAYBE;
-                let file = rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())?;
+                let Ok(file) =
+                    rustix::fs::openat(rustix::fs::CWD, &proc_root, flags, Mode::empty())
+                else {
+                    continue;
+                };
 
                 proc_fds.push(ProcFd::new(file));
             }

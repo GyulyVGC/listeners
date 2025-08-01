@@ -28,35 +28,39 @@ impl ProtoListener {
 
     pub(super) fn get_all() -> crate::Result<Vec<ProtoListener>> {
         let mut table = Vec::new();
-        let tcp_table = File::open("/proc/net/tcp")?;
-        for line in BufReader::new(tcp_table).lines().map_while(Result::ok) {
-            if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::TCP) {
-                table.push(l);
+
+        if let Ok(tcp_table) = File::open("/proc/net/tcp") {
+            for line in BufReader::new(tcp_table).lines().map_while(Result::ok) {
+                if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::TCP) {
+                    table.push(l);
+                }
             }
         }
 
-        let tcp6_table = File::open("/proc/net/tcp6")?;
-        for line in BufReader::new(tcp6_table).lines().map_while(Result::ok) {
-            if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::TCP) {
-                table.push(l);
+        if let Ok(tcp6_table) = File::open("/proc/net/tcp6") {
+            for line in BufReader::new(tcp6_table).lines().map_while(Result::ok) {
+                if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::TCP) {
+                    table.push(l);
+                }
             }
         }
 
-        let udp_table = File::open("/proc/net/udp")?;
-        for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
-            // the lines/fields for tcp and udp are identical as far as Listeners is concerend
-            if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::UDP) {
-                table.push(l)
+        if let Ok(udp_table) = File::open("/proc/net/udp") {
+            for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
+                if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::UDP) {
+                    table.push(l)
+                }
             }
         }
 
-        let udp_table = File::open("/proc/net/udp6")?;
-        for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
-            // the lines/fields for tcp and udp are identical as far as Listeners is concerend
-            if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::UDP) {
-                table.push(l)
+        if let Ok(udp_table) = File::open("/proc/net/udp6") {
+            for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
+                if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::UDP) {
+                    table.push(l)
+                }
             }
         }
+
         Ok(table)
     }
 
