@@ -4,7 +4,7 @@ use std::os::fd::{AsFd, BorrowedFd, RawFd};
 use std::path::Path;
 use std::str::FromStr;
 
-use rustix::fs::{Access, AtFlags, Mode, OFlags};
+use rustix::fs::{Mode, OFlags};
 
 use crate::platform::linux::proc_fd::ProcFd;
 use crate::platform::linux::proc_info::ProcInfo;
