@@ -9,7 +9,7 @@ mod platform;
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// A process listening on a socket.
-#[derive(Eq, PartialEq, Hash, Debug)]
+#[derive(Eq, PartialEq, Hash, Debug, Clone)]
 pub struct Listener {
     /// The listening process.
     pub process: Process,
@@ -20,7 +20,7 @@ pub struct Listener {
 }
 
 /// An active process.
-#[derive(Eq, PartialEq, Hash, Debug)]
+#[derive(Eq, PartialEq, Hash, Debug, Clone)]
 pub struct Process {
     /// Process ID.
     pub pid: u32,

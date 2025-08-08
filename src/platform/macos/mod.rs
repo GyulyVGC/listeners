@@ -24,21 +24,21 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 
     for pid in ProcPid::get_all().into_iter().flatten() {
         for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
-            if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd) {
-                if let Ok(ProcName(name)) = ProcName::from_pid(pid) {
-                    let ProcPath(path) = ProcPath::from_pid(pid);
-                    let Ok(pid_u_32) = pid.as_u_32() else {
-                        continue;
-                    };
-                    let listener = Listener::new(
-                        pid_u_32,
-                        name,
-                        path,
-                        proto_listener.socket_addr(),
-                        proto_listener.protocol(),
-                    );
-                    listeners.insert(listener);
-                }
+            if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
+                && let Ok(ProcName(name)) = ProcName::from_pid(pid)
+            {
+                let ProcPath(path) = ProcPath::from_pid(pid);
+                let Ok(pid_u_32) = pid.as_u_32() else {
+                    continue;
+                };
+                let listener = Listener::new(
+                    pid_u_32,
+                    name,
+                    path,
+                    proto_listener.socket_addr(),
+                    proto_listener.protocol(),
+                );
+                listeners.insert(listener);
             }
         }
     }
