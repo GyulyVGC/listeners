@@ -32,10 +32,10 @@ pub(super) fn build_inode_proc_map(proc_fds: Vec<ProcFd>) -> crate::Result<HashM
         let mut socket_inodes = Vec::new();
         while let Some(Ok(entry)) = dir.next() {
             let name = entry.file_name().to_string_lossy();
-            if RawFd::from_str(&name).is_ok() {
-                if let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref()) {
-                    socket_inodes.push(socket_inode);
-                }
+            if RawFd::from_str(&name).is_ok()
+                && let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref())
+            {
+                socket_inodes.push(socket_inode);
             }
         }
 
