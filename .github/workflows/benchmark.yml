@@ -15,6 +15,7 @@ jobs:
       contents: write
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - os: ubuntu
