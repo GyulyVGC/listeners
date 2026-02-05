@@ -76,9 +76,11 @@ check the [`examples`](https://github.com/GyulyVGC/listeners/tree/main/examples)
 ## Benchmarks
 
 Here are some benchmarks measuring the performance of the `listeners::get_all` method on all supported platforms,
-varying the number of listening processes.
+varying the number of listening processes. <br>
+These benchmarks are run on GitHub Actions runners, and the results are
+generated using [`criterion`](https://crates.io/crates/criterion).
 
-**Windows**
+### Windows
 
 <details>
 
@@ -92,34 +94,31 @@ varying the number of listening processes.
 
 </details>
 
-**Linux**
+### Linux
 
 <details>
 
 <summary>See details</summary>
 
-| Number of listeners | Results                                                                                                                                |
-|---------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Number of listeners | Results                                                                                                                               |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | 100                 | ![linux_get_all_100](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_100.svg) |
 | 1k                  | ![linux_get_all_1k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_1k.svg)   |
 | 10k                 | ![linux_get_all_10k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_10k.svg) |
 
 </details>
 
-**macOS**
+### macOS
 
 <details>
 
 <summary>See details</summary>
 
-| Number of listeners | Results                                                                                                                                |
-|---------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| Number of listeners | Results                                                                                                                               |
+|---------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | 100                 | ![macos_get_all_100](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_100.svg) |
 | 1k                  | ![macos_get_all_1k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_1k.svg)   |
 | 10k                 | ![macos_get_all_10k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_10k.svg) |
 
 </details>
 
-
-These benchmarks are run on GitHub Actions runners, and the results are
-generated using `criterion`(https://crates.io/crates/criterion).
