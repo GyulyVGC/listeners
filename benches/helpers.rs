@@ -1,6 +1,6 @@
+use serde_json::Value;
 use std::env::consts::OS;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
-use serde_json::Value;
 
 #[allow(dead_code)]
 pub enum SocketType {
