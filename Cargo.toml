@@ -12,13 +12,23 @@ categories = ["network-programming"]
 include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
-windows = { version = "0.62.2", features = ["Win32_Foundation", "Win32_System_Diagnostics_ToolHelp", "Win32_System_Threading"] }
+windows = { version = "0.62.2", features = [
+    "Win32_Foundation",
+    "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Threading",
+] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 byteorder = "1.5.0"
 
 [target.'cfg(target_os = "linux")'.dependencies]
-rustix = {version = "1.0.8", features = ["fs"]}
+rustix = { version = "1.0.8", features = ["fs"] }
+
+[target.'cfg(target_os = "freebsd")'.dependencies]
+libc = "0.2.180"
+
+[target.'cfg(target_os = "freebsd")'.build-dependencies]
+cc = "1.0"
 
 #[target.'cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
 #bsd-kvm = "0.1.5"

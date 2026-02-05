@@ -18,16 +18,24 @@ mod linux;
 #[cfg(target_os = "linux")]
 use linux as target_os;
 
+/* ---------- freebsd ---------- */
+#[cfg(target_os = "freebsd")]
+mod freebsd;
+#[cfg(target_os = "freebsd")]
+use freebsd as target_os;
+
 /* ----------- other ----------- */
 #[cfg(all(
     not(target_os = "linux"),
     not(target_os = "macos"),
-    not(target_os = "windows")
+    not(target_os = "windows"),
+    not(target_os = "freebsd")
 ))]
 mod bsd;
 #[cfg(all(
     not(target_os = "linux"),
     not(target_os = "macos"),
-    not(target_os = "windows")
+    not(target_os = "windows"),
+    not(target_os = "freebsd")
 ))]
 use bsd as target_os;
