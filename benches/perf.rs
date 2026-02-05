@@ -1,6 +1,6 @@
+use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
-use criterion::{criterion_group, criterion_main, Criterion};
 
 #[allow(dead_code)]
 enum SocketType {
@@ -27,7 +27,9 @@ fn benchmark_get_all_100(c: &mut Criterion) {
     let listeners = listeners::get_all().unwrap_or_default().len();
     println!("=== Benchmarking get_all with {} listeners ===", listeners);
 
-    c.bench_function("get_all__100", |b| b.iter(|| black_box(listeners::get_all())));
+    c.bench_function("get_all__100", |b| {
+        b.iter(|| black_box(listeners::get_all()))
+    });
 }
 
 fn benchmark_get_all_1k(c: &mut Criterion) {
@@ -35,7 +37,9 @@ fn benchmark_get_all_1k(c: &mut Criterion) {
     let listeners = listeners::get_all().unwrap_or_default().len();
     println!("=== Benchmarking get_all with {} listeners ===", listeners);
 
-    c.bench_function("get_all__1k", |b| b.iter(|| black_box(listeners::get_all())));
+    c.bench_function("get_all__1k", |b| {
+        b.iter(|| black_box(listeners::get_all()))
+    });
 }
 
 fn benchmark_get_all_10k(c: &mut Criterion) {
@@ -43,8 +47,15 @@ fn benchmark_get_all_10k(c: &mut Criterion) {
     let listeners = listeners::get_all().unwrap_or_default().len();
     println!("=== Benchmarking get_all with {} listeners ===", listeners);
 
-    c.bench_function("get_all__10k", |b| b.iter(|| black_box(listeners::get_all())));
+    c.bench_function("get_all__10k", |b| {
+        b.iter(|| black_box(listeners::get_all()))
+    });
 }
 
-criterion_group!(benches, benchmark_get_all_100, benchmark_get_all_1k, benchmark_get_all_10k);
+criterion_group!(
+    benches,
+    benchmark_get_all_100,
+    benchmark_get_all_1k,
+    benchmark_get_all_10k
+);
 criterion_main!(benches);
