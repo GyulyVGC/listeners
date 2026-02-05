@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: bench
+          ref: main
       - uses: dtolnay/rust-toolchain@stable
 
       - name: bench
