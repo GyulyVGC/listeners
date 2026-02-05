@@ -23,9 +23,17 @@ pub fn spawn_sockets(n: usize) -> Vec<SocketType> {
 }
 
 pub fn save_chart_svg(benchmark_id: &str) {
-    let file = format!("target/criterion/{benchmark_id}/report/pdf_small.svg");
+    let mut svg = std::fs::read_to_string(format!(
+        "target/criterion/{benchmark_id}/report/pdf_small.svg"
+    ))
+    .unwrap();
+    let insert_pos = svg.find('\n').unwrap() + 1;
+    svg.insert_str(
+        insert_pos,
+        "<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n",
+    );
     let dest = format!("resources/benchmarks/{OS}_{benchmark_id}.svg");
-    std::fs::copy(&file, &dest).unwrap();
+    std::fs::write(&dest, &svg).unwrap();
 }
 
 pub fn save_mean_txt(benchmark_id: &str) {

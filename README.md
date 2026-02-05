@@ -19,7 +19,7 @@ Some examples of existing libraries:
 
 This library wants to fill this gap, and it aims to be: 
 - **Cross-platform**: it currently supports Windows, Linux and macOS
-- **Performant**: it internally uses low-level system APIs
+- **Performant**: it internally uses low-level system APIs (see [benchmarks](#benchmarks) for more info)
 - **Simple**: it exposes intuitive APIs to get details about the listening processes
 - **Lightweight**: it has only the strictly necessary dependencies
 
@@ -72,3 +72,54 @@ PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:59
  
 For more examples of usage, including how to get listening processes in a more granular way,
 check the [`examples`](https://github.com/GyulyVGC/listeners/tree/main/examples) folder.
+
+## Benchmarks
+
+Here are some benchmarks measuring the performance of the `listeners::get_all` method on all supported platforms,
+varying the number of listening processes.
+
+**Windows**
+
+<details>
+
+<summary>See details</summary>
+
+| Number of listeners | Results                                                                                                                                   |
+|---------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| 100                 | ![windows_get_all_100](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_100.svg) |
+| 1k                  | ![windows_get_all_1k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_1k.svg)   |
+| 10k                 | ![windows_get_all_10k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_10k.svg) |
+
+</details>
+
+**Linux**
+
+<details>
+
+<summary>See details</summary>
+
+| Number of listeners | Results                                                                                                                                |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| 100                 | ![linux_get_all_100](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_100.svg) |
+| 1k                  | ![linux_get_all_1k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_1k.svg)   |
+| 10k                 | ![linux_get_all_10k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_10k.svg) |
+
+</details>
+
+**macOS**
+
+<details>
+
+<summary>See details</summary>
+
+| Number of listeners | Results                                                                                                                                |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| 100                 | ![macos_get_all_100](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_100.svg) |
+| 1k                  | ![macos_get_all_1k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_1k.svg)   |
+| 10k                 | ![macos_get_all_10k](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_10k.svg) |
+
+</details>
+
+
+These benchmarks are run on GitHub Actions runners, and the results are
+generated using `criterion`(https://crates.io/crates/criterion).
