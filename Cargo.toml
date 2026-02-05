@@ -27,8 +27,9 @@ rustix = {version = "1.1.3", features = ["fs"]}
 [dev-dependencies]
 http-test-server = "2.1.1"
 serial_test = "3.3.1"
-criterion = { version = "0.8.2", features = ["html_reports"] }
+criterion = "0.8.2"
+serde_json = "1.0.149"
 
 [[bench]]
-name = "perf"
+name = "get_all"
 harness = false

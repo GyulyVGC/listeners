@@ -1,55 +1,54 @@
+use crate::helpers::{save_chart_svg, save_mean_txt};
 use criterion::{Criterion, criterion_group, criterion_main};
+use helpers::spawn_sockets;
 use std::hint::black_box;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
 
-#[allow(dead_code)]
-enum SocketType {
-    TCP(TcpListener),
-    UDP(UdpSocket),
-}
-
-fn spawn_sockets(n: usize) -> Vec<SocketType> {
-    let mut sockets: Vec<SocketType> = Vec::new();
-    let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
-    for _ in 0..n / 2 {
-        let socket = TcpListener::bind(socket).unwrap();
-        sockets.push(SocketType::TCP(socket));
-    }
-    for _ in 0..n / 2 {
-        let socket = UdpSocket::bind(socket).unwrap();
-        sockets.push(SocketType::UDP(socket));
-    }
-    sockets
-}
+#[path = "helpers.rs"]
+mod helpers;
 
 fn benchmark_get_all_100(c: &mut Criterion) {
+    // spawn sockets
     let _sockets = spawn_sockets(100);
     let listeners = listeners::get_all().unwrap_or_default().len();
     println!("=== Benchmarking get_all with {} listeners ===", listeners);
 
-    c.bench_function("get_all__100", |b| {
-        b.iter(|| black_box(listeners::get_all()))
-    });
+    // benchmark
+    let id = "get_all_100";
+    c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
+
+    // save files
+    save_chart_svg(id);
+    save_mean_txt(id);
 }
 
 fn benchmark_get_all_1k(c: &mut Criterion) {
+    // spawn sockets
     let _sockets = spawn_sockets(1_000);
     let listeners = listeners::get_all().unwrap_or_default().len();
     println!("=== Benchmarking get_all with {} listeners ===", listeners);
 
-    c.bench_function("get_all__1k", |b| {
-        b.iter(|| black_box(listeners::get_all()))
-    });
+    // benchmark
+    let id = "get_all_1k";
+    c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
+
+    // save files
+    save_chart_svg(id);
+    save_mean_txt(id);
 }
 
 fn benchmark_get_all_10k(c: &mut Criterion) {
+    // spawn sockets
     let _sockets = spawn_sockets(10_000);
     let listeners = listeners::get_all().unwrap_or_default().len();
     println!("=== Benchmarking get_all with {} listeners ===", listeners);
 
-    c.bench_function("get_all__10k", |b| {
-        b.iter(|| black_box(listeners::get_all()))
-    });
+    // benchmark
+    let id = "get_all_10k";
+    c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
+
+    // save files
+    save_chart_svg(id);
+    save_mean_txt(id);
 }
 
 criterion_group!(
