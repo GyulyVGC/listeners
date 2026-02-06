@@ -14,7 +14,8 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 pub const IS_OS_SUPPORTED: bool = cfg!(any(
     target_os = "macos",
     target_os = "linux",
-    target_os = "windows"
+    target_os = "windows",
+    target_os = "freebsd"
 ));
 
 /// A process listening on a socket.
