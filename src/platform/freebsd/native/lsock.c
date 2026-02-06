@@ -48,6 +48,40 @@ static int get_pcb_list(int mib[4], char **buffer, size_t *buffer_size)
     return 0;
 }
 
+static fillsock_tcp(struct socket_info_t *sock, struct xtcpcb *xtp, int is_ipv6)
+{
+    sock->port = ntohs(xtp->xt_inp.inp_lport);
+    sock->protocol = PROTOCOL_TCP;
+
+    if (is_ipv6)
+    {
+        sock->address.addr.ipv6 = xtp->xt_inp.in6p_laddr;
+        sock->address.family = AF_INET6;
+    }
+    else
+    {
+        sock->address.addr.ipv4 = xtp->xt_inp.inp_laddr;
+        sock->address.family = AF_INET;
+    }
+}
+
+static fillsock_udp(struct socket_info_t *sock, struct xinpcb *xip, int is_ipv6)
+{
+    sock->port = ntohs(xip->inp_lport);
+    sock->protocol = PROTOCOL_UDP;
+
+    if (is_ipv6)
+    {
+        sock->address.addr.ipv6 = xip->in6p_laddr;
+        sock->address.family = AF_INET6;
+    }
+    else
+    {
+        sock->address.addr.ipv4 = xip->inp_laddr;
+        sock->address.family = AF_INET;
+    }
+}
+
 static int lsock_impl(struct socket_info_t **list, size_t *nentries, enum protocol_t protocol, int is_ipv6)
 {
     if (list == NULL || nentries == NULL)
@@ -101,21 +135,7 @@ static int lsock_impl(struct socket_info_t **list, size_t *nentries, enum protoc
 
             if (xtp->t_state == TCPS_LISTEN && xtp->xt_inp.inp_vflag & vflag)
             {
-
-                (*list)[index].port = ntohs(xtp->xt_inp.inp_lport);
-                (*list)[index].protocol = PROTOCOL_TCP;
-
-                if (is_ipv6)
-                {
-                    (*list)[index].address.addr.ipv6 = xtp->xt_inp.in6p_laddr;
-                    (*list)[index].address.family = AF_INET6;
-                }
-                else
-                {
-                    (*list)[index].address.addr.ipv4 = xtp->xt_inp.inp_laddr;
-                    (*list)[index].address.family = AF_INET;
-                }
-
+                fillsock_tcp(&((*list)[index], xig, is_ipv6));
                 ++index;
             }
         }
@@ -125,20 +145,7 @@ static int lsock_impl(struct socket_info_t **list, size_t *nentries, enum protoc
 
             if (xip->inp_vflag & vflag)
             {
-                (*list)[index].port = ntohs(xip->inp_lport);
-                (*list)[index].protocol = PROTOCOL_UDP;
-
-                if (is_ipv6)
-                {
-                    (*list)[index].address.addr.ipv6 = xip->in6p_laddr;
-                    (*list)[index].address.family = AF_INET6;
-                }
-                else
-                {
-                    (*list)[index].address.addr.ipv4 = xip->inp_laddr;
-                    (*list)[index].address.family = AF_INET;
-                }
-
+                fillsock_udp(&((*list)[index], xip, is_ipv6));
                 ++index;
             }
         }

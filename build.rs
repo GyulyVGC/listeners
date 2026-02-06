@@ -22,7 +22,7 @@ fn main() {
 
     build.include(src_dir.clone());
 
-    build.compile("native_bsd_lib");
+    build.compile("native_freebsd_lib");
 
     for file in &c_files {
         println!("cargo:rerun-if-changed={}", file.display());
