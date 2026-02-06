@@ -1,10 +1,6 @@
 #[cfg(target_os = "freebsd")]
 fn main() {
-    use std::env;
-    use std::fs;
-    use std::path::{Path, PathBuf};
-
-    let src_dir = PathBuf::from("src/platform/freebsd/native");
+    let src_dir = std::path::PathBuf::from("src/platform/freebsd/native");
 
     let mut c_files = Vec::new();
     find_c_files(&src_dir, &mut c_files);
@@ -35,14 +31,12 @@ fn main() {
 fn main() {}
 
 #[cfg(target_os = "freebsd")]
-fn find_c_files(dir: &Path, out: &mut Vec<PathBuf>) {
-    use std::fs;
-    use std::path::Path;
-
+fn find_c_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
     if !dir.is_dir() {
         return;
     }
-    for entry in fs::read_dir(dir).unwrap() {
+
+    for entry in std::fs::read_dir(dir).unwrap() {
         let entry = match entry {
             Ok(e) => e,
             Err(_) => continue,

@@ -48,7 +48,7 @@ static int get_pcb_list(int mib[4], char **buffer, size_t *buffer_size)
     return 0;
 }
 
-static fillsock_tcp(struct socket_info_t *sock, struct xtcpcb *xtp, int is_ipv6)
+static void fillsock_tcp(struct socket_info_t *sock, struct xtcpcb *xtp, int is_ipv6)
 {
     sock->port = ntohs(xtp->xt_inp.inp_lport);
     sock->protocol = PROTOCOL_TCP;
@@ -65,7 +65,7 @@ static fillsock_tcp(struct socket_info_t *sock, struct xtcpcb *xtp, int is_ipv6)
     }
 }
 
-static fillsock_udp(struct socket_info_t *sock, struct xinpcb *xip, int is_ipv6)
+static void fillsock_udp(struct socket_info_t *sock, struct xinpcb *xip, int is_ipv6)
 {
     sock->port = ntohs(xip->inp_lport);
     sock->protocol = PROTOCOL_UDP;
@@ -135,7 +135,7 @@ static int lsock_impl(struct socket_info_t **list, size_t *nentries, enum protoc
 
             if (xtp->t_state == TCPS_LISTEN && xtp->xt_inp.inp_vflag & vflag)
             {
-                fillsock_tcp(&((*list)[index], xig, is_ipv6));
+                fillsock_tcp(&((*list)[index]), xtp, is_ipv6);
                 ++index;
             }
         }
@@ -145,7 +145,7 @@ static int lsock_impl(struct socket_info_t **list, size_t *nentries, enum protoc
 
             if (xip->inp_vflag & vflag)
             {
-                fillsock_udp(&((*list)[index], xip, is_ipv6));
+                fillsock_udp(&((*list)[index]), xip, is_ipv6);
                 ++index;
             }
         }
