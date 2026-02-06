@@ -18,7 +18,7 @@ impl ProcFd {
         &self.0
     }
 
-    pub(super) fn get_all() -> crate::Result<Vec<ProcFd>> {
+    pub(super) fn get_all() -> crate::Result<impl Iterator<Item = ProcFd>> {
         let root = Path::new(ROOT);
         let dir = rustix::fs::openat(
             rustix::fs::CWD,
@@ -28,8 +28,23 @@ impl ProcFd {
         )?;
         let dir = rustix::fs::Dir::read_from(dir)?;
 
-        let mut proc_fds: Vec<ProcFd> = vec![];
-        for entry in dir.flatten() {
+        Ok(ProcFdsIter {
+            iter: dir.flatten(),
+        })
+    }
+}
+
+struct ProcFdsIter {
+    iter: std::iter::Flatten<rustix::fs::Dir>,
+}
+
+impl Iterator for ProcFdsIter {
+    type Item = ProcFd;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let root = Path::new(ROOT);
+
+        for entry in self.iter.by_ref() {
             if let Ok(pid) = i32::from_str(&entry.file_name().to_string_lossy()) {
                 let proc_root = PathBuf::from(root).join(pid.to_string());
 
@@ -40,9 +55,10 @@ impl ProcFd {
                     continue;
                 };
 
-                proc_fds.push(ProcFd::new(file));
+                return Some(ProcFd::new(file));
             }
         }
-        Ok(proc_fds)
+
+        None
     }
 }
