@@ -1,0 +1,36 @@
+name: benchmark
+
+on:
+  workflow_dispatch:
+
+env:
+  GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+
+jobs:
+
+  benchmark:
+    name: ${{ matrix.os }}-latest
+    runs-on: ${{ matrix.os }}-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - os: ubuntu
+          - os: macos
+          - os: windows
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: bench
+        run: cargo bench
+
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "update benchmarks for ${{ matrix.os }}"

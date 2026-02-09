@@ -2,6 +2,11 @@
 
 All releases with the relative changes are documented in this file.
 
+## [UNRELEASED]
+### Added
+- `IS_OS_SUPPORTED` constant to check if the consumer platform is supported by the library
+- Benchmarks to measure performance on all supported platforms ([#31](https://github.com/GyulyVGC/listeners/pull/31))
+
 ## [0.3.0] - 2025-08-02
 ### Added
 - Added `path` field to `Process` struct, making it possible to obtain the executables' full path ([#23](https://github.com/GyulyVGC/listeners/pull/23))
