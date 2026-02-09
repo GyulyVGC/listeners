@@ -6,6 +6,8 @@ All releases with the relative changes are documented in this file.
 ### Added
 - `IS_OS_SUPPORTED` constant to check if the consumer platform is supported by the library
 - Benchmarks to measure performance on all supported platforms ([#31](https://github.com/GyulyVGC/listeners/pull/31))
+### Changed
+- Only open one `ProcFd` at a time on Linux ([#30](https://github.com/GyulyVGC/listeners/pull/30))
 
 ## [0.3.0] - 2025-08-02
 ### Added
