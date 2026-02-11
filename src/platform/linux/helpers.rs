@@ -31,14 +31,12 @@ pub(super) fn build_inode_proc_map() -> crate::Result<HashMap<u64, ProcInfo>> {
         dir.rewind();
 
         let mut socket_inodes = Vec::new();
-        for entry_res in dir {
-            if let Ok(entry) = entry_res {
-                let name = entry.file_name().to_string_lossy();
-                if RawFd::from_str(&name).is_ok()
-                    && let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref())
-                {
-                    socket_inodes.push(socket_inode);
-                }
+        for entry in dir.flatten() {
+            let name = entry.file_name().to_string_lossy();
+            if RawFd::from_str(&name).is_ok()
+                && let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref())
+            {
+                socket_inodes.push(socket_inode);
             }
         }
 
@@ -81,16 +79,14 @@ pub(super) fn get_proc_by_inode(inode: u64) -> crate::Result<ProcInfo> {
         dir.rewind();
 
         let mut inode_found = false;
-        for entry_res in dir {
-            if let Ok(entry) = entry_res {
-                let name = entry.file_name().to_string_lossy();
-                if RawFd::from_str(&name).is_ok()
-                    && let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref())
-                    && socket_inode == inode
-                {
-                    inode_found = true;
-                    break;
-                }
+        for entry in dir.flatten() {
+            let name = entry.file_name().to_string_lossy();
+            if RawFd::from_str(&name).is_ok()
+                && let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref())
+                && socket_inode == inode
+            {
+                inode_found = true;
+                break;
             }
         }
 
