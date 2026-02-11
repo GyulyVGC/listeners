@@ -3,6 +3,7 @@ use serde_json::Value;
 use std::env::consts::OS;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
 
+#[allow(dead_code)]
 pub enum SocketType {
     TCP(TcpListener),
     UDP(UdpSocket),
@@ -22,6 +23,7 @@ pub fn spawn_sockets(n: usize) -> Vec<SocketType> {
     sockets
 }
 
+#[allow(dead_code)]
 pub fn get_ports_protos(sockets: &[SocketType]) -> Vec<(u16, Protocol)> {
     sockets
         .iter()
