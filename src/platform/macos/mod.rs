@@ -58,14 +58,7 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
                 let Ok(pid_u_32) = pid.as_u_32() else {
                     continue;
                 };
-                let listener = Listener::new(
-                    pid_u_32,
-                    name,
-                    path,
-                    proto_listener.socket_addr(),
-                    proto_listener.protocol(),
-                );
-                return Ok(listener.process);
+                return Ok(Process::new(pid_u_32, name, path));
             }
         }
     }
