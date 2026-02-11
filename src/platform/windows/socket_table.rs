@@ -19,7 +19,11 @@ use super::statics::UDP_TABLE_OWNER_PID;
 pub(super) trait SocketTable {
     fn get_table() -> crate::Result<Vec<u8>>;
     fn get_rows_count(table: &[u8]) -> usize;
-    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener>;
+    fn get_proto_listener(
+        table: &[u8],
+        index: usize,
+        filter_port: Option<u16>,
+    ) -> Option<ProtoListener>;
 }
 
 impl SocketTable for TcpTable {
@@ -33,15 +37,26 @@ impl SocketTable for TcpTable {
         table.rows_count as usize
     }
 
-    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
+    fn get_proto_listener(
+        table: &[u8],
+        index: usize,
+        filter_port: Option<u16>,
+    ) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<TcpTable>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
-        // if row.state == LISTEN { // get all states
+        let port = u16::from_be(u16::try_from(row.local_port).ok()?);
+
+        if let Some(filter_port) = filter_port
+            && filter_port != port
+        {
+            return None;
+        }
+
         Some(ProtoListener::new(
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
-            u16::from_be(u16::try_from(row.local_port).ok()?),
+            port,
             row.owning_pid,
             Protocol::TCP,
         ))
@@ -59,15 +74,26 @@ impl SocketTable for Tcp6Table {
         table.rows_count as usize
     }
 
-    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
+    fn get_proto_listener(
+        table: &[u8],
+        index: usize,
+        filter_port: Option<u16>,
+    ) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<Tcp6Table>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
-        // if row.state == LISTEN {
+        let port = u16::from_be(u16::try_from(row.local_port).ok()?);
+
+        if let Some(filter_port) = filter_port
+            && filter_port != port
+        {
+            return None;
+        }
+
         Some(ProtoListener::new(
             IpAddr::V6(Ipv6Addr::from(row.local_addr)),
-            u16::from_be(u16::try_from(row.local_port).ok()?),
+            port,
             row.owning_pid,
             Protocol::TCP,
         ))
@@ -85,14 +111,26 @@ impl SocketTable for UdpTable {
         table.rows_count as usize
     }
 
-    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
+    fn get_proto_listener(
+        table: &[u8],
+        index: usize,
+        filter_port: Option<u16>,
+    ) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<UdpTable>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
+        let port = u16::from_be(u16::try_from(row.local_port).ok()?);
+
+        if let Some(filter_port) = filter_port
+            && filter_port != port
+        {
+            return None;
+        }
+
         Some(ProtoListener::new(
             IpAddr::V4(Ipv4Addr::from(u32::from_be(row.local_addr))),
-            u16::from_be(u16::try_from(row.local_port).ok()?),
+            port,
             row.owning_pid,
             Protocol::UDP,
         ))
@@ -110,26 +148,31 @@ impl SocketTable for Udp6Table {
         table.rows_count as usize
     }
 
-    fn get_proto_listener(table: &[u8], index: usize) -> Option<ProtoListener> {
+    fn get_proto_listener(
+        table: &[u8],
+        index: usize,
+        filter_port: Option<u16>,
+    ) -> Option<ProtoListener> {
         #[allow(clippy::cast_ptr_alignment)]
         let table = unsafe { &*(table.as_ptr().cast::<Udp6Table>()) };
         let rows_ptr = std::ptr::addr_of!(table.rows[0]);
         let row = unsafe { &*rows_ptr.add(index) };
+        let port = u16::from_be(u16::try_from(row.local_port).ok()?);
+
+        if let Some(filter_port) = filter_port
+            && filter_port != port
+        {
+            return None;
+        }
+
         Some(ProtoListener::new(
             IpAddr::V6(Ipv6Addr::from(row.local_addr)),
-            u16::from_be(u16::try_from(row.local_port).ok()?),
+            port,
             row.owning_pid,
             Protocol::UDP,
         ))
     }
 }
-
-// fn get_protocol_table(address_family: c_ulong, protocol: Protocol) -> crate::Result<Vec<u8>> {
-//     match protocol {
-//         Protocol::TCP | Protocol::TCP6 => get_tcp_table(address_family),
-//         Protocol::UDP | Protocol::UDP6 => get_udp_table(address_family),
-//     }
-// }
 
 fn get_udp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     let mut table_size: c_ulong = 0;

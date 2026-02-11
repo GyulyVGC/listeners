@@ -172,6 +172,10 @@ pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
     })
 }
 
+pub fn get_process_by_port(port: u16, protocol: Protocol) -> Result<Process> {
+    platform::get_process_by_port(port, protocol)
+}
+
 impl Listener {
     fn new(pid: u32, name: String, path: String, socket: SocketAddr, protocol: Protocol) -> Self {
         let process = Process::new(pid, name, path);

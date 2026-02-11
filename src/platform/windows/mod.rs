@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use proto_listener::ProtoListener;
 
-use crate::Listener;
+use crate::{Listener, Process, Protocol};
 
 mod c_iphlpapi;
 mod proto_listener;
@@ -23,4 +23,12 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     }
 
     Ok(listeners)
+}
+
+pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
+    let proto_listener = ProtoListener::get_by_port(port, protocol)?;
+    proto_listener
+        .to_listener()
+        .map(|listener| listener.process)
+        .ok_or_else(|| "Could not convert ProtoListener to Listener".into())
 }

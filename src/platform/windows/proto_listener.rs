@@ -39,15 +39,36 @@ impl ProtoListener {
             .collect()
     }
 
+    pub(super) fn get_by_port(port: u16, protocol: Protocol) -> crate::Result<ProtoListener> {
+        match protocol {
+            Protocol::TCP => Self::table_entry_by_port::<TcpTable>(port)
+                .or_else(|_| Self::table_entry_by_port::<Tcp6Table>(port)),
+            Protocol::UDP => Self::table_entry_by_port::<UdpTable>(port)
+                .or_else(|_| Self::table_entry_by_port::<Udp6Table>(port)),
+        }
+    }
+
     fn table_entries<Table: SocketTable>() -> crate::Result<Vec<Self>> {
         let mut proto_listeners = Vec::new();
         let table = Table::get_table()?;
-        for i in 0..Table::get_rows_count(&table) {
-            if let Some(proto_listener) = Table::get_proto_listener(&table, i) {
+        let rows_count = Table::get_rows_count(&table);
+        for i in 0..rows_count {
+            if let Some(proto_listener) = Table::get_proto_listener(&table, i, None) {
                 proto_listeners.push(proto_listener);
             }
         }
         Ok(proto_listeners)
+    }
+
+    fn table_entry_by_port<Table: SocketTable>(port: u16) -> crate::Result<Self> {
+        let table = Table::get_table()?;
+        let rows_count = Table::get_rows_count(&table);
+        for i in 0..rows_count {
+            if let Some(proto_listener) = Table::get_proto_listener(&table, i, Some(port)) {
+                return Ok(proto_listener);
+            }
+        }
+        Err("No listener found on port".into())
     }
 
     pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol: Protocol) -> Self {
