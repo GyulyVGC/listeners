@@ -14,11 +14,7 @@ fn benchmark_get_all_100(c: &mut Criterion) {
 
     // benchmark
     let id = "get_all_100";
-    c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
-
-    // save files
-    save_chart_svg(id);
-    save_mean_txt(id);
+    benchmark_get_all(c, id);
 }
 
 fn benchmark_get_all_1k(c: &mut Criterion) {
@@ -29,11 +25,7 @@ fn benchmark_get_all_1k(c: &mut Criterion) {
 
     // benchmark
     let id = "get_all_1k";
-    c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
-
-    // save files
-    save_chart_svg(id);
-    save_mean_txt(id);
+    benchmark_get_all(c, id);
 }
 
 fn benchmark_get_all_10k(c: &mut Criterion) {
@@ -44,6 +36,10 @@ fn benchmark_get_all_10k(c: &mut Criterion) {
 
     // benchmark
     let id = "get_all_10k";
+    benchmark_get_all(c, id);
+}
+
+fn benchmark_get_all(c: &mut Criterion, id: &str) {
     c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
 
     // save files
