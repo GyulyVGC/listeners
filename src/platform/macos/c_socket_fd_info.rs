@@ -28,12 +28,6 @@ impl CSocketFdInfo {
             }
         };
 
-        // if tcp, do not filter on state (get em all)
-        // if tcp_in.tcpsi_state != SOCKET_STATE_LISTEN && ip_protocol == IPPROT_TCP {
-        //     return Err("Socket is not in listening state".into());
-        // }
-
-        // let tcp_sockaddr_in = tcp_in.tcpsi_ini;
         let lport_bytes: [u8; 4] = i32::to_le_bytes(general_sock_info.insi_lport);
         let local_address = Self::get_local_addr(family, general_sock_info)?;
         let protocol = Self::get_protocol(family, transport_protocol)?;

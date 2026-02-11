@@ -80,96 +80,33 @@ pub fn get_all() -> Result<HashSet<Listener>> {
     platform::get_all()
 }
 
-/// Returns the list of [Process]es listening on a given port.
+/// Returns the [Process] listening on a given port.
 ///
 /// # Arguments
 ///
 /// * `port` - The port to look for.
+/// * `protocol` - The protocol to look for (TCP or UDP).
 ///
 /// # Errors
 ///
-/// This function returns an error if it fails to retrieve listeners for the current platform.
+/// This function returns an error if it fails to retrieve the process listening on the given port, or if no process is found.
 ///
 /// # Example
 ///
 ///  ``` no_run
-#[doc = include_str!("../examples/get_processes_by_port.rs")]
+#[doc = include_str!("../examples/get_process_by_port.rs")]
 /// ```
 ///
 /// Output:
 /// ``` text
 /// PID: 2123       Process name: Telegram
 /// ```
-pub fn get_processes_by_port(port: u16) -> Result<HashSet<Process>> {
-    platform::get_all().map(|listeners| {
-        listeners
-            .into_iter()
-            .filter(|listener| listener.socket.port() == port)
-            .map(|listener| listener.process)
-            .collect()
-    })
-}
+pub fn get_process_by_port(port: u16, protocol: Protocol) -> Result<Process> {
+    if port == 0 {
+        return Err("Port can't be 0".into());
+    }
 
-/// Returns the list of ports listened to by a process given its PID.
-///
-/// # Arguments
-///
-/// * `pid` - The PID of the process.
-///
-/// # Errors
-///
-/// This function returns an error if it fails to retrieve listeners for the current platform.
-///
-/// # Example
-///
-///  ``` no_run
-#[doc = include_str!("../examples/get_ports_by_pid.rs")]
-/// ```
-///
-/// Output:
-/// ``` text
-/// 3306
-/// 33060
-/// ```
-pub fn get_ports_by_pid(pid: u32) -> Result<HashSet<u16>> {
-    platform::get_all().map(|listeners| {
-        listeners
-            .into_iter()
-            .filter(|listener| listener.process.pid == pid)
-            .map(|listener| listener.socket.port())
-            .collect()
-    })
-}
-
-/// Returns the list of ports listened to by a process given its name.
-///
-/// # Arguments
-///
-/// * `name` - The name of the process.
-///
-/// # Errors
-///
-/// This function returns an error if it fails to retrieve listeners for the current platform.
-///
-/// # Example
-///
-///  ``` no_run
-#[doc = include_str!("../examples/get_ports_by_process_name.rs")]
-/// ```
-///
-/// Output:
-/// ``` text
-/// 3306
-/// 33060
-/// ```
-pub fn get_ports_by_process_name(name: &str) -> Result<HashSet<u16>> {
-    platform::get_all().map(|listeners| {
-        listeners
-            .into_iter()
-            .filter(|listener| listener.process.name == name)
-            .map(|listener| listener.socket.port())
-            .collect()
-    })
+    platform::get_process_by_port(port, protocol)
 }
 
 impl Listener {

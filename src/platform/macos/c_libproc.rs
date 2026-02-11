@@ -34,7 +34,7 @@ unsafe extern "C" {
 }
 
 unsafe extern "C" {
-    pub fn proc_pidpath(
+    pub(super) fn proc_pidpath(
         pid: ::std::os::raw::c_int,
         buffer: *mut ::std::os::raw::c_void,
         buffersize: u32,
