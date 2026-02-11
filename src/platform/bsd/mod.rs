@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 // use bsd_kvm::{Access, KernProc, Kvm};
-use crate::Listener;
+use crate::{Listener, Process, Protocol};
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     Err("This OS isn't supported yet".into())
@@ -36,4 +36,8 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     // let val = ctl.value().unwrap();
     // let val = val.as_struct();
     // println!("Value: {:?}", val);
+}
+
+pub(crate) fn get_process_by_port(_port: u16, _protocol: Protocol) -> crate::Result<Process> {
+    Err("This OS isn't supported yet".into())
 }
