@@ -31,7 +31,7 @@ pub(super) fn build_inode_proc_map() -> crate::Result<HashMap<u64, ProcInfo>> {
         dir.rewind();
 
         let mut socket_inodes = Vec::new();
-        while let Some(entry_res) = dir.next() {
+        for entry_res in dir {
             if let Ok(entry) = entry_res {
                 let name = entry.file_name().to_string_lossy();
                 if RawFd::from_str(&name).is_ok()
@@ -81,7 +81,7 @@ pub(super) fn get_proc_by_inode(inode: u64) -> crate::Result<ProcInfo> {
         dir.rewind();
 
         let mut inode_found = false;
-        while let Some(entry_res) = dir.next() {
+        for entry_res in dir {
             if let Ok(entry) = entry_res {
                 let name = entry.file_name().to_string_lossy();
                 if RawFd::from_str(&name).is_ok()

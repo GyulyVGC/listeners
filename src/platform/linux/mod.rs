@@ -34,6 +34,5 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
     let proto_listener = ProtoListener::get_by_port(port, protocol)?;
-    let p = get_proc_by_inode(proto_listener.inode())?;
-    return Ok(Process::new(p.pid(), p.name(), p.path()));
+    get_proc_by_inode(proto_listener.inode()).map(|p| Process::new(p.pid(), p.name(), p.path()))
 }
