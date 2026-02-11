@@ -1,5 +1,5 @@
 use http_test_server::TestServer;
-use listeners::{Listener, Process, Protocol};
+use listeners::{Listener, Process, Protocol, get_process_by_port};
 use serial_test::serial;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 use std::str::FromStr;
@@ -99,9 +99,12 @@ fn test_udp() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
@@ -127,9 +130,12 @@ fn test_tcp() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::TCP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
@@ -155,9 +161,12 @@ fn test_tcp6() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::TCP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
@@ -183,9 +192,12 @@ fn test_udp6() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
