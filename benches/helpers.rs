@@ -1,8 +1,8 @@
+use listeners::Protocol;
 use serde_json::Value;
 use std::env::consts::OS;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
 
-#[allow(dead_code)]
 pub enum SocketType {
     TCP(TcpListener),
     UDP(UdpSocket),
@@ -20,6 +20,22 @@ pub fn spawn_sockets(n: usize) -> Vec<SocketType> {
         sockets.push(SocketType::UDP(socket));
     }
     sockets
+}
+
+pub fn get_ports_protos(sockets: &[SocketType]) -> Vec<(u16, Protocol)> {
+    sockets
+        .iter()
+        .filter_map(|socket| match socket {
+            SocketType::TCP(tcp) => tcp
+                .local_addr()
+                .ok()
+                .map(|addr| (addr.port(), Protocol::TCP)),
+            SocketType::UDP(udp) => udp
+                .local_addr()
+                .ok()
+                .map(|addr| (addr.port(), Protocol::UDP)),
+        })
+        .collect::<Vec<_>>()
 }
 
 pub fn save_chart_svg(benchmark_id: &str) {

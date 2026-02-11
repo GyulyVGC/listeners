@@ -10,7 +10,7 @@ fn benchmark_get_all_100(c: &mut Criterion) {
     // spawn sockets
     let _sockets = spawn_sockets(100);
     let listeners = listeners::get_all().unwrap_or_default().len();
-    println!("=== Benchmarking get_all with {} listeners ===", listeners);
+    println!("=== Benchmarking get_all with {listeners} listeners ===");
 
     // benchmark
     let id = "get_all_100";
@@ -25,7 +25,7 @@ fn benchmark_get_all_1k(c: &mut Criterion) {
     // spawn sockets
     let _sockets = spawn_sockets(1_000);
     let listeners = listeners::get_all().unwrap_or_default().len();
-    println!("=== Benchmarking get_all with {} listeners ===", listeners);
+    println!("=== Benchmarking get_all with {listeners} listeners ===");
 
     // benchmark
     let id = "get_all_1k";
@@ -40,7 +40,7 @@ fn benchmark_get_all_10k(c: &mut Criterion) {
     // spawn sockets
     let _sockets = spawn_sockets(10_000);
     let listeners = listeners::get_all().unwrap_or_default().len();
-    println!("=== Benchmarking get_all with {} listeners ===", listeners);
+    println!("=== Benchmarking get_all with {listeners} listeners ===");
 
     // benchmark
     let id = "get_all_10k";
