@@ -5,8 +5,8 @@ use proc_pid::ProcPid;
 use proto_listener::ProtoListener;
 use socket_fd::SocketFd;
 
-use crate::Listener;
 use crate::platform::macos::proc_path::ProcPath;
+use crate::{Listener, Process, Protocol};
 
 mod c_libproc;
 mod c_proc_fd_info;
@@ -46,19 +46,29 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     Ok(listeners)
 }
 
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn test_get_all() {
-//         let listeners = crate::get_all().unwrap();
-//         assert!(!listeners.is_empty());
-//
-//         // let out = std::process::Command::new("netstat")
-//         //     .args(["-p", "tcp", "-van"])
-//         //     .output()
-//         //     .unwrap();
-//         // for l in String::from_utf8(out.stdout).unwrap().lines().filter(|l| l.contains("LISTEN")) {
-//         //     println!("{}", l);
-//         // }
-//     }
-// }
+pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
+    for pid in ProcPid::get_all().into_iter().flatten() {
+        for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
+            if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
+                && proto_listener.socket_addr().port() == port
+                && proto_listener.protocol() == protocol
+                && let Ok(ProcName(name)) = ProcName::from_pid(pid)
+            {
+                let ProcPath(path) = ProcPath::from_pid(pid);
+                let Ok(pid_u_32) = pid.as_u_32() else {
+                    continue;
+                };
+                let listener = Listener::new(
+                    pid_u_32,
+                    name,
+                    path,
+                    proto_listener.socket_addr(),
+                    proto_listener.protocol(),
+                );
+                return Ok(listener.process);
+            }
+        }
+    }
+
+    Err("No process found listening on the specified port and protocol".into())
+}

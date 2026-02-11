@@ -13,6 +13,7 @@ mod tcp_table;
 mod udp6_table;
 mod udp_table;
 
+#[allow(clippy::unnecessary_wraps)]
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
