@@ -88,9 +88,9 @@ impl ProtoListener {
         let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
         process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
 
-        if unsafe { Process32First(h, &mut process) }.is_ok() {
+        if unsafe { Process32First(h, &raw mut process) }.is_ok() {
             loop {
-                if unsafe { Process32Next(h, &mut process) }.is_ok() {
+                if unsafe { Process32Next(h, &raw mut process) }.is_ok() {
                     let id: u32 = process.th32ProcessID;
                     if id == pid {
                         break;
@@ -108,6 +108,7 @@ impl ProtoListener {
         let name = process.szExeFile;
         let len = name.iter().position(|&x| x == 0)?;
 
+        #[allow(clippy::cast_sign_loss)]
         String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
     }
 
@@ -123,13 +124,13 @@ impl ProtoListener {
             }
 
             let mut buffer: [u16; 1024] = [0; 1024];
-            let mut size = buffer.len() as u32;
+            let mut size = u32::try_from(buffer.len()).unwrap_or_default();
 
             let _ = QueryFullProcessImageNameW(
                 handle,
                 PROCESS_NAME_FORMAT(0),
                 PWSTR(buffer.as_mut_ptr()),
-                &mut size,
+                &raw mut size,
             );
             let _ = CloseHandle(handle);
 

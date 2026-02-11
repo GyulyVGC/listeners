@@ -179,7 +179,7 @@ fn get_udp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     let mut err_code = unsafe {
         GetExtendedUdpTable(
             std::ptr::null_mut(),
-            &mut table_size,
+            &raw mut table_size,
             FALSE,
             address_family,
             UDP_TABLE_OWNER_PID,
@@ -193,7 +193,7 @@ fn get_udp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
         err_code = unsafe {
             GetExtendedUdpTable(
                 table.as_mut_ptr().cast::<c_void>(),
-                &mut table_size,
+                &raw mut table_size,
                 FALSE,
                 address_family,
                 UDP_TABLE_OWNER_PID,
@@ -217,7 +217,7 @@ fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     let mut err_code = unsafe {
         GetExtendedTcpTable(
             std::ptr::null_mut(),
-            &mut table_size,
+            &raw mut table_size,
             FALSE,
             address_family,
             TCP_TABLE_OWNER_PID_ALL,
@@ -231,7 +231,7 @@ fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
         err_code = unsafe {
             GetExtendedTcpTable(
                 table.as_mut_ptr().cast::<c_void>(),
-                &mut table_size,
+                &raw mut table_size,
                 FALSE,
                 address_family,
                 TCP_TABLE_OWNER_PID_ALL,
