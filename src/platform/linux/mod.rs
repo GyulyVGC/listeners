@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
-use helpers::build_inode_proc_map;
-use proc_fd::ProcFd;
+use helpers::{build_inode_proc_map, get_proc_by_inode};
 use proto_listener::ProtoListener;
 
 use crate::{Listener, Process, Protocol};
