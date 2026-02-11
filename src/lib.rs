@@ -102,6 +102,10 @@ pub fn get_all() -> Result<HashSet<Listener>> {
 /// PID: 2123       Process name: Telegram
 /// ```
 pub fn get_process_by_port(port: u16, protocol: Protocol) -> Result<Process> {
+    if port == 0 {
+        return Err("Port can't be 0".into());
+    }
+
     platform::get_process_by_port(port, protocol)
 }
 
