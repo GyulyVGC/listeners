@@ -1,12 +1,13 @@
 use std::env::args;
 
 fn main() {
-    let port = args()
+    let mut args = args();
+    let port = args
         .nth(1)
         .expect("Expected CLI argument: port")
         .parse()
         .expect("Port must be an unsigned integer on at most 16 bits");
-    let protocol_str = args()
+    let protocol_str = args
         .next()
         .expect("Expected CLI argument: protocol (TCP or UDP)");
 
