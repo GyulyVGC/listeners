@@ -12,8 +12,6 @@ pub(super) struct ProtoListener {
 }
 
 impl ProtoListener {
-    // const LISTEN_STATE: &'static str = "0A";
-
     pub(super) fn local_addr(&self) -> SocketAddr {
         self.local_addr
     }
@@ -53,8 +51,8 @@ impl ProtoListener {
             }
         }
 
-        if let Ok(udp_table) = File::open("/proc/net/udp6") {
-            for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
+        if let Ok(udp6_table) = File::open("/proc/net/udp6") {
+            for line in BufReader::new(udp6_table).lines().map_while(Result::ok) {
                 if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::UDP) {
                     table.push(l)
                 }
@@ -62,6 +60,57 @@ impl ProtoListener {
         }
 
         Ok(table)
+    }
+
+    pub(super) fn get_by_port(port: u16, protocol: Protocol) -> crate::Result<ProtoListener> {
+        match protocol {
+            Protocol::TCP => {
+                if let Ok(tcp_table) = File::open("/proc/net/tcp") {
+                    for line in BufReader::new(tcp_table).lines().map_while(Result::ok) {
+                        if let Ok(l) =
+                            ProtoListener::from_protocol_table_entry(&line, Protocol::TCP)
+                            && l.local_addr().port() == port
+                        {
+                            return Ok(l);
+                        }
+                    }
+                }
+                if let Ok(tcp6_table) = File::open("/proc/net/tcp6") {
+                    for line in BufReader::new(tcp6_table).lines().map_while(Result::ok) {
+                        if let Ok(l) =
+                            ProtoListener::from_protocolv6_table_entry(&line, Protocol::TCP)
+                            && l.local_addr().port() == port
+                        {
+                            return Ok(l);
+                        }
+                    }
+                }
+            }
+            Protocol::UDP => {
+                if let Ok(udp_table) = File::open("/proc/net/udp") {
+                    for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
+                        if let Ok(l) =
+                            ProtoListener::from_protocol_table_entry(&line, Protocol::UDP)
+                            && l.local_addr().port() == port
+                        {
+                            return Ok(l);
+                        }
+                    }
+                }
+                if let Ok(udp6_table) = File::open("/proc/net/udp6") {
+                    for line in BufReader::new(udp6_table).lines().map_while(Result::ok) {
+                        if let Ok(l) =
+                            ProtoListener::from_protocolv6_table_entry(&line, Protocol::UDP)
+                            && l.local_addr().port() == port
+                        {
+                            return Ok(l);
+                        }
+                    }
+                }
+            }
+        }
+
+        Err("No listener found on port".into())
     }
 
     fn from_protocol_table_entry(line: &str, protocol: Protocol) -> crate::Result<Self> {

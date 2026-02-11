@@ -22,7 +22,7 @@ mod statics;
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
-    for pid in ProcPid::get_all().into_iter().flatten() {
+    for pid in ProcPid::get_all()? {
         for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
             if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
                 && let Ok(ProcName(name)) = ProcName::from_pid(pid)
@@ -47,7 +47,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 }
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
-    for pid in ProcPid::get_all().into_iter().flatten() {
+    for pid in ProcPid::get_all()? {
         for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
             if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
                 && proto_listener.socket_addr().port() == port
