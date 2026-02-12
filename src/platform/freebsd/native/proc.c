@@ -2,8 +2,10 @@
 
 int proc_list(struct process_info_t **list, size_t *nentries)
 {
-    uid_t uid = geteuid();
-    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, uid};
+    uid_t uid = getuid();
+    uid_t euid = geteuid();
+
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, euid};
     size_t buflen = 0;
 
     if (sysctl(mib, 4, NULL, &buflen, NULL, 0) == -1)
@@ -38,6 +40,9 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         if (procbuf[i].ki_flag & P_KPROC)
             continue;
 
+        if (procbuf[i].ki_uid != uid)
+            continue;
+
         ++retval_cnt;
     }
 
@@ -61,6 +66,9 @@ int proc_list(struct process_info_t **list, size_t *nentries)
     for (size_t i = 0; i < list_len; i++)
     {
         if (procbuf[i].ki_flag & P_KPROC)
+            continue;
+
+        if (procbuf[i].ki_uid != uid)
             continue;
 
         (*list)[idx].pid = procbuf[i].ki_pid;
