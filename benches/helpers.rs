@@ -9,6 +9,7 @@ pub enum SocketType {
     UDP(UdpSocket),
 }
 
+// TODO: sockets should be associated with different PIDs
 pub fn spawn_sockets(n: usize) -> Vec<SocketType> {
     let mut sockets: Vec<SocketType> = Vec::new();
     let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);

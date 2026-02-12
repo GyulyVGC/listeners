@@ -22,7 +22,7 @@ use crate::platform::windows::tcp6_table::Tcp6Table;
 use super::udp_table::UdpTable;
 use super::udp6_table::Udp6Table;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(super) struct ProtoListener {
     local_addr: IpAddr,
     local_port: u16,
@@ -150,7 +150,7 @@ impl ProtoListener {
 }
 
 pub(super) struct ProtoListenersCache {
-    cache: HashMap<u32, Listener>,
+    cache: HashMap<ProtoListener, Listener>,
 }
 
 impl ProtoListenersCache {
@@ -161,13 +161,11 @@ impl ProtoListenersCache {
     }
 
     pub(super) fn get(&mut self, proto_listener: ProtoListener) -> Option<Listener> {
-        let pid = proto_listener.pid;
-
-        if let Entry::Vacant(e) = self.cache.entry(pid) {
+        if let Entry::Vacant(e) = self.cache.entry(proto_listener) {
             let listener = proto_listener.to_listener()?;
             e.insert(listener);
         }
 
-        self.cache.get(&pid).cloned()
+        self.cache.get(&proto_listener).cloned()
     }
 }
