@@ -1,7 +1,6 @@
-use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6};
-
 use super::ffi::CSocketInfo;
 use crate::Protocol;
+use std::net::SocketAddr;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub(super) struct SocketInfo {
