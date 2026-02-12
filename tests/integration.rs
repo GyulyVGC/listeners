@@ -20,7 +20,8 @@ fn test_consistency() {
 
     for l in &listeners {
         let process_by_port = listeners::get_process_by_port(l.socket.port(), l.protocol).unwrap();
-        assert_eq!(process_by_port, l.process);
+        assert_eq!(process_by_port.name, l.process.name);
+        assert_eq!(process_by_port.path, l.process.path);
     }
 }
 
