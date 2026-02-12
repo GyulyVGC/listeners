@@ -18,7 +18,7 @@ Some examples of existing libraries:
 - [sysinfo](https://crates.io/crates/sysinfo): doesn't expose the sockets used by each process
 
 This library wants to fill this gap, and it aims to be: 
-- **Cross-platform**: it currently supports Windows, Linux and macOS
+- **Cross-platform**: it currently supports Windows, Linux, macOS, and FreeBSD
 - **Performant**: it internally uses low-level system APIs to be more efficient (see [benchmarks](#benchmarks))
 - **Simple**: it exposes intuitive APIs to get details about the listening processes
 - **Lightweight**: it has only the strictly necessary dependencies
@@ -28,7 +28,8 @@ This library wants to fill this gap, and it aims to be:
 - [x] Windows
 - [x] Linux
 - [x] macOS
-- [ ] BSD
+- [x] FreeBSD
+- [ ] Other BSD-based
 - [ ] iOS
 - [ ] Android
 
