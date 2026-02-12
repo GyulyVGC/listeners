@@ -81,4 +81,4 @@ jobs:
             cargo clippy -- -D warnings
 
             echo "Running cargo tests..."
-            cargo test --verbose -- --nocapture
+            sudo -E cargo test --verbose -- --nocapture
