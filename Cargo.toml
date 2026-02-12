@@ -30,10 +30,6 @@ libc = "0.2.180"
 [target.'cfg(target_os = "freebsd")'.build-dependencies]
 cc = "1.0"
 
-#[target.'cfg(all(not(target_os = "linux"), not(target_os = "macos"), not(target_os = "windows")))'.dependencies]
-#bsd-kvm = "0.1.5"
-#sysctl = "0.5.5"
-
 [dev-dependencies]
 http-test-server = "2.1.1"
 serial_test = "3.3.1"
