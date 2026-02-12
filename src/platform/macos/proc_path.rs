@@ -52,8 +52,7 @@ impl ProcPathsCache {
 
     pub(super) fn get(&mut self, pid: ProcPid) -> ProcPath {
         if let Entry::Vacant(e) = self.cache.entry(pid) {
-            let proc_path = ProcPath::from_pid(pid);
-            e.insert(proc_path);
+            e.insert(ProcPath::from_pid(pid));
         }
 
         self.cache.get(&pid).cloned().unwrap_or_default()

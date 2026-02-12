@@ -40,7 +40,7 @@ impl ProcName {
 }
 
 pub(super) struct ProcNamesCache {
-    cache: HashMap<ProcPid, ProcName>,
+    cache: HashMap<ProcPid, Option<ProcName>>,
 }
 
 impl ProcNamesCache {
@@ -50,15 +50,11 @@ impl ProcNamesCache {
         }
     }
 
-    pub(super) fn get(&mut self, pid: ProcPid) -> crate::Result<ProcName> {
+    pub(super) fn get(&mut self, pid: ProcPid) -> Option<ProcName> {
         if let Entry::Vacant(e) = self.cache.entry(pid) {
-            let proc_name = ProcName::from_pid(pid)?;
-            e.insert(proc_name);
+            e.insert(ProcName::from_pid(pid).ok());
         }
 
-        self.cache
-            .get(&pid)
-            .cloned()
-            .ok_or_else(|| "Failed to get process name from cache".into())
+        self.cache.get(&pid).cloned().flatten()
     }
 }

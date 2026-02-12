@@ -16,7 +16,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
     for proto_listener in ProtoListener::get_all()? {
-        if let Ok(p) = inode_proc_cache.get(proto_listener.inode()) {
+        if let Some(p) = inode_proc_cache.get(proto_listener.inode()) {
             let listener = Listener::new(
                 p.pid(),
                 p.name(),

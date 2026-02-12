@@ -88,7 +88,7 @@ fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> crate::Resul
 }
 
 pub(super) struct InodeProcCache {
-    cache: HashMap<u64, ProcInfo>,
+    cache: HashMap<u64, Option<ProcInfo>>,
 }
 
 impl InodeProcCache {
@@ -98,15 +98,11 @@ impl InodeProcCache {
         }
     }
 
-    pub(super) fn get(&mut self, inode: u64) -> crate::Result<ProcInfo> {
+    pub(super) fn get(&mut self, inode: u64) -> Option<ProcInfo> {
         if let Entry::Vacant(e) = self.cache.entry(inode) {
-            let proc_info = get_proc_by_inode(inode)?;
-            e.insert(proc_info);
+            e.insert(get_proc_by_inode(inode).ok());
         }
 
-        self.cache
-            .get(&inode)
-            .cloned()
-            .ok_or_else(|| "Failed to get process name from cache".into())
+        self.cache.get(&inode).cloned().flatten()
     }
 }

@@ -150,7 +150,7 @@ impl ProtoListener {
 }
 
 pub(super) struct ProtoListenersCache {
-    cache: HashMap<ProtoListener, Listener>,
+    cache: HashMap<ProtoListener, Option<Listener>>,
 }
 
 impl ProtoListenersCache {
@@ -162,10 +162,9 @@ impl ProtoListenersCache {
 
     pub(super) fn get(&mut self, proto_listener: ProtoListener) -> Option<Listener> {
         if let Entry::Vacant(e) = self.cache.entry(proto_listener) {
-            let listener = proto_listener.to_listener()?;
-            e.insert(listener);
+            e.insert(proto_listener.to_listener().ok());
         }
 
-        self.cache.get(&proto_listener).cloned()
+        self.cache.get(&proto_listener).cloned().flatten()
     }
 }

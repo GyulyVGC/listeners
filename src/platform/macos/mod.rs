@@ -32,7 +32,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
         };
         for fd in &SocketFd::get_all_of_pid(pid).unwrap_or_default() {
             if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
-                && let Ok(ProcName(name)) = proc_names_cache.get(pid)
+                && let Some(ProcName(name)) = proc_names_cache.get(pid)
             {
                 let ProcPath(path) = proc_paths_cache.get(pid);
                 let listener = Listener::new(
