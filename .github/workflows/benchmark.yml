@@ -8,6 +8,43 @@ env:
 
 jobs:
 
+  benchmark-freebsd:
+    name: freebsd
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: bench
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          architecture: x86_64
+          version: 14.3
+          cpu_count: 4
+          memory: 4G
+          shutdown_vm: true
+          sync_files: true
+          run: |
+            sudo pkg update
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            
+            export PATH=$HOME/.cargo/bin:$PATH
+            
+            echo "Running benchmarks..."
+            sudo -E env "PATH=$PATH" cargo bench
+            
+            echo "Fixing file permissions for sync..."
+            sudo chown -R $(whoami):$(whoami) .
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "update benchmarks for freebsd"
+
   benchmark:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
@@ -34,42 +71,3 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "update benchmarks for ${{ matrix.os }}"
-
-  benchmark-freebsd:
-    name: freebsd
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@main
-        with:
-          fetch-depth: 0
-          submodules: recursive
-
-      - name: Run Benchmarks
-        uses: cross-platform-actions/action@v0.32.0
-        with:
-          operating_system: freebsd
-          architecture: x86_64
-          version: 14.3
-          cpu_count: 4
-          memory: 4G
-          shutdown_vm: true
-          sync_files: true
-          run: |
-            sudo pkg update
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            
-            export PATH=$HOME/.cargo/bin:$PATH
-            
-            echo "Running benchmarks..."
-            sudo -E env "PATH=$PATH" cargo bench
-            
-            echo "Fixing file permissions for sync..."
-            sudo chown -R $(whoami):$(whoami) .
-
-      - uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: "update benchmarks for freebsd"
