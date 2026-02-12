@@ -31,7 +31,21 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         return -1;
     }
 
-    *nentries = buflen / sizeof(struct kinfo_proc);
+    size_t retval_cnt = 0;
+    for (size_t i = 0; i < *nentries; i++)
+    {
+        if (procbuf[i].ki_flag & P_KPROC)
+            continue;
+        ++retval_cnt;
+    }
+
+    *nentries = retval_cnt;
+
+    if (retval_cnt == 0)
+    {
+        free(procbuf);
+        return 0;
+    }
 
     *list = calloc(*nentries, sizeof(struct process_info_t));
     if (!*list)
