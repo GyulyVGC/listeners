@@ -1,27 +1,41 @@
+use super::socket_info::SocketInfo;
+use crate::Process;
 use std::ffi::CStr;
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::os::raw::{c_char, c_int};
 use std::{io, ptr};
 
-use super::socket_info::SocketInfo;
-use crate::Process;
-
 #[repr(C)]
-pub(super) struct CSocketAddress {
-    pub(super) addr: CAddress,
-    pub(super) family: i32,
+struct CSocketAddress {
+    addr: CAddress,
+    family: i32,
 }
 
 #[repr(C)]
-pub(super) union CAddress {
-    pub(super) ipv4: [u8; 4],
-    pub(super) ipv6: [u8; 16],
+union CAddress {
+    ipv4: [u8; 4],
+    ipv6: [u8; 16],
 }
 
 #[repr(C)]
 pub(super) struct CSocketInfo {
-    pub(super) address: CSocketAddress,
-    pub(super) port: u16,
+    address: CSocketAddress,
+    port: u16,
     pub(super) protocol: u32,
+}
+
+impl CSocketInfo {
+    pub(super) fn to_sockaddr(&self) -> SocketAddr {
+        let c_sock_addr = self.address;
+        let ip = if c_sock_addr.family == libc::AF_INET {
+            let octets = unsafe { c_sock_addr.addr.ipv4 };
+            IpAddr::V4(Ipv4Addr::from_octets(octets))
+        } else {
+            let octets = unsafe { c_sock_addr.addr.ipv6 };
+            IpAddr::V6(Ipv6Addr::from_octets(octets))
+        };
+        SocketAddr::new(ip, self.port)
+    }
 }
 
 #[repr(C)]
