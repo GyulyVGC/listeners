@@ -59,10 +59,9 @@ int proc_list(struct process_info_t **list, size_t *nentries)
 
 int proc_sockets(pid_t pid, struct socket_info_t **list, size_t *nentries)
 {
-    struct kinfo_file *kf;
     int cnt;
 
-    kf = kinfo_getfile(pid, &cnt);
+    struct kinfo_file *kf = kinfo_getfile(pid, &cnt);
     if (kf == NULL)
     {
         *list = NULL;
@@ -70,7 +69,25 @@ int proc_sockets(pid_t pid, struct socket_info_t **list, size_t *nentries)
         return -1;
     }
 
-    *list = calloc(cnt, sizeof(struct socket_info_t));
+    int retval_cnt = 0;
+    for (int i = 0; i < cnt; i++)
+    {
+        if (kf[i].kf_type != KF_TYPE_SOCKET)
+            continue;
+
+        if (kf[i].kf_sock_protocol == IPPROTO_UDP || kf[i].kf_sock_protocol == IPPROTO_TCP)
+            retval_cnt++;
+    }
+
+    if (retval_cnt == 0)
+    {
+        free(kf);
+        *list = NULL;
+        *nentries = 0;
+        return 0;
+    }
+
+    *list = calloc(retval_cnt, sizeof(struct socket_info_t));
     if (!*list)
     {
         free(kf);
@@ -80,40 +97,42 @@ int proc_sockets(pid_t pid, struct socket_info_t **list, size_t *nentries)
         return -1;
     }
 
-    size_t idx = 0;
+    int idx = 0;
     for (int i = 0; i < cnt; i++)
     {
         if (kf[i].kf_type != KF_TYPE_SOCKET)
             continue;
 
-        struct sockaddr_storage *local = &kf[i].kf_sa_local;
+        if (kf[i].kf_sock_protocol != IPPROTO_UDP && kf[i].kf_sock_protocol != IPPROTO_TCP)
+            continue;
 
+        (*list)[idx].protocol = (kf[i].kf_sock_protocol == IPPROTO_UDP ? PROTOCOL_UDP : PROTOCOL_TCP);
+
+        struct sockaddr_storage *local = &kf[i].kf_sa_local;
         if (local->ss_family == AF_INET)
         {
             struct sockaddr_in *s = (struct sockaddr_in *)local;
 
-            (*list)[idx].protocol = (kf[i].kf_sock_protocol == IPPROTO_UDP ? PROTOCOL_UDP : PROTOCOL_TCP);
             (*list)[idx].address.family = AF_INET;
             (*list)[idx].address.addr.ipv4 = s->sin_addr;
             (*list)[idx].port = ntohs(s->sin_port);
 
-            idx++;
+            ++idx;
         }
         else if (local->ss_family == AF_INET6)
         {
             struct sockaddr_in6 *s6 = (struct sockaddr_in6 *)local;
 
-            (*list)[idx].protocol = (kf[i].kf_sock_protocol == IPPROTO_UDP ? PROTOCOL_UDP : PROTOCOL_TCP);
             (*list)[idx].address.family = AF_INET6;
             (*list)[idx].address.addr.ipv6 = s6->sin6_addr;
             (*list)[idx].port = ntohs(s6->sin6_port);
 
-            idx++;
+            ++idx;
         }
     }
 
     free(kf);
 
-    *nentries = idx;
+    *nentries = retval_cnt;
     return 0;
 }
