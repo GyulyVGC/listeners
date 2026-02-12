@@ -7,28 +7,28 @@ use crate::Process;
 
 #[repr(C)]
 pub(super) struct CSocketAddress {
-    pub addr: CAddress,
-    pub family: i32,
+    pub(super) addr: CAddress,
+    pub(super) family: i32,
 }
 
 #[repr(C)]
 pub(super) union CAddress {
-    pub ipv4: [u8; 4],
-    pub ipv6: [u8; 16],
+    pub(super) ipv4: [u8; 4],
+    pub(super) ipv6: [u8; 16],
 }
 
 #[repr(C)]
 pub(super) struct CSocketInfo {
-    pub address: CSocketAddress,
-    pub port: u16,
-    pub protocol: u32,
+    pub(super) address: CSocketAddress,
+    pub(super) port: u16,
+    pub(super) protocol: u32,
 }
 
 #[repr(C)]
-pub(super) struct CProcessInfo {
-    pub path: [c_char; libc::PATH_MAX as usize],
-    pub name: [c_char; libc::COMMLEN + 1],
-    pub pid: c_int,
+struct CProcessInfo {
+    path: [c_char; libc::PATH_MAX as usize],
+    name: [c_char; libc::COMMLEN + 1],
+    pid: c_int,
 }
 
 unsafe extern "C" {
@@ -40,7 +40,7 @@ unsafe extern "C" {
     fn proc_sockets(pid: c_int, list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
 }
 
-pub fn get_listening_sockets_tcp() -> io::Result<Vec<SocketInfo>> {
+pub(super) fn get_listening_sockets_tcp() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
@@ -67,7 +67,7 @@ pub fn get_listening_sockets_tcp() -> io::Result<Vec<SocketInfo>> {
     Ok(sockets)
 }
 
-pub fn get_listening_sockets_tcp6() -> io::Result<Vec<SocketInfo>> {
+pub(super) fn get_listening_sockets_tcp6() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
@@ -94,7 +94,7 @@ pub fn get_listening_sockets_tcp6() -> io::Result<Vec<SocketInfo>> {
     Ok(sockets)
 }
 
-pub fn get_listening_sockets_udp() -> io::Result<Vec<SocketInfo>> {
+pub(super) fn get_listening_sockets_udp() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
@@ -121,7 +121,7 @@ pub fn get_listening_sockets_udp() -> io::Result<Vec<SocketInfo>> {
     Ok(sockets)
 }
 
-pub fn get_listening_sockets_udp6() -> io::Result<Vec<SocketInfo>> {
+pub(super) fn get_listening_sockets_udp6() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
@@ -148,7 +148,7 @@ pub fn get_listening_sockets_udp6() -> io::Result<Vec<SocketInfo>> {
     Ok(sockets)
 }
 
-pub fn get_processes() -> io::Result<Vec<Process>> {
+pub(super) fn get_processes() -> io::Result<Vec<Process>> {
     let mut list: *mut CProcessInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
@@ -183,7 +183,7 @@ pub fn get_processes() -> io::Result<Vec<Process>> {
     Ok(processes)
 }
 
-pub fn get_process_all_sockets(pid: u32) -> io::Result<Vec<SocketInfo>> {
+pub(super) fn get_process_all_sockets(pid: u32) -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 

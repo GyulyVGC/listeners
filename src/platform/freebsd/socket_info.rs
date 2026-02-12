@@ -4,9 +4,9 @@ use super::ffi::{CSocketAddress, CSocketInfo};
 use crate::Protocol;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub struct SocketInfo {
-    pub address: SocketAddr,
-    pub protocol: Protocol,
+pub(super) struct SocketInfo {
+    pub(super) address: SocketAddr,
+    pub(super) protocol: Protocol,
 }
 
 impl From<&CSocketInfo> for SocketInfo {
