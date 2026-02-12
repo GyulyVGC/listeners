@@ -48,11 +48,7 @@ jobs:
       contents: write
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@main
-        with:
-          fetch-depth: 0
-          submodules: recursive
+      - uses: actions/checkout@v6
 
       - name: Run CI
         uses: cross-platform-actions/action@v0.32.0
