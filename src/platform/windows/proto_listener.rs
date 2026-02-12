@@ -141,7 +141,7 @@ impl ProtoListener {
         }
     }
 
-    pub(super) fn to_listener(&self) -> Option<Listener> {
+    pub(super) fn to_listener(self) -> Option<Listener> {
         let socket = SocketAddr::new(self.local_addr, self.local_port);
         let pname = self.pname()?;
         let ppath = self.ppath();
