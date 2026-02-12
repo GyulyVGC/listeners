@@ -4,6 +4,7 @@ All releases with the relative changes are documented in this file.
 
 ## [UNRELEASED]
 ### Added
+- FreeBSD support ([#32](https://github.com/GyulyVGC/listeners/pull/32))
 - New API `get_process_by_port` to efficiently get the process listening on a specific port and protocol ([#34](https://github.com/GyulyVGC/listeners/pull/34) — fixes [#25](https://github.com/GyulyVGC/listeners/issues/25))
 - `IS_OS_SUPPORTED` constant to check if the consumer platform is supported by the library
 - Benchmarks to measure performance on all supported platforms ([#31](https://github.com/GyulyVGC/listeners/pull/31))
