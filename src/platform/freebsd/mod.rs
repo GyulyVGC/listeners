@@ -1,6 +1,5 @@
 use socket_info::SocketInfo;
 use std::collections::HashSet;
-use std::io::{Error, ErrorKind};
 
 mod ffi;
 mod socket_info;
@@ -41,7 +40,7 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
     for process in processes {
         let sockets = ffi::get_process_all_sockets(process.pid);
 
-        if let Some(socket) = sockets.into_iter().find(|s| lsocket.eq(s)) {
+        if sockets.into_iter().find(|s| lsocket.eq(s)).is_some() {
             return Ok(process);
         }
     }
