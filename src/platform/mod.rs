@@ -1,4 +1,5 @@
 pub(crate) use target_os::get_all;
+pub(crate) use target_os::get_process_by_port;
 
 /* ---------- windows ---------- */
 #[cfg(target_os = "windows")]

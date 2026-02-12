@@ -1,10 +1,9 @@
 use std::collections::HashSet;
 
-use helpers::build_inode_proc_map;
-use proc_fd::ProcFd;
+use helpers::{build_inode_proc_map, get_proc_by_inode};
 use proto_listener::ProtoListener;
 
-use crate::Listener;
+use crate::{Listener, Process, Protocol};
 
 mod helpers;
 mod proc_fd;
@@ -15,7 +14,7 @@ mod statics;
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
-    let inode_proc_map = build_inode_proc_map(ProcFd::get_all()?)?;
+    let inode_proc_map = build_inode_proc_map()?;
 
     for proto_listener in ProtoListener::get_all()? {
         if let Some(p) = inode_proc_map.get(&proto_listener.inode()) {
@@ -33,19 +32,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     Ok(listeners)
 }
 
-// #[cfg(test)]
-// mod tests {
-//     #[test]
-//     fn test_get_all() {
-//         let listeners = crate::get_all().unwrap();
-//         assert!(!listeners.is_empty());
-//
-//         // let out = std::process::Command::new("netstat")
-//         //     .args(["-plnt"])
-//         //     .output()
-//         //     .unwrap();
-//         // for l in String::from_utf8(out.stdout).unwrap().lines() {
-//         //     println!("{}", l);
-//         // }
-//     }
-// }
+pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
+    let proto_listener = ProtoListener::get_by_port(port, protocol)?;
+    get_proc_by_inode(proto_listener.inode()).map(|p| Process::new(p.pid(), p.name(), p.path()))
+}

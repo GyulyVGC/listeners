@@ -1,5 +1,5 @@
 use http_test_server::TestServer;
-use listeners::{Listener, Process, Protocol};
+use listeners::{Listener, Process, Protocol, get_process_by_port};
 use serial_test::serial;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 use std::str::FromStr;
@@ -11,35 +11,17 @@ fn test_consistency() {
     let _test = TestServer::new().unwrap();
 
     // retrieve all listeners and check that the set is not empty
-    let listeners = listeners::get_all().unwrap();
+    let mut listeners = listeners::get_all().unwrap();
     assert!(!listeners.is_empty());
 
-    // maybe there is no udp connection
-    if let Some(l_udp) = listeners.iter().find(|l| l.protocol == Protocol::UDP) {
-        println!("UDP: {l_udp}");
+    // only keep listeners running on a port != 0
+    listeners.retain(|l| l.socket.port() != 0);
+    assert!(!listeners.is_empty());
 
-        let ports_by_name = listeners::get_ports_by_process_name(&l_udp.process.name).unwrap();
-        assert!(ports_by_name.contains(&l_udp.socket.port()));
-
-        let processes_by_port = listeners::get_processes_by_port(l_udp.socket.port()).unwrap();
-        assert!(processes_by_port.contains(&l_udp.process));
-
-        let ports_by_pid = listeners::get_ports_by_pid(l_udp.process.pid).unwrap();
-        assert!(ports_by_pid.contains(&l_udp.socket.port()));
-    };
-
-    if let Some(l_tcp) = listeners.iter().find(|l| l.protocol == Protocol::TCP) {
-        println!("TCP: {l_tcp}");
-
-        let ports_by_name = listeners::get_ports_by_process_name(&l_tcp.process.name).unwrap();
-        assert!(ports_by_name.contains(&l_tcp.socket.port()));
-
-        let processes_by_port = listeners::get_processes_by_port(l_tcp.socket.port()).unwrap();
-        assert!(processes_by_port.contains(&l_tcp.process));
-
-        let ports_by_pid = listeners::get_ports_by_pid(l_tcp.process.pid).unwrap();
-        assert!(ports_by_pid.contains(&l_tcp.socket.port()));
-    };
+    for l in &listeners {
+        let process_by_port = listeners::get_process_by_port(l.socket.port(), l.protocol).unwrap();
+        assert_eq!(process_by_port, l.process);
+    }
 }
 
 #[test]
@@ -50,36 +32,23 @@ fn test_http_server() {
     let http_server_port = http_server.port();
 
     // get the http server process by its port
-    let processes = listeners::get_processes_by_port(http_server_port).unwrap();
-    assert_eq!(processes.len(), 1);
-    let http_server_process = processes.into_iter().next().unwrap();
+    let http_server_process =
+        listeners::get_process_by_port(http_server_port, Protocol::TCP).unwrap();
 
     let http_server_name = http_server_process.name.clone();
     let http_server_pid = http_server_process.pid;
-    let http_server_path = http_server_process.path;
+    let http_server_path = http_server_process.path.clone();
 
     // assert that the http server process name and path are not empty
     assert!(!http_server_name.is_empty());
     assert!(!http_server_path.is_empty());
-
-    // get the http server port by its process name
-    // and check that it is the same as the one of the http server
-    let ports = listeners::get_ports_by_process_name(&http_server_name).unwrap();
-    assert_eq!(ports.len(), 1);
-    assert!(ports.contains(&http_server_port));
-
-    // get the http server port by its process id
-    // and check that it is the same as the one of the http server
-    let ports = listeners::get_ports_by_pid(http_server_pid).unwrap();
-    assert_eq!(ports.len(), 1);
-    assert!(ports.contains(&http_server_port));
 
     // get all listeners
     // and check that the http server is in the list
     let listeners = listeners::get_all().unwrap();
     let http_server_listener = listeners
         .iter()
-        .find(|l| l.process.pid == http_server_pid)
+        .find(|l| http_server_process.eq(&l.process))
         .unwrap();
     println!("{http_server_listener}");
     assert_eq!(
@@ -130,9 +99,12 @@ fn test_udp() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
@@ -158,9 +130,12 @@ fn test_tcp() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::TCP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
@@ -186,9 +161,12 @@ fn test_tcp6() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::TCP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);
@@ -214,9 +192,12 @@ fn test_udp6() {
 
     let all_listeners = listeners::get_all().unwrap();
     let all_found = opened_ports.iter().all(|p| {
-        all_listeners
+        let l = all_listeners
             .iter()
-            .any(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        l.process == process_by_port
     });
 
     assert!(all_found);

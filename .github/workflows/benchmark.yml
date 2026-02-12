@@ -25,13 +25,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: main
+          ref: ${{ github.ref_name }}
       - uses: dtolnay/rust-toolchain@stable
 
       - name: bench
         run: cargo bench
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "update benchmarks for ${{ matrix.os }}"
 

@@ -39,15 +39,36 @@ impl ProtoListener {
             .collect()
     }
 
+    pub(super) fn get_by_port(port: u16, protocol: Protocol) -> crate::Result<ProtoListener> {
+        match protocol {
+            Protocol::TCP => Self::table_entry_by_port::<TcpTable>(port)
+                .or_else(|_| Self::table_entry_by_port::<Tcp6Table>(port)),
+            Protocol::UDP => Self::table_entry_by_port::<UdpTable>(port)
+                .or_else(|_| Self::table_entry_by_port::<Udp6Table>(port)),
+        }
+    }
+
     fn table_entries<Table: SocketTable>() -> crate::Result<Vec<Self>> {
         let mut proto_listeners = Vec::new();
         let table = Table::get_table()?;
-        for i in 0..Table::get_rows_count(&table) {
-            if let Some(proto_listener) = Table::get_proto_listener(&table, i) {
+        let rows_count = Table::get_rows_count(&table);
+        for i in 0..rows_count {
+            if let Some(proto_listener) = Table::get_proto_listener(&table, i, None) {
                 proto_listeners.push(proto_listener);
             }
         }
         Ok(proto_listeners)
+    }
+
+    fn table_entry_by_port<Table: SocketTable>(port: u16) -> crate::Result<Self> {
+        let table = Table::get_table()?;
+        let rows_count = Table::get_rows_count(&table);
+        for i in 0..rows_count {
+            if let Some(proto_listener) = Table::get_proto_listener(&table, i, Some(port)) {
+                return Ok(proto_listener);
+            }
+        }
+        Err("No listener found on port".into())
     }
 
     pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol: Protocol) -> Self {
@@ -67,9 +88,9 @@ impl ProtoListener {
         let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
         process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
 
-        if unsafe { Process32First(h, &mut process) }.is_ok() {
+        if unsafe { Process32First(h, &raw mut process) }.is_ok() {
             loop {
-                if unsafe { Process32Next(h, &mut process) }.is_ok() {
+                if unsafe { Process32Next(h, &raw mut process) }.is_ok() {
                     let id: u32 = process.th32ProcessID;
                     if id == pid {
                         break;
@@ -87,6 +108,7 @@ impl ProtoListener {
         let name = process.szExeFile;
         let len = name.iter().position(|&x| x == 0)?;
 
+        #[allow(clippy::cast_sign_loss)]
         String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
     }
 
@@ -102,13 +124,13 @@ impl ProtoListener {
             }
 
             let mut buffer: [u16; 1024] = [0; 1024];
-            let mut size = buffer.len() as u32;
+            let mut size = u32::try_from(buffer.len()).unwrap_or_default();
 
             let _ = QueryFullProcessImageNameW(
                 handle,
                 PROCESS_NAME_FORMAT(0),
                 PWSTR(buffer.as_mut_ptr()),
-                &mut size,
+                &raw mut size,
             );
             let _ = CloseHandle(handle);
 

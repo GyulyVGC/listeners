@@ -39,7 +39,12 @@ http-test-server = "2.1.1"
 serial_test = "3.3.1"
 criterion = "0.8.2"
 serde_json = "1.0.149"
+rand = "0.10.0"
 
 [[bench]]
 name = "get_all"
+harness = false
+
+[[bench]]
+name = "get_process_by_port"
 harness = false
