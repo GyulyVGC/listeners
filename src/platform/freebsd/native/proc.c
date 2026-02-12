@@ -2,7 +2,7 @@
 
 int proc_list(struct process_info_t **list, size_t *nentries)
 {
-    int mib[3] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL};
+    int mib[3] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC};
     size_t buflen = 0;
 
     if (sysctl(mib, 3, NULL, &buflen, NULL, 0) == -1)
