@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
@@ -144,5 +145,28 @@ impl ProtoListener {
         let pname = self.pname()?;
         let ppath = self.ppath();
         Some(Listener::new(self.pid, pname, ppath, socket, self.protocol))
+    }
+}
+
+pub(super) struct ProtoListenersCache {
+    cache: HashMap<u32, Listener>,
+}
+
+impl ProtoListenersCache {
+    pub(super) fn new() -> Self {
+        Self {
+            cache: HashMap::new(),
+        }
+    }
+
+    pub(super) fn get(&mut self, proto_listener: ProtoListener) -> Option<Listener> {
+        let pid = proto_listener.pid;
+
+        if let Entry::Vacant(e) = self.cache.entry(pid) {
+            let listener = proto_listener.to_listener()?;
+            e.insert(listener);
+        }
+
+        self.cache.get(&pid).cloned()
     }
 }

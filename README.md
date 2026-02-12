@@ -76,7 +76,7 @@ check the [`examples`](https://github.com/GyulyVGC/listeners/tree/main/examples)
 ## Benchmarks
 
 Below you can find exhaustive benchmarks measuring the performance of the `listeners::get_all` and `listeners::get_process_by_port` methods
-on all supported platforms, varying the number of listening processes. <br>
+on all supported platforms, varying the number of open sockets. <br>
 These benchmarks are run on GitHub Actions runners, and the results are generated using [`criterion`](https://crates.io/crates/criterion).
 
 ### Windows
@@ -85,11 +85,11 @@ These benchmarks are run on GitHub Actions runners, and the results are generate
 
 <summary>See benchmarks</summary>
 
-| Number of listeners | `listeners::get_all`                                                                                                   | `listeners::get_process_by_port`                                                                                                   |
-|---------------------|------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
-| 100                 | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_100.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_process_by_port_100.svg) |
-| 1k                  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_1k.svg)  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_process_by_port_1k.svg)  |
-| 10k                 | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_10k.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_process_by_port_10k.svg) |
+| Number of sockets | `listeners::get_all`                                                                                                   | `listeners::get_process_by_port`                                                                                                   |
+|-------------------|------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------|
+| 100               | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_100.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_process_by_port_100.svg) |
+| 1k                | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_1k.svg)  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_process_by_port_1k.svg)  |
+| 10k               | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_all_10k.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/windows_get_process_by_port_10k.svg) |
 
 </details>
 
@@ -99,11 +99,11 @@ These benchmarks are run on GitHub Actions runners, and the results are generate
 
 <summary>See benchmarks</summary>
 
-| Number of listeners | `listeners::get_all`                                                                                                 | `listeners::get_process_by_port`                                                                                                 |
-|---------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| 100                 | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_100.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_process_by_port_100.svg) |
-| 1k                  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_1k.svg)  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_process_by_port_1k.svg)  |
-| 10k                 | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_10k.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_process_by_port_10k.svg) |
+| Number of sockets | `listeners::get_all`                                                                                                 | `listeners::get_process_by_port`                                                                                                 |
+|-------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| 100               | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_100.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_process_by_port_100.svg) |
+| 1k                | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_1k.svg)  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_process_by_port_1k.svg)  |
+| 10k               | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_all_10k.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/linux_get_process_by_port_10k.svg) |
 
 </details>
 
@@ -113,11 +113,11 @@ These benchmarks are run on GitHub Actions runners, and the results are generate
 
 <summary>See benchmarks</summary>
 
-| Number of listeners | `listeners::get_all`                                                                                                 | `listeners::get_process_by_port`                                                                                                 |
-|---------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
-| 100                 | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_100.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_process_by_port_100.svg) |
-| 1k                  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_1k.svg)  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_process_by_port_1k.svg)  |
-| 10k                 | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_10k.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_process_by_port_10k.svg) |
+| Number of sockets | `listeners::get_all`                                                                                                 | `listeners::get_process_by_port`                                                                                                 |
+|-------------------|----------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| 100               | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_100.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_process_by_port_100.svg) |
+| 1k                | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_1k.svg)  | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_process_by_port_1k.svg)  |
+| 10k               | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_all_10k.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/macos_get_process_by_port_10k.svg) |
 
 </details>
 

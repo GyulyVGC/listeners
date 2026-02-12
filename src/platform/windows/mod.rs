@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use proto_listener::ProtoListener;
+use proto_listener::{ProtoListener, ProtoListenersCache};
 
 use crate::{Listener, Process, Protocol};
 
@@ -15,10 +15,11 @@ mod udp_table;
 
 #[allow(clippy::unnecessary_wraps)]
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
+    let mut proto_listeners_cache = ProtoListenersCache::new();
     let mut listeners = HashSet::new();
 
     for proto_listener in ProtoListener::get_all() {
-        if let Some(listener) = proto_listener.to_listener() {
+        if let Some(listener) = proto_listeners_cache.get(proto_listener) {
             listeners.insert(listener);
         }
     }
