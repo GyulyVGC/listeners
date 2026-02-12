@@ -22,7 +22,7 @@ use crate::platform::windows::tcp6_table::Tcp6Table;
 use super::udp_table::UdpTable;
 use super::udp6_table::Udp6Table;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub(super) struct ProtoListener {
     local_addr: IpAddr,
     local_port: u16,
