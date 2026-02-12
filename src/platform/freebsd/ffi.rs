@@ -95,12 +95,12 @@ pub(super) fn get_processes() -> io::Result<Vec<Process>> {
     Ok(processes)
 }
 
-pub(super) fn get_all_sockets_of_pid(pid: u32) -> Vec<SocketInfo> {
+pub(super) fn get_all_sockets_of_pid(pid: u32) -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
     if unsafe { proc_sockets(pid as c_int, &mut list, &mut nentries) } != 0 {
-        return Vec::new();
+        return Err(io::Error::last_os_error());
     }
 
     let mut sockets = Vec::new();
@@ -117,19 +117,19 @@ pub(super) fn get_all_sockets_of_pid(pid: u32) -> Vec<SocketInfo> {
         }
     }
 
-    sockets
+    Ok(sockets)
 }
 
 pub(super) fn get_socket_by_port_of_pid(
     pid: u32,
     port: u16,
     protocol: Protocol,
-) -> Option<SocketInfo> {
+) -> io::Result<Option<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
     if unsafe { proc_sockets(pid as c_int, &mut list, &mut nentries) } != 0 {
-        return None;
+        return Err(io::Error::last_os_error());
     }
 
     if nentries > 0 && !list.is_null() {
@@ -140,7 +140,7 @@ pub(super) fn get_socket_by_port_of_pid(
                 let socket_info = c_socket.to_socket_info();
                 if socket_info.address.port() == port && socket_info.protocol == protocol {
                     libc::free(list as *mut libc::c_void);
-                    return Some(socket_info);
+                    return Ok(Some(socket_info));
                 }
             }
 
@@ -148,5 +148,5 @@ pub(super) fn get_socket_by_port_of_pid(
         }
     }
 
-    None
+    Ok(None)
 }
