@@ -41,6 +41,8 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         ++retval_cnt;
     }
 
+    *nentries = retval_cnt;
+
     if (*nentries == 0)
     {
         free(procbuf);
