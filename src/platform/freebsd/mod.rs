@@ -40,7 +40,7 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
     for process in processes {
         let sockets = ffi::get_process_all_sockets(process.pid);
 
-        if sockets.into_iter().find(|s| lsocket.eq(s)).is_some() {
+        if sockets.contains(&lsocket) {
             return Ok(process);
         }
     }
