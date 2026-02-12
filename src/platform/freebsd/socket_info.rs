@@ -1,4 +1,3 @@
-use libc;
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr, SocketAddrV4, SocketAddrV6};
 
 use super::ffi::{CSocketAddress, CSocketInfo};

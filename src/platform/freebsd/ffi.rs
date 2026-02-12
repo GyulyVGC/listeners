@@ -1,4 +1,3 @@
-use libc;
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
 use std::{io, ptr};
@@ -28,7 +27,7 @@ pub(super) struct CSocketInfo {
 #[repr(C)]
 pub(super) struct CProcessInfo {
     pub path: [c_char; libc::PATH_MAX as usize],
-    pub name: [c_char; (libc::COMMLEN + 1) as usize],
+    pub name: [c_char; libc::COMMLEN + 1],
     pub pid: c_int,
 }
 
