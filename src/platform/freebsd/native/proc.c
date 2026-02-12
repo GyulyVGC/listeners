@@ -2,10 +2,11 @@
 
 int proc_list(struct process_info_t **list, size_t *nentries)
 {
-    int mib[3] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC};
+    uid_t uid = geteuid();
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, uid};
     size_t buflen = 0;
 
-    if (sysctl(mib, 3, NULL, &buflen, NULL, 0) == -1)
+    if (sysctl(mib, 4, NULL, &buflen, NULL, 0) == -1)
     {
         return -1;
     }
@@ -24,7 +25,7 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         return -1;
     }
 
-    if (sysctl(mib, 3, procbuf, &buflen, NULL, 0) == -1)
+    if (sysctl(mib, 4, procbuf, &buflen, NULL, 0) == -1)
     {
         free(procbuf);
         return -1;
