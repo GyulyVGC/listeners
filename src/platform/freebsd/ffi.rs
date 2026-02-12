@@ -5,6 +5,12 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::os::raw::{c_char, c_int};
 use std::{io, ptr};
 
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub(super) struct SocketInfo {
+    pub(super) address: SocketAddr,
+    pub(super) protocol: Protocol,
+}
+
 #[repr(C)]
 struct CSocketAddress {
     addr: CAddress,
@@ -18,14 +24,14 @@ union CAddress {
 }
 
 #[repr(C)]
-pub(super) struct CSocketInfo {
+struct CSocketInfo {
     address: CSocketAddress,
     port: u16,
-    pub(super) protocol: u32,
+    protocol: u32,
 }
 
 impl CSocketInfo {
-    pub(super) fn to_sockaddr(&self) -> SocketAddr {
+    fn to_socket_info(&self) -> SocketInfo {
         let c_sock_addr = &self.address;
         let ip = if c_sock_addr.family == libc::AF_INET {
             let octets = unsafe { c_sock_addr.addr.ipv4 };
@@ -34,7 +40,14 @@ impl CSocketInfo {
             let octets = unsafe { c_sock_addr.addr.ipv6 };
             IpAddr::V6(Ipv6Addr::from_octets(octets))
         };
-        SocketAddr::new(ip, self.port)
+
+        SocketInfo {
+            address: SocketAddr::new(ip, self.port),
+            protocol: match self.protocol {
+                0 => Protocol::TCP,
+                _ => Protocol::UDP,
+            },
+        }
     }
 }
 
@@ -46,10 +59,6 @@ struct CProcessInfo {
 }
 
 unsafe extern "C" {
-    fn lsock_tcp(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
-    fn lsock_tcp6(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
-    fn lsock_udp(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
-    fn lsock_udp6(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
     fn proc_list(list: *mut *mut CProcessInfo, nentries: *mut usize) -> c_int;
     fn proc_sockets(pid: c_int, list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
 }
@@ -102,7 +111,7 @@ pub(super) fn get_all_sockets_of_pid(pid: u32) -> Vec<SocketInfo> {
             let c_sockets = std::slice::from_raw_parts(list, nentries);
 
             for c_socket in c_sockets {
-                sockets.push(SocketInfo::from(c_socket));
+                sockets.push(c_socket.to_socket_info());
             }
 
             libc::free(list as *mut libc::c_void);
@@ -129,7 +138,7 @@ pub(super) fn get_socket_by_port_of_pid(
             let c_sockets = std::slice::from_raw_parts(list, nentries);
 
             for c_socket in c_sockets {
-                let socket_info = SocketInfo::from(c_socket);
+                let socket_info = c_socket.to_socket_info();
                 if socket_info.address.port() == port && socket_info.protocol == protocol {
                     libc::free(list as *mut libc::c_void);
                     return Some(socket_info);

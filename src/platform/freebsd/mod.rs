@@ -1,9 +1,7 @@
+use crate::{Listener, Process, Protocol};
 use std::collections::HashSet;
 
 mod ffi;
-mod socket_info;
-
-use crate::{Listener, Process, Protocol};
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
