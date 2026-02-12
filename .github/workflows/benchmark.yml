@@ -64,7 +64,11 @@ jobs:
             
             export PATH=$HOME/.cargo/bin:$PATH
             
-            cargo bench
+            echo "Running benchmarks..."
+            sudo -E env "PATH=$PATH" cargo bench
+            
+            echo "Fixing file permissions for sync..."
+            sudo chown -R $(whoami):$(whoami) .
 
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
