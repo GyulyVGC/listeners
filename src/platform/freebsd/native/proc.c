@@ -5,7 +5,7 @@ int proc_list(struct process_info_t **list, size_t *nentries)
     uid_t uid = getuid();
     uid_t euid = geteuid();
 
-    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PROC, euid};
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_UID, euid};
     size_t buflen = 0;
 
     if (sysctl(mib, 4, NULL, &buflen, NULL, 0) == -1)
