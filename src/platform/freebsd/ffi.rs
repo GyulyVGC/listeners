@@ -1,4 +1,3 @@
-use super::socket_info::SocketInfo;
 use crate::{Process, Protocol};
 use std::ffi::CStr;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
