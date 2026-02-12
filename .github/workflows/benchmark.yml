@@ -34,3 +34,39 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "update benchmarks for ${{ matrix.os }}"
+
+  benchmark-freebsd:
+    name: freebsd
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Run Benchmarks
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: freebsd
+          architecture: x86_64
+          version: 14.3
+          cpu_count: 4
+          memory: 4G
+          shutdown_vm: true
+          sync_files: true
+          run: |
+            sudo pkg update
+            sudo pkg install -y cmake llvm libpcap protobuf bash
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            
+            export PATH=$HOME/.cargo/bin:$PATH
+            
+            cargo bench
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "update benchmarks for freebsd"
