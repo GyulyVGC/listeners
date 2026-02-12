@@ -162,7 +162,7 @@ impl ProtoListenersCache {
 
     pub(super) fn get(&mut self, proto_listener: ProtoListener) -> Option<Listener> {
         if let Entry::Vacant(e) = self.cache.entry(proto_listener) {
-            e.insert(proto_listener.to_listener().ok());
+            e.insert(proto_listener.to_listener());
         }
 
         self.cache.get(&proto_listener).cloned().flatten()
