@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use helpers::{build_inode_proc_map, get_proc_by_inode};
+use helpers::{InodeProcCache, get_proc_by_inode};
 use proto_listener::ProtoListener;
 
 use crate::{Listener, Process, Protocol};
@@ -12,12 +12,11 @@ mod proto_listener;
 mod statics;
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
+    let mut inode_proc_cache = InodeProcCache::new();
     let mut listeners = HashSet::new();
 
-    let inode_proc_map = build_inode_proc_map()?;
-
     for proto_listener in ProtoListener::get_all()? {
-        if let Some(p) = inode_proc_map.get(&proto_listener.inode()) {
+        if let Ok(p) = inode_proc_cache.get(proto_listener.inode()) {
             let listener = Listener::new(
                 p.pid(),
                 p.name(),
