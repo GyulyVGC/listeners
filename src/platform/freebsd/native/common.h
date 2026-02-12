@@ -16,6 +16,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <libutil.h>
+#include <unistd.h>
 
 #ifdef __cplusplus
 extern "C"
