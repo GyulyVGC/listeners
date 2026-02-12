@@ -1,3 +1,6 @@
+#[cfg(not(target_os = "freebsd"))]
+fn main() {}
+
 #[cfg(target_os = "freebsd")]
 fn main() {
     let src_dir = std::path::PathBuf::from("src/platform/freebsd/native");
@@ -27,16 +30,18 @@ fn main() {
     println!("cargo:rerun-if-changed={}", src_dir.display());
 }
 
-#[cfg(not(target_os = "freebsd"))]
-fn main() {}
-
 #[cfg(target_os = "freebsd")]
 fn find_c_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
     if !dir.is_dir() {
         return;
     }
 
-    for entry in std::fs::read_dir(dir).unwrap() {
+    let entries = match std::fs::read_dir(dir) {
+        Ok(e) => e,
+        Err(_) => return,
+    };
+
+    for entry in entries {
         let entry = match entry {
             Ok(e) => e,
             Err(_) => continue,
