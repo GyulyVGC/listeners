@@ -1,9 +1,12 @@
 use http_test_server::TestServer;
 use listeners::{Listener, Process, Protocol, get_process_by_port};
+use rand::prelude::IteratorRandom;
 use serial_test::serial;
+use std::collections::HashSet;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 use std::str::FromStr;
 
+#[cfg(not(target_os = "freebsd"))]
 #[test]
 #[serial]
 fn test_consistency() {
@@ -20,8 +23,33 @@ fn test_consistency() {
 
     for l in &listeners {
         let process_by_port = listeners::get_process_by_port(l.socket.port(), l.protocol).unwrap();
-        assert_eq!(process_by_port.name, l.process.name);
-        assert_eq!(process_by_port.path, l.process.path);
+        assert_eq!(process_by_port, l.process);
+    }
+}
+
+#[test]
+#[serial]
+fn test_inactive_ports() {
+    // retrieve all listeners and get their ports
+    let ports = listeners::get_all()
+        .unwrap()
+        .iter()
+        .map(|l| l.socket.port())
+        .collect::<HashSet<_>>();
+    assert!(!ports.is_empty());
+
+    let mut inactive_ports = (1..u16::MAX).collect::<Vec<_>>();
+    inactive_ports.retain(|p| !ports.contains(p));
+    assert!(!inactive_ports.is_empty());
+
+    // choose 10 random inactive ports and check that get_process_by_port returns an error for them
+    let mut rng = rand::rng();
+    let random_inactive_ports = inactive_ports.iter().sample(&mut rng, 10);
+    for p in random_inactive_ports {
+        let process_by_port = listeners::get_process_by_port(*p, Protocol::TCP);
+        assert!(process_by_port.is_err());
+        let process_by_port = listeners::get_process_by_port(*p, Protocol::UDP);
+        assert!(process_by_port.is_err());
     }
 }
 
