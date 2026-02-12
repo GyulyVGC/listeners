@@ -31,17 +31,17 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         return -1;
     }
 
+    size_t list_len = buflen / sizeof(struct kinfo_proc);
     size_t retval_cnt = 0;
-    for (size_t i = 0; i < *nentries; i++)
+    for (size_t i = 0; i < list_len; i++)
     {
         if (procbuf[i].ki_flag & P_KPROC)
             continue;
+
         ++retval_cnt;
     }
 
-    *nentries = retval_cnt;
-
-    if (retval_cnt == 0)
+    if (*nentries == 0)
     {
         free(procbuf);
         return 0;
@@ -55,17 +55,23 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         return -1;
     }
 
-    for (size_t i = 0; i < *nentries; i++)
+    size_t idx = 0;
+    for (size_t i = 0; i < list_len; i++)
     {
-        (*list)[i].pid = procbuf[i].ki_pid;
-        strlcpy((*list)[i].name, procbuf[i].ki_comm, sizeof((*list)[i].name));
+        if (procbuf[i].ki_flag & P_KPROC)
+            continue;
+
+        (*list)[idx].pid = procbuf[i].ki_pid;
+        strlcpy((*list)[idx].name, procbuf[i].ki_comm, sizeof((*list)[i].name));
 
         int mib_path[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, procbuf[i].ki_pid};
-        size_t pathlen = sizeof((*list)[i].path);
-        if (sysctl(mib_path, 4, (*list)[i].path, &pathlen, NULL, 0) == -1)
+        size_t pathlen = sizeof((*list)[idx].path);
+        if (sysctl(mib_path, 4, (*list)[idx].path, &pathlen, NULL, 0) == -1)
         {
-            (*list)[i].path[0] = '\0';
+            (*list)[idx].path[0] = '\0';
         }
+
+        ++idx;
     }
 
     free(procbuf);
