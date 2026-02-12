@@ -28,10 +28,10 @@ impl CSocketInfo {
     pub(super) fn to_sockaddr(&self) -> SocketAddr {
         let c_sock_addr = &self.address;
         let ip = if c_sock_addr.family == libc::AF_INET {
-            let octets = unsafe { c_sock_addr.addr.ipv4.clone() };
+            let octets = unsafe { c_sock_addr.addr.ipv4 };
             IpAddr::V4(Ipv4Addr::from_octets(octets))
         } else {
-            let octets = unsafe { c_sock_addr.addr.ipv6.clone() };
+            let octets = unsafe { c_sock_addr.addr.ipv6 };
             IpAddr::V6(Ipv6Addr::from_octets(octets))
         };
         SocketAddr::new(ip, self.port)
