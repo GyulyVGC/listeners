@@ -5,7 +5,9 @@ use proc_pid::ProcPid;
 use proto_listener::ProtoListener;
 use socket_fd::SocketFd;
 
+use crate::platform::macos::proc_name::ProcNamesCache;
 use crate::platform::macos::proc_path::ProcPath;
+use crate::platform::target_os::proc_path::ProcPathsCache;
 use crate::{Listener, Process, Protocol};
 
 mod c_libproc;
@@ -20,17 +22,19 @@ mod statics;
 
 #[allow(clippy::unnecessary_wraps)]
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
+    let mut proc_names_cache = ProcNamesCache::new();
+    let mut proc_paths_cache = ProcPathsCache::new();
     let mut listeners = HashSet::new();
 
     for pid in ProcPid::get_all()? {
-        for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
+        let Ok(pid_u_32) = pid.as_u_32() else {
+            continue;
+        };
+        for fd in &SocketFd::get_all_of_pid(pid).unwrap_or_default() {
             if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
-                && let Ok(ProcName(name)) = ProcName::from_pid(pid)
+                && let Ok(ProcName(name)) = proc_names_cache.get(pid)
             {
-                let ProcPath(path) = ProcPath::from_pid(pid);
-                let Ok(pid_u_32) = pid.as_u_32() else {
-                    continue;
-                };
+                let ProcPath(path) = proc_paths_cache.get(pid);
                 let listener = Listener::new(
                     pid_u_32,
                     name,
@@ -48,16 +52,16 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
     for pid in ProcPid::get_all()? {
-        for fd in SocketFd::get_all_of_pid(pid).iter().flatten() {
+        let Ok(pid_u_32) = pid.as_u_32() else {
+            continue;
+        };
+        for fd in &SocketFd::get_all_of_pid(pid).unwrap_or_default() {
             if let Ok(proto_listener) = ProtoListener::from_pid_fd(pid, fd)
                 && proto_listener.socket_addr().port() == port
                 && proto_listener.protocol() == protocol
                 && let Ok(ProcName(name)) = ProcName::from_pid(pid)
             {
                 let ProcPath(path) = ProcPath::from_pid(pid);
-                let Ok(pid_u_32) = pid.as_u_32() else {
-                    continue;
-                };
                 return Ok(Process::new(pid_u_32, name, path));
             }
         }

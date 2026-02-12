@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::ffi::c_void;
 
 use crate::platform::macos::c_libproc::proc_name;
 use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::statics::PROC_PID_PATH_INFO_MAXSIZE;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(super) struct ProcName(pub(super) String);
 
 impl ProcName {
@@ -34,5 +36,29 @@ impl ProcName {
             Ok(name) => Ok(Self::new(name)),
             Err(_) => Err("Invalid UTF sequence for process name".into()),
         }
+    }
+}
+
+pub(super) struct ProcNamesCache {
+    cache: HashMap<ProcPid, ProcName>,
+}
+
+impl ProcNamesCache {
+    pub(super) fn new() -> Self {
+        Self {
+            cache: HashMap::new(),
+        }
+    }
+
+    pub(super) fn get(&mut self, pid: ProcPid) -> crate::Result<ProcName> {
+        if let Entry::Vacant(e) = self.cache.entry(pid) {
+            let proc_name = ProcName::from_pid(pid)?;
+            e.insert(proc_name);
+        }
+
+        self.cache
+            .get(&pid)
+            .cloned()
+            .ok_or_else(|| "Failed to get process name from cache".into())
     }
 }

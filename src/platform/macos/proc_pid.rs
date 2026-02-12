@@ -4,7 +4,7 @@ use std::{mem, ptr};
 use super::c_libproc::proc_listpids;
 use super::statics::PROC_ALL_PIDS;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub(super) struct ProcPid(c_int);
 
 impl ProcPid {

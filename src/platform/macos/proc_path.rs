@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::ffi::c_void;
 
 use crate::platform::macos::c_libproc::proc_pidpath;
 use crate::platform::macos::proc_pid::ProcPid;
 use crate::platform::macos::statics::PROC_PID_PATH_INFO_MAXSIZE;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub(super) struct ProcPath(pub(super) String);
 
 impl ProcPath {
@@ -34,5 +36,26 @@ impl ProcPath {
             Ok(path) => Self::new(path),
             Err(_) => Self(String::new()),
         }
+    }
+}
+
+pub(super) struct ProcPathsCache {
+    cache: HashMap<ProcPid, ProcPath>,
+}
+
+impl ProcPathsCache {
+    pub(super) fn new() -> Self {
+        Self {
+            cache: HashMap::new(),
+        }
+    }
+
+    pub(super) fn get(&mut self, pid: ProcPid) -> ProcPath {
+        if let Entry::Vacant(e) = self.cache.entry(pid) {
+            let proc_path = ProcPath::from_pid(pid);
+            e.insert(proc_path);
+        }
+
+        self.cache.get(&pid).cloned().unwrap_or_default()
     }
 }
