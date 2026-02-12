@@ -7,16 +7,10 @@ mod socket_info;
 use crate::{Listener, Process, Protocol};
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
-    let lsockets = SocketInfo::get_all_listening();
-
-    let processes = ffi::get_processes()?;
-
     let mut listeners = HashSet::new();
 
-    for process in processes {
-        let sockets = ffi::get_process_all_sockets(process.pid);
-
-        for socket in sockets.into_iter().filter(|s| lsockets.contains(s)) {
+    for process in ffi::get_processes()? {
+        for socket in ffi::get_all_sockets_of_pid(process.pid) {
             listeners.insert(Listener::new(
                 process.pid,
                 process.name.clone(),
@@ -31,16 +25,8 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 }
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
-    let Some(lsocket) = SocketInfo::get_listening_on_port(port, protocol) else {
-        return Err("No process found listening on the specified port and protocol".into());
-    };
-
-    let processes = ffi::get_processes()?;
-
-    for process in processes {
-        let sockets = ffi::get_process_all_sockets(process.pid);
-
-        if sockets.contains(&lsocket) {
+    for process in ffi::get_processes()? {
+        if let Some(socket) = ffi::get_socket_by_port_of_pid(process.pid, port, protocol) {
             return Ok(process);
         }
     }
