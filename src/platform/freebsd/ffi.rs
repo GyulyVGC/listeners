@@ -54,50 +54,6 @@ unsafe extern "C" {
     fn proc_sockets(pid: c_int, list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
 }
 
-// pub(super) fn get_listening_sockets_tcp() -> Vec<SocketInfo> {
-//     let mut list: *mut CSocketInfo = ptr::null_mut();
-//     let mut nentries: usize = 0;
-//
-//     if unsafe { lsock_tcp(&mut list, &mut nentries) } != 0 {
-//         return Vec::new();
-//     }
-//
-//     handle_c_sockets(list, nentries)
-// }
-
-// pub(super) fn get_listening_sockets_tcp6() -> Vec<SocketInfo> {
-//     let mut list: *mut CSocketInfo = ptr::null_mut();
-//     let mut nentries: usize = 0;
-//
-//     if unsafe { lsock_tcp6(&mut list, &mut nentries) } != 0 {
-//         return Vec::new();
-//     }
-//
-//     handle_c_sockets(list, nentries)
-// }
-
-// pub(super) fn get_listening_sockets_udp() -> Vec<SocketInfo> {
-//     let mut list: *mut CSocketInfo = ptr::null_mut();
-//     let mut nentries: usize = 0;
-//
-//     if unsafe { lsock_udp(&mut list, &mut nentries) } != 0 {
-//         return Vec::new();
-//     }
-//
-//     handle_c_sockets(list, nentries)
-// }
-
-// pub(super) fn get_listening_sockets_udp6() -> Vec<SocketInfo> {
-//     let mut list: *mut CSocketInfo = ptr::null_mut();
-//     let mut nentries: usize = 0;
-//
-//     if unsafe { lsock_udp6(&mut list, &mut nentries) } != 0 {
-//         return Vec::new();
-//     }
-//
-//     handle_c_sockets(list, nentries)
-// }
-
 pub(super) fn get_processes() -> io::Result<Vec<Process>> {
     let mut list: *mut CProcessInfo = ptr::null_mut();
     let mut nentries: usize = 0;
@@ -165,7 +121,7 @@ pub(super) fn get_socket_by_port_of_pid(
     let mut nentries: usize = 0;
 
     if unsafe { proc_sockets(pid as c_int, &mut list, &mut nentries) } != 0 {
-        return Vec::new();
+        return None;
     }
 
     if nentries > 0 && !list.is_null() {

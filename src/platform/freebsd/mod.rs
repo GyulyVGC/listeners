@@ -1,4 +1,3 @@
-use socket_info::SocketInfo;
 use std::collections::HashSet;
 
 mod ffi;
@@ -26,7 +25,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
     for process in ffi::get_processes()? {
-        if let Some(socket) = ffi::get_socket_by_port_of_pid(process.pid, port, protocol) {
+        if ffi::get_socket_by_port_of_pid(process.pid, port, protocol).is_some() {
             return Ok(process);
         }
     }
