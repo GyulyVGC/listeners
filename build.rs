@@ -44,8 +44,9 @@ fn find_c_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
         let path = entry.path();
         if path.is_dir() {
             find_c_files(&path, out);
-        } else if let Some(ext) = path.extension() 
-            && ext == "c" {
+        } else if let Some(ext) = path.extension()
+            && ext == "c"
+        {
             out.push(path);
         }
     }
