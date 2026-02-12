@@ -24,6 +24,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
       - uses: dtolnay/rust-toolchain@stable
 
       - name: bench

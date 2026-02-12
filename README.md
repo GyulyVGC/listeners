@@ -19,7 +19,7 @@ Some examples of existing libraries:
 
 This library wants to fill this gap, and it aims to be: 
 - **Cross-platform**: it currently supports Windows, Linux and macOS
-- **Performant**: it internally uses low-level system APIs (see [benchmarks](#benchmarks) for more info)
+- **Performant**: it internally uses low-level system APIs to be more efficient (see [benchmarks](#benchmarks))
 - **Simple**: it exposes intuitive APIs to get details about the listening processes
 - **Lightweight**: it has only the strictly necessary dependencies
 
