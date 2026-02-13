@@ -1,9 +1,11 @@
 use crate::{Listener, Process, Protocol};
+use ffi::ProcNamesPathsCache;
 use std::collections::HashSet;
 
 mod ffi;
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
+    let mut proc_cache = ProcNamesPathsCache::new();
     let mut listeners = HashSet::new();
 
     let sockets: Vec<_> = ffi::get_tcp_sockets()?
@@ -14,11 +16,13 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let kvaddr_pid_map = ffi::get_kvaddr_to_pid_table()?;
 
     for socket in sockets {
-        if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr) {
+        if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr)
+            && let Some(name, path) = proc_names_cache.get(*pid)
+        {
             listeners.insert(Listener::new(
                 (*pid).cast_unsigned(),
-                ffi::get_process_name(*pid).unwrap_or_default(),
-                ffi::get_process_path(*pid).unwrap_or_default(),
+                name,
+                path,
                 socket.address,
                 socket.protocol,
             ));

@@ -173,3 +173,30 @@ pub(super) fn get_process_path(pid: i32) -> io::Result<String> {
         Ok(path)
     }
 }
+
+fn get_process_name_path(pid: i32) -> Option<(String, String)> {
+    let name = get_process_name(pid).ok();
+    let path = Some(get_process_path(pid).unwrap_or_default());
+
+    name.zip(path)
+}
+
+pub(super) struct ProcNamesPathsCache {
+    cache: HashMap<i32, Option<(String, String)>>,
+}
+
+impl ProcNamesPathsCache {
+    pub(super) fn new() -> Self {
+        Self {
+            cache: HashMap::new(),
+        }
+    }
+
+    pub(super) fn get(&mut self, pid: i32) -> Option<(String, String)> {
+        if let Entry::Vacant(e) = self.cache.entry(pid) {
+            e.insert(get_process_name_path(pid));
+        }
+
+        self.cache.get(&pid).cloned().flatten()
+    }
+}
