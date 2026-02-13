@@ -9,7 +9,7 @@ fn main() {
     find_c_files(&src_dir, &mut c_files);
 
     if c_files.is_empty() {
-        println!("cargo:warning=no C files found in {src_dir}");
+        println!("cargo:warning=no C files found in {src_dir:?}");
         return;
     }
 
