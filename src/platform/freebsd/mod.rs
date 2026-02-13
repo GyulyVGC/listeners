@@ -40,7 +40,11 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
         if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr)
             && socket.address.port() == port
         {
-            return Ok(Process::new(*pid as u32, String::new(), String::new()));
+            return Ok(Process::new(
+                *pid as u32,
+                ffi::get_process_name(*pid).unwrap_or_default(),
+                ffi::get_process_path(*pid).unwrap_or_default(),
+            ));
         }
     }
 
