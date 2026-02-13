@@ -29,20 +29,25 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 }
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
-    let sockets = match protocol {
+    let mut sockets_on_port = match protocol {
         Protocol::TCP => ffi::get_tcp_sockets()?,
         Protocol::UDP => ffi::get_udp_sockets()?,
     };
+    sockets_on_port.retain(|socket| socket.address.port() == port);
+
+    if sockets_on_port.is_empty() {
+        return Err("No process found listening on the specified port and protocol".into());
+    }
 
     let kvaddr_pid_map = ffi::get_kvaddr_to_pid_table()?;
 
-    for socket in sockets {
+    for socket in sockets_on_port {
         if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr)
-            && socket.address.port() == port
+            && let Ok(name) = ffi::get_process_name(*pid)
         {
             return Ok(Process::new(
                 (*pid).cast_unsigned(),
-                ffi::get_process_name(*pid).unwrap_or_default(),
+                name,
                 ffi::get_process_path(*pid).unwrap_or_default(),
             ));
         }
