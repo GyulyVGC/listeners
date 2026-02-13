@@ -12,7 +12,7 @@ mod proto_listener;
 mod statics;
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
-    let mut inode_proc_cache = InodeProcCache::new();
+    let mut inode_proc_cache = InodeProcCache::new()?;
     let mut listeners = HashSet::new();
 
     for proto_listener in ProtoListener::get_all()? {
