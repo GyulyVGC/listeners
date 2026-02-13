@@ -81,79 +81,19 @@ impl ProtoListener {
             protocol,
         }
     }
-
-    fn pname(&self) -> Option<String> {
-        let pid = self.pid;
-
-        let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
-
-        let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-        process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
-
-        if unsafe { Process32First(h, &raw mut process) }.is_ok() {
-            loop {
-                if unsafe { Process32Next(h, &raw mut process) }.is_ok() {
-                    let id: u32 = process.th32ProcessID;
-                    if id == pid {
-                        break;
-                    }
-                } else {
-                    return None;
-                }
-            }
-        }
-
-        unsafe {
-            let _ = CloseHandle(h);
-        };
-
-        let name = process.szExeFile;
-        let len = name.iter().position(|&x| x == 0)?;
-
-        #[allow(clippy::cast_sign_loss)]
-        String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
-    }
-
-    fn ppath(&self) -> String {
-        let pid = self.pid;
-
-        unsafe {
-            let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
-                return String::new();
-            };
-            if handle.is_invalid() {
-                return String::new();
-            }
-
-            let mut buffer: [u16; 1024] = [0; 1024];
-            let mut size = u32::try_from(buffer.len()).unwrap_or_default();
-
-            let _ = QueryFullProcessImageNameW(
-                handle,
-                PROCESS_NAME_FORMAT(0),
-                PWSTR(buffer.as_mut_ptr()),
-                &raw mut size,
-            );
-            let _ = CloseHandle(handle);
-
-            let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
-            path.to_string_lossy().into_owned()
-        }
-    }
-
-    pub(super) fn to_listener(self) -> Option<Listener> {
-        let socket = SocketAddr::new(self.local_addr, self.local_port);
-        let pname = self.pname()?;
-        let ppath = self.ppath();
-        Some(Listener::new(self.pid, pname, ppath, socket, self.protocol))
-    }
 }
 
-pub(super) struct ProtoListenersCache {
-    cache: HashMap<ProtoListener, Option<Listener>>,
+pub(super) fn pname_ppath(pid: u32) -> Option<(String, String)> {
+    let pname = pname(pid);
+    let ppath = Some(ppath(pid));
+    pname.zip(ppath)
 }
 
-impl ProtoListenersCache {
+pub(super) struct PidNamePathCache {
+    cache: HashMap<u32, Option<(String, String)>>,
+}
+
+impl PidNamePathCache {
     pub(super) fn new() -> Self {
         Self {
             cache: HashMap::new(),
@@ -161,10 +101,74 @@ impl ProtoListenersCache {
     }
 
     pub(super) fn get(&mut self, proto_listener: ProtoListener) -> Option<Listener> {
-        if let Entry::Vacant(e) = self.cache.entry(proto_listener) {
-            e.insert(proto_listener.to_listener());
+        let pid = proto_listener.pid;
+
+        if let Entry::Vacant(e) = self.cache.entry(pid) {
+            e.insert(pname_ppath());
         }
 
-        self.cache.get(&proto_listener).cloned().flatten()
+        self.cache
+            .get(&pid)
+            .cloned()
+            .flatten()
+            .map(|(pname, ppath)| {
+                let socket = SocketAddr::new(proto_listener.local_addr, proto_listener.local_port);
+                Listener::new(pid, pname, ppath, socket, proto_listener.protocol)
+            })
+    }
+}
+
+fn pname(pid: u32) -> Option<String> {
+    let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
+
+    let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
+    process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
+
+    if unsafe { Process32First(h, &raw mut process) }.is_ok() {
+        loop {
+            if unsafe { Process32Next(h, &raw mut process) }.is_ok() {
+                let id: u32 = process.th32ProcessID;
+                if id == pid {
+                    break;
+                }
+            } else {
+                return None;
+            }
+        }
+    }
+
+    unsafe {
+        let _ = CloseHandle(h);
+    };
+
+    let name = process.szExeFile;
+    let len = name.iter().position(|&x| x == 0)?;
+
+    #[allow(clippy::cast_sign_loss)]
+    String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
+}
+
+fn ppath(pid: u32) -> String {
+    unsafe {
+        let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
+            return String::new();
+        };
+        if handle.is_invalid() {
+            return String::new();
+        }
+
+        let mut buffer: [u16; 1024] = [0; 1024];
+        let mut size = u32::try_from(buffer.len()).unwrap_or_default();
+
+        let _ = QueryFullProcessImageNameW(
+            handle,
+            PROCESS_NAME_FORMAT(0),
+            PWSTR(buffer.as_mut_ptr()),
+            &raw mut size,
+        );
+        let _ = CloseHandle(handle);
+
+        let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
+        path.to_string_lossy().into_owned()
     }
 }
