@@ -73,7 +73,7 @@ pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
-    if unsafe { lsock_tcp(&mut list, &mut nentries) } != 0 {
+    if unsafe { lsock_tcp(&raw mut list, &raw mut nentries) } != 0 {
         return Err(io::Error::last_os_error());
     }
 
@@ -87,7 +87,7 @@ pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
                 sockets.push(c_socket.to_socket_info());
             }
 
-            libc::free(list as *mut libc::c_void);
+            libc::free(list.cast::<libc::c_void>());
         }
     }
 
@@ -98,7 +98,7 @@ pub(super) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
-    if unsafe { lsock_udp(&mut list, &mut nentries) } != 0 {
+    if unsafe { lsock_udp(&raw mut list, &raw mut nentries) } != 0 {
         return Err(io::Error::last_os_error());
     }
 
@@ -112,7 +112,7 @@ pub(super) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>> {
                 sockets.push(c_socket.to_socket_info());
             }
 
-            libc::free(list as *mut libc::c_void);
+            libc::free(list.cast::<libc::c_void>());
         }
     }
 
@@ -123,7 +123,7 @@ pub(super) fn get_kvaddr_to_pid_table() -> io::Result<HashMap<usize, i32>> {
     let mut list: *mut CSocketFile = ptr::null_mut();
     let mut nentries: usize = 0;
 
-    if unsafe { lsock_files(&mut list, &mut nentries) } != 0 {
+    if unsafe { lsock_files(&raw mut list, &raw mut nentries) } != 0 {
         return Err(io::Error::last_os_error());
     }
 
@@ -137,7 +137,7 @@ pub(super) fn get_kvaddr_to_pid_table() -> io::Result<HashMap<usize, i32>> {
                 retval.insert(c_file.kvaddr, c_file.pid);
             }
 
-            libc::free(list as *mut libc::c_void);
+            libc::free(list.cast::<libc::c_void>());
         }
     }
 
@@ -153,7 +153,7 @@ pub(super) fn get_process_name(pid: i32) -> io::Result<String> {
 
         let name = CStr::from_ptr(name_ptr).to_string_lossy().into_owned();
 
-        libc::free(name_ptr as *mut libc::c_void);
+        libc::free(name_ptr.cast::<libc::c_void>());
 
         Ok(name)
     }
@@ -168,7 +168,7 @@ pub(super) fn get_process_path(pid: i32) -> io::Result<String> {
 
         let path = CStr::from_ptr(path_ptr).to_string_lossy().into_owned();
 
-        libc::free(path_ptr as *mut libc::c_void);
+        libc::free(path_ptr.cast::<libc::c_void>());
 
         Ok(path)
     }

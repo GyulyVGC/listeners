@@ -16,7 +16,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     for socket in sockets {
         if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr) {
             listeners.insert(Listener::new(
-                *pid as u32,
+                (*pid).cast_unsigned(),
                 ffi::get_process_name(*pid).unwrap_or_default(),
                 ffi::get_process_path(*pid).unwrap_or_default(),
                 socket.address,
@@ -41,7 +41,7 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
             && socket.address.port() == port
         {
             return Ok(Process::new(
-                *pid as u32,
+                (*pid).cast_unsigned(),
                 ffi::get_process_name(*pid).unwrap_or_default(),
                 ffi::get_process_path(*pid).unwrap_or_default(),
             ));
