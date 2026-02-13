@@ -70,14 +70,7 @@ unsafe extern "C" {
     fn proc_path(pid: libc::pid_t) -> *mut c_char;
 }
 
-pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
-    let mut list: *mut CSocketInfo = ptr::null_mut();
-    let mut nentries: usize = 0;
-
-    if unsafe { lsock_tcp(&raw mut list, &raw mut nentries) } != 0 {
-        return Err(io::Error::last_os_error());
-    }
-
+fn socket_info_list(list: *mut CSocketInfo, nentries: usize) -> Vec<SocketInfo> {
     let mut sockets = Vec::new();
 
     if nentries > 0 && !list.is_null() {
@@ -92,7 +85,18 @@ pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
         }
     }
 
-    Ok(sockets)
+    sockets
+}
+
+pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
+    let mut list: *mut CSocketInfo = ptr::null_mut();
+    let mut nentries: usize = 0;
+
+    if unsafe { lsock_tcp(&raw mut list, &raw mut nentries) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    Ok(socket_info_list(list, nentries))
 }
 
 pub(super) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>> {
@@ -103,21 +107,7 @@ pub(super) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>> {
         return Err(io::Error::last_os_error());
     }
 
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.to_socket_info());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    Ok(sockets)
+    Ok(socket_info_list(list, nentries))
 }
 
 pub(super) fn get_kvaddr_to_pid_table() -> io::Result<HashMap<usize, i32>> {
