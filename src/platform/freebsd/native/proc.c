@@ -93,11 +93,12 @@ int proc_sockets(pid_t pid, struct socket_info_t **list, size_t *nentries)
     int cnt;
 
     struct kinfo_file *kf = kinfo_getfile(pid, &cnt);
+    
     if (kf == NULL)
     {
-        *list = NULL;
         *nentries = 0;
-        return -1;
+        *list = NULL;
+        return cnt == 0 ? 0 : -1;
     }
 
     int retval_cnt = 0;
