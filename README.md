@@ -5,7 +5,7 @@
 [![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
 
-**Cross-platform library for Rust to find out processes listening on network sockets.**
+**Cross-platform library for Rust to [_efficiently_](#benchmarks) find out processes listening on network sockets.**
 
 ## Motivation
 
@@ -19,7 +19,7 @@ Some examples of existing libraries:
 
 This library wants to fill this gap, and it aims to be: 
 - **Cross-platform**: it currently supports Windows, Linux, macOS, and FreeBSD
-- **Performant**: it internally uses low-level system APIs to be more efficient (see [benchmarks](#benchmarks))
+- **Performant**: it focuses on performance (see [benchmarks](#benchmarks)) by internally using low-level system APIs
 - **Simple**: it exposes intuitive APIs to get details about the listening processes
 - **Lightweight**: it has only the strictly necessary dependencies
 
