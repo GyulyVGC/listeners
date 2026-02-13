@@ -17,7 +17,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 
     for socket in sockets {
         if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr)
-            && let Some(name, path) = proc_names_cache.get(*pid)
+            && let Some((name, path)) = proc_cache.get(*pid)
         {
             listeners.insert(Listener::new(
                 (*pid).cast_unsigned(),

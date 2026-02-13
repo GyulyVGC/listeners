@@ -1,5 +1,6 @@
 use crate::Protocol;
 use std::collections::HashMap;
+use std::collections::hash_map::Entry;
 use std::ffi::CStr;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::os::raw::{c_char, c_int};
