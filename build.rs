@@ -9,7 +9,7 @@ fn main() {
     find_c_files(&src_dir, &mut c_files);
 
     if c_files.is_empty() {
-        println!("cargo:warning=no C files found in {src_dir:?}");
+        println!("cargo:warning=no C files found in {}", src_dir.display());
         return;
     }
 
@@ -41,10 +41,7 @@ fn find_c_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
     };
 
     for entry in entries {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(_) => continue,
-        };
+        let Ok(entry) = entry else { continue };
         let path = entry.path();
         if path.is_dir() {
             find_c_files(&path, out);
