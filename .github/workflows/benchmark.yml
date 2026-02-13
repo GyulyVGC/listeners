@@ -45,6 +45,7 @@ jobs:
   benchmark:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
+    needs: benchmark-freebsd
     permissions:
       contents: write
     strategy:
