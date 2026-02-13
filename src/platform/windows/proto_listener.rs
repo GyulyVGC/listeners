@@ -26,7 +26,7 @@ use super::udp6_table::Udp6Table;
 pub(super) struct ProtoListener {
     local_addr: IpAddr,
     local_port: u16,
-    pid: u32,
+    pub(super) pid: u32,
     protocol: Protocol,
 }
 
@@ -104,7 +104,7 @@ impl PidNamePathCache {
         let pid = proto_listener.pid;
 
         if let Entry::Vacant(e) = self.cache.entry(pid) {
-            e.insert(pname_ppath());
+            e.insert(pname_ppath(pid));
         }
 
         self.cache
