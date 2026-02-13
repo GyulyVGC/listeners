@@ -76,6 +76,6 @@ jobs:
             cargo clippy -- -D warnings
 
             echo "Running cargo tests..."
-            sudo -E env "PATH=$PATH" cargo test --verbose -- --nocapture
+            cargo test --verbose -- --nocapture
 
-            sudo -E env "PATH=$PATH" cargo clean
+            cargo clean

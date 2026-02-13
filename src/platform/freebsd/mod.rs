@@ -6,12 +6,19 @@ mod ffi;
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
-    for process in ffi::get_processes()? {
-        for socket in ffi::get_all_sockets_of_pid(process.pid)? {
+    let sockets: Vec<_> = ffi::get_tcp_sockets()?
+        .into_iter()
+        .chain(ffi::get_udp_sockets()?)
+        .collect();
+
+    let kvaddr_pid_map = ffi::get_kvaddr_to_pid_table()?;
+
+    for socket in sockets {
+        if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr) {
             listeners.insert(Listener::new(
-                process.pid,
-                process.name.clone(),
-                process.path.clone(),
+                *pid as u32,
+                ffi::get_process_name(*pid).unwrap_or_default(),
+                ffi::get_process_path(*pid).unwrap_or_default(),
                 socket.address,
                 socket.protocol,
             ));
@@ -22,9 +29,22 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 }
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
-    for process in ffi::get_processes()? {
-        if ffi::get_socket_by_port_of_pid(process.pid, port, protocol)?.is_some() {
-            return Ok(process);
+    let sockets = match protocol {
+        Protocol::TCP => ffi::get_tcp_sockets()?,
+        Protocol::UDP => ffi::get_udp_sockets()?,
+    };
+
+    let kvaddr_pid_map = ffi::get_kvaddr_to_pid_table()?;
+
+    for socket in sockets {
+        if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr)
+            && socket.address.port() == port
+        {
+            return Ok(Process::new(
+                *pid as u32,
+                ffi::get_process_name(*pid).unwrap_or_default(),
+                ffi::get_process_path(*pid).unwrap_or_default(),
+            ));
         }
     }
 
