@@ -1,7 +1,9 @@
 use crate::Protocol;
 use std::collections::HashMap;
+use std::ffi::CStr;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::os::raw::c_int;
+use std::os::raw::{c_char, c_int};
+
 use std::{io, ptr};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -9,12 +11,6 @@ pub(super) struct SocketInfo {
     pub(super) address: SocketAddr,
     pub(super) protocol: Protocol,
     pub(super) kvaddr: usize,
-}
-
-#[derive(Debug, Clone, Eq, PartialEq)]
-pub(super) struct SocketFile {
-    pub(super) kvaddr: usize,
-    pub(super) pid: u32,
 }
 
 #[repr(C)]
@@ -65,20 +61,12 @@ impl CSocketInfo {
     }
 }
 
-impl CSocketFile {
-    fn to_socket_file(&self) -> SocketFile {
-        SocketFile {
-            kvaddr: self.kvaddr,
-            pid: self.pid as u32,
-        }
-    }
-}
-
 unsafe extern "C" {
     fn lsock_tcp(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
     fn lsock_udp(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
     fn lsock_files(list: *mut *mut CSocketFile, nentries: *mut usize) -> c_int;
-
+    fn proc_name(pid: libc::pid_t) -> *mut c_char;
+    fn proc_path(pid: libc::pid_t) -> *mut c_char;
 }
 
 pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
@@ -154,4 +142,34 @@ pub(super) fn get_kvaddr_to_pid_table() -> io::Result<HashMap<usize, i32>> {
     }
 
     Ok(retval)
+}
+
+pub(super) fn get_process_name(pid: i32) -> io::Result<String> {
+    unsafe {
+        let name_ptr = proc_name(pid);
+        if name_ptr.is_null() {
+            return Err(io::Error::last_os_error());
+        }
+
+        let name = CStr::from_ptr(name_ptr).to_string_lossy().into_owned();
+
+        libc::free(name_ptr as *mut libc::c_void);
+
+        Ok(name)
+    }
+}
+
+pub(super) fn get_process_path(pid: i32) -> io::Result<String> {
+    unsafe {
+        let path_ptr = proc_path(pid);
+        if path_ptr.is_null() {
+            return Err(io::Error::last_os_error());
+        }
+
+        let path = CStr::from_ptr(path_ptr).to_string_lossy().into_owned();
+
+        libc::free(path_ptr as *mut libc::c_void);
+
+        Ok(path)
+    }
 }

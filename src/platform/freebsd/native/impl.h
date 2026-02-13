@@ -51,6 +51,9 @@ extern "C"
     int lsock_udp(struct socket_info_t **list, size_t *nentries);
     int lsock_files(struct socket_file_t** list, size_t *nentries);
 
+    char* proc_name(pid_t pid);
+    char* proc_path(pid_t pid);
+
 #ifdef __cplusplus
 }
 #endif

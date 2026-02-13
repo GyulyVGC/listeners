@@ -17,8 +17,8 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
         if let Some(pid) = kvaddr_pid_map.get(&socket.kvaddr) {
             listeners.insert(Listener::new(
                 *pid as u32,
-                String::new(),
-                String::new(),
+                ffi::get_process_name(*pid).unwrap_or_default(),
+                ffi::get_process_path(*pid).unwrap_or_default(),
                 socket.address,
                 socket.protocol,
             ));

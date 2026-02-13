@@ -197,3 +197,35 @@ int lsock_files(struct socket_file_t **list, size_t *nentries)
     free(buffer);
     return 0;
 }
+
+char *proc_name(pid_t pid)
+{
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PID, pid};
+    struct kinfo_proc proc;
+    size_t size = sizeof(proc);
+
+    if (sysctl(mib, 4, &proc, &size, NULL, 0) < 0)
+        return NULL;
+
+    char *name = strdup(proc.ki_comm);
+    if (!name)
+        errno = ENOMEM;
+
+    return name;
+}
+
+char *proc_path(pid_t pid)
+{
+    int mib[4] = {CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, pid};
+    char pathname[PATH_MAX];
+    size_t size = sizeof(pathname);
+
+    if (sysctl(mib, 4, pathname, &size, NULL, 0) < 0)
+        return NULL;
+
+    char *path = strdup(pathname);
+    if (!path)
+        errno = ENOMEM;
+
+    return path;
+}
