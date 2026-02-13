@@ -7,6 +7,7 @@
 #include <sys/socketvar.h>
 #include <sys/sysctl.h>
 #include <sys/user.h> 
+#include <sys/file.h>
 #include <netinet/in.h>
 #include <netinet/in_pcb.h>
 #include <netinet/tcp.h>
@@ -44,7 +45,7 @@ extern "C"
     {
         kvaddr_t kvaddr;
         pid_t pid;
-    }
+    };
 
     int lsock_tcp(struct socket_info_t **list, size_t *nentries);
     int lsock_udp(struct socket_info_t **list, size_t *nentries);
