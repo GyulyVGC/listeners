@@ -1,19 +1,20 @@
-use crate::{Process, Protocol};
-use std::ffi::CStr;
+use crate::Protocol;
+use std::collections::HashMap;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::os::raw::{c_char, c_int};
+use std::os::raw::c_int;
 use std::{io, ptr};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub(super) struct SocketInfo {
     pub(super) address: SocketAddr,
     pub(super) protocol: Protocol,
+    pub(super) kvaddr: usize,
 }
 
-#[repr(C)]
-struct CSocketAddress {
-    addr: CAddress,
-    family: i32,
+#[derive(Debug, Clone, Eq, PartialEq)]
+pub(super) struct SocketFile {
+    pub(super) kvaddr: usize,
+    pub(super) pid: u32,
 }
 
 #[repr(C)]
@@ -23,10 +24,23 @@ union CAddress {
 }
 
 #[repr(C)]
+struct CSocketAddress {
+    addr: CAddress,
+    family: i32,
+}
+
+#[repr(C)]
 struct CSocketInfo {
     address: CSocketAddress,
+    kvaddr: usize,
+    protocol: i32,
     port: u16,
-    protocol: u32,
+}
+
+#[repr(C)]
+struct CSocketFile {
+    kvaddr: usize,
+    pid: libc::pid_t,
 }
 
 impl CSocketInfo {
@@ -41,65 +55,37 @@ impl CSocketInfo {
         };
 
         SocketInfo {
+            kvaddr: self.kvaddr,
             address: SocketAddr::new(ip, self.port),
             protocol: match self.protocol {
-                0 => Protocol::TCP,
+                libc::IPPROTO_TCP => Protocol::TCP,
                 _ => Protocol::UDP,
             },
         }
     }
 }
 
-#[repr(C)]
-struct CProcessInfo {
-    path: [c_char; libc::PATH_MAX as usize],
-    name: [c_char; libc::COMMLEN + 1],
-    pid: c_int,
+impl CSocketFile {
+    fn to_socket_file(&self) -> SocketFile {
+        SocketFile {
+            kvaddr: self.kvaddr,
+            pid: self.pid as u32,
+        }
+    }
 }
 
 unsafe extern "C" {
-    fn proc_list(list: *mut *mut CProcessInfo, nentries: *mut usize) -> c_int;
-    fn proc_sockets(pid: c_int, list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
+    fn lsock_tcp(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
+    fn lsock_udp(list: *mut *mut CSocketInfo, nentries: *mut usize) -> c_int;
+    fn lsock_files(list: *mut *mut CSocketFile, nentries: *mut usize) -> c_int;
+
 }
 
-pub(super) fn get_processes() -> io::Result<Vec<Process>> {
-    let mut list: *mut CProcessInfo = ptr::null_mut();
-    let mut nentries: usize = 0;
-
-    if unsafe { proc_list(&mut list, &mut nentries) } != 0 {
-        return Err(io::Error::last_os_error());
-    }
-
-    let mut processes = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_processes = std::slice::from_raw_parts(list, nentries);
-
-            for c_process in c_processes.iter() {
-                let name = CStr::from_ptr(c_process.name.as_ptr())
-                    .to_string_lossy()
-                    .into_owned();
-
-                let path = CStr::from_ptr(c_process.path.as_ptr())
-                    .to_string_lossy()
-                    .into_owned();
-
-                processes.push(Process::new(c_process.pid as u32, name, path));
-            }
-
-            libc::free(list as *mut libc::c_void);
-        }
-    }
-
-    Ok(processes)
-}
-
-pub(super) fn get_all_sockets_of_pid(pid: u32) -> io::Result<Vec<SocketInfo>> {
+pub(super) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
-    if unsafe { proc_sockets(pid as c_int, &mut list, &mut nentries) } != 0 {
+    if unsafe { lsock_tcp(&mut list, &mut nentries) } != 0 {
         return Err(io::Error::last_os_error());
     }
 
@@ -120,33 +106,52 @@ pub(super) fn get_all_sockets_of_pid(pid: u32) -> io::Result<Vec<SocketInfo>> {
     Ok(sockets)
 }
 
-pub(super) fn get_socket_by_port_of_pid(
-    pid: u32,
-    port: u16,
-    protocol: Protocol,
-) -> io::Result<Option<SocketInfo>> {
+pub(super) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>> {
     let mut list: *mut CSocketInfo = ptr::null_mut();
     let mut nentries: usize = 0;
 
-    if unsafe { proc_sockets(pid as c_int, &mut list, &mut nentries) } != 0 {
+    if unsafe { lsock_udp(&mut list, &mut nentries) } != 0 {
         return Err(io::Error::last_os_error());
     }
+
+    let mut sockets = Vec::new();
 
     if nentries > 0 && !list.is_null() {
         unsafe {
             let c_sockets = std::slice::from_raw_parts(list, nentries);
 
             for c_socket in c_sockets {
-                let socket_info = c_socket.to_socket_info();
-                if socket_info.address.port() == port && socket_info.protocol == protocol {
-                    libc::free(list as *mut libc::c_void);
-                    return Ok(Some(socket_info));
-                }
+                sockets.push(c_socket.to_socket_info());
             }
 
             libc::free(list as *mut libc::c_void);
         }
     }
 
-    Ok(None)
+    Ok(sockets)
+}
+
+pub(super) fn get_kvaddr_to_pid_table() -> io::Result<HashMap<usize, i32>> {
+    let mut list: *mut CSocketFile = ptr::null_mut();
+    let mut nentries: usize = 0;
+
+    if unsafe { lsock_files(&mut list, &mut nentries) } != 0 {
+        return Err(io::Error::last_os_error());
+    }
+
+    let mut retval = HashMap::new();
+
+    if nentries > 0 && !list.is_null() {
+        unsafe {
+            let c_files = std::slice::from_raw_parts(list, nentries);
+
+            for c_file in c_files {
+                retval.insert(c_file.kvaddr, c_file.pid);
+            }
+
+            libc::free(list as *mut libc::c_void);
+        }
+    }
+
+    Ok(retval)
 }

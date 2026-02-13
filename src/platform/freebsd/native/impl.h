@@ -15,20 +15,12 @@
 #include <netinet/udp_var.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#include <libutil.h>
 #include <unistd.h>
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-    enum protocol_t
-    {
-        PROTOCOL_TCP = 0,
-        PROTOCOL_UDP = 1
-    };
-
     typedef struct
     {
         union
@@ -43,15 +35,21 @@ extern "C"
     struct socket_info_t
     {
         socket_address_t address;
+        kvaddr_t kvaddr;
+        int32_t protocol;
         uint16_t port;
-        enum protocol_t protocol;
     };
 
-    struct process_info_t {
-        char  path[PATH_MAX];
-        char  name[COMMLEN + 1];
+    struct socket_file_t
+    {
+        kvaddr_t kvaddr;
         pid_t pid;
-    };
+    }
+
+    int lsock_tcp(struct socket_info_t **list, size_t *nentries);
+    int lsock_udp(struct socket_info_t **list, size_t *nentries);
+    int lsock_files(struct socket_file_t** list, size_t *nentries);
+
 #ifdef __cplusplus
 }
 #endif
