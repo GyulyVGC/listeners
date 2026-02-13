@@ -40,9 +40,6 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         if (procbuf[i].ki_flag & P_KPROC)
             continue;
 
-        if (procbuf[i].ki_uid != uid)
-            continue;
-
         ++retval_cnt;
     }
 
@@ -68,9 +65,6 @@ int proc_list(struct process_info_t **list, size_t *nentries)
         if (procbuf[i].ki_flag & P_KPROC)
             continue;
 
-        if (procbuf[i].ki_uid != uid)
-            continue;
-
         (*list)[idx].pid = procbuf[i].ki_pid;
         strlcpy((*list)[idx].name, procbuf[i].ki_comm, sizeof((*list)[i].name));
 
@@ -93,7 +87,7 @@ int proc_sockets(pid_t pid, struct socket_info_t **list, size_t *nentries)
     int cnt;
 
     struct kinfo_file *kf = kinfo_getfile(pid, &cnt);
-    
+
     if (kf == NULL)
     {
         *nentries = 0;
