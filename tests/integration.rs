@@ -32,7 +32,7 @@ fn test_consistency() {
 fn test_inactive_ports() {
     // starts test server in case there are no open sockets
     let _test = TestServer::new().unwrap();
-    
+
     // retrieve all listeners and get their ports
     let ports = listeners::get_all()
         .unwrap()
