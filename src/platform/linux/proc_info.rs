@@ -1,4 +1,3 @@
-use crate::platform::linux::proc_fd::ProcFd;
 use std::fs;
 use std::fs::File;
 use std::io::Read;
@@ -29,15 +28,7 @@ impl ProcInfo {
         self.path.clone()
     }
 
-    pub(super) fn from_fd(proc_fd: &ProcFd) -> crate::Result<Self> {
-        let stat = rustix::fs::openat(
-            proc_fd.as_fd(),
-            "stat",
-            OFlags::RDONLY | OFlags::CLOEXEC,
-            Mode::empty(),
-        )?;
-        let mut file = File::from(stat);
-
+    pub(super) fn from_file(mut file: File) -> crate::Result<Self> {
         // read in entire thing, this is only going to be 1 line
         let mut buf = Vec::new();
         file.read_to_end(&mut buf)?;

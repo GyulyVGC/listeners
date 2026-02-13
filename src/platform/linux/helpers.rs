@@ -46,7 +46,16 @@ pub(super) fn get_proc_by_inode(inode: u64) -> crate::Result<ProcInfo> {
             continue;
         }
 
-        if let Ok(proc_info) = ProcInfo::from_fd(&proc_fd) {
+        let Ok(stat) = rustix::fs::openat(
+            proc_fd.as_fd(),
+            "stat",
+            OFlags::RDONLY | OFlags::CLOEXEC,
+            Mode::empty(),
+        ) else {
+            continue;
+        };
+
+        if let Ok(proc_info) = ProcInfo::from_file(File::from(stat)) {
             return Ok(proc_info);
         }
     }
@@ -78,61 +87,20 @@ fn get_socket_inode<P: AsRef<Path>>(dir_fd: BorrowedFd, path: P) -> crate::Resul
     Err("Not a socket inode".into())
 }
 
-fn build_inode_fd_map() -> crate::Result<HashMap<u64, ProcFd>> {
-    let proc_fds = ProcFd::get_all()?;
-    let mut map: HashMap<u64, ProcFd> = HashMap::new();
-
-    for proc_fd in proc_fds {
-        let dirfd = proc_fd.as_fd();
-        let path = "fd";
-        let Ok(dir_fd) = rustix::fs::openat(
-            dirfd,
-            path,
-            OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
-            Mode::empty(),
-        ) else {
-            continue;
-        };
-        let Ok(mut dir) = rustix::fs::Dir::read_from(&dir_fd) else {
-            continue;
-        };
-        dir.rewind();
-
-        let mut socket_inodes = Vec::new();
-        for entry in dir.flatten() {
-            let name = entry.file_name().to_string_lossy();
-            if RawFd::from_str(&name).is_ok()
-                && let Ok(socket_inode) = get_socket_inode(dir_fd.as_fd(), name.as_ref())
-            {
-                socket_inodes.push(socket_inode);
-            }
-        }
-
-        for inode in socket_inodes {
-            map.insert(inode, proc_fd);
-        }
-    }
-
-    Ok(map)
-}
-
 pub(super) struct InodeProcCache {
-    map: HashMap<u64, ProcFd>,
     cache: HashMap<u64, Option<ProcInfo>>,
 }
 
 impl InodeProcCache {
-    pub(super) fn new() -> crate::Result<Self> {
+    pub(super) fn new() -> Self {
         Self {
-            map: build_inode_fd_map()?,
             cache: HashMap::new(),
         }
     }
 
     pub(super) fn get(&mut self, inode: u64) -> Option<ProcInfo> {
-        let proc_fd = self.map.get(&inode);
         if let Entry::Vacant(e) = self.cache.entry(inode) {
-            e.insert(proc_fd.and_then(|fd| ProcInfo::from_fd(fd).ok()));
+            e.insert(get_proc_by_inode(inode).ok());
         }
 
         self.cache.get(&inode).cloned().flatten()
