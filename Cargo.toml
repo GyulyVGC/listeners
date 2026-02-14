@@ -42,5 +42,9 @@ name = "get_all"
 harness = false
 
 [[bench]]
-name = "get_process_by_port"
+name = "get_process_by_active_port"
+harness = false
+
+[[bench]]
+name = "get_process_by_inactive_port"
 harness = false

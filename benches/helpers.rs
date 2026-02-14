@@ -10,9 +10,37 @@ pub enum SocketType {
     UDP(UdpSocket),
 }
 
-pub fn prepare_bench(size: usize) -> (Vec<SocketType>, String) {
+#[derive(Copy, Clone)]
+pub enum SystemLoad {
+    Low,
+    Medium,
+    High,
+}
+
+impl SystemLoad {
+    pub fn num_sockets(&self) -> usize {
+        match self {
+            SystemLoad::Low => 100,
+            SystemLoad::Medium => 1_000,
+            SystemLoad::High => 10_000,
+        }
+    }
+
+    // fn num_processes(&self) -> usize {
+    //     match self {
+    //         SystemLoad::Low => 10,
+    //         SystemLoad::Medium => 100,
+    //         SystemLoad::High => 1_000,
+    //     }
+    // }
+}
+
+pub fn prepare_bench(system_load: SystemLoad) -> (Vec<SocketType>, String) {
     // spawn sockets
-    let sockets = spawn_sockets(size);
+    let sockets = spawn_sockets(system_load.num_sockets());
+
+    // spawn processes
+    // let childs = spawn_processes(system_load.num_processes());
 
     // get bench info
     let bench_info = get_bench_info();
@@ -21,7 +49,14 @@ pub fn prepare_bench(size: usize) -> (Vec<SocketType>, String) {
     (sockets, bench_info)
 }
 
-// TODO: sockets should be associated with different PIDs
+pub fn cleanup_bench(sockets: Vec<SocketType>) {
+    drop(sockets);
+    // for mut process in processes {
+    //     let _ = process.kill();
+    //     let _ = process.wait();
+    // }
+}
+
 fn spawn_sockets(n: usize) -> Vec<SocketType> {
     let mut sockets: Vec<SocketType> = Vec::new();
     let socket_v4 = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
@@ -46,6 +81,26 @@ fn spawn_sockets(n: usize) -> Vec<SocketType> {
 
     sockets
 }
+
+// TODO: increase the number of PIDs
+// TODO: sockets should be associated with different PIDs
+// fn spawn_processes(n: usize) -> Vec<Child> {
+//     let mut processes: Vec<Child> = Vec::new();
+//
+//     for _ in 0..n {
+//         #[cfg(not(target_os = "windows"))]
+//         let program = "sleep";
+//         #[cfg(target_os = "windows")]
+//         let program = "timeout";
+//         let process = std::process::Command::new(program)
+//             .arg("1000")
+//             .spawn()
+//             .unwrap();
+//         processes.push(process);
+//     }
+//
+//     processes
+// }
 
 fn get_bench_info() -> String {
     let listeners = listeners::get_all().unwrap_or_default();
