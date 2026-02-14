@@ -29,9 +29,11 @@ This library wants to fill this gap, and it aims to be:
 - [x] Linux
 - [x] macOS
 - [x] FreeBSD
-- [ ] Other BSD-based
-- [ ] iOS
+- [ ] OpenBSD
+- [ ] NetBSD
 - [ ] Android
+- [ ] iOS
+- [ ] Other?
 
 ## Usage
 
