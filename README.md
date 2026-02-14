@@ -1,9 +1,10 @@
 # Listene*rs*
 
-[![Crates](https://img.shields.io/crates/v/listeners?&logo=rust)](https://crates.io/crates/listeners)
 [![Downloads](https://img.shields.io/crates/d/listeners.svg)](https://crates.io/crates/listeners)
-[![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
+[![Stars](https://img.shields.io/github/stars/GyulyVGC/listeners?logo=github&style=flat)](https://github.com/GyulyVGC/listeners)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
+[![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
+[![Crates](https://img.shields.io/crates/v/listeners?&logo=rust)](https://crates.io/crates/listeners)
 
 **Cross-platform library for Rust to [_efficiently_](#benchmarks) find out processes listening on network sockets.**
 
