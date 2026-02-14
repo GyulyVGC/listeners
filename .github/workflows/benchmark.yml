@@ -1,3 +1,10 @@
+# Typical setup for benchmarking:
+# - create a new GitHub branch
+# - trigger benchmark.yml on the new branch
+# - open PR to main
+# - review the PR
+# - squash and merge
+
 name: benchmark
 
 on:
