@@ -23,7 +23,7 @@ jobs:
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
-          version: 15.0
+          version: 14.3
           run: |
             sudo pkg update
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
