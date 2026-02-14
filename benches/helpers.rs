@@ -2,7 +2,7 @@ use listeners::Protocol;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::env::consts::OS;
-use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 
 #[allow(dead_code)]
 pub enum SocketType {
@@ -24,15 +24,26 @@ pub fn prepare_bench(size: usize) -> (Vec<SocketType>, String) {
 // TODO: sockets should be associated with different PIDs
 fn spawn_sockets(n: usize) -> Vec<SocketType> {
     let mut sockets: Vec<SocketType> = Vec::new();
-    let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
-    for _ in 0..n / 2 {
-        let socket = TcpListener::bind(socket).unwrap();
+    let socket_v4 = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
+    let socket_v6 = SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 0);
+
+    for _ in 0..n / 4 {
+        let socket = TcpListener::bind(socket_v4).unwrap();
         sockets.push(SocketType::TCP(socket));
     }
-    for _ in 0..n / 2 {
-        let socket = UdpSocket::bind(socket).unwrap();
+    for _ in 0..n / 4 {
+        let socket = TcpListener::bind(socket_v6).unwrap();
+        sockets.push(SocketType::TCP(socket));
+    }
+    for _ in 0..n / 4 {
+        let socket = UdpSocket::bind(socket_v4).unwrap();
         sockets.push(SocketType::UDP(socket));
     }
+    for _ in 0..n / 4 {
+        let socket = UdpSocket::bind(socket_v6).unwrap();
+        sockets.push(SocketType::UDP(socket));
+    }
+
     sockets
 }
 
@@ -40,19 +51,30 @@ fn get_bench_info() -> String {
     let listeners = listeners::get_all().unwrap_or_default();
 
     let n_listeners = listeners.len();
+
     let sockets = listeners
         .iter()
-        .map(|listener| listener.socket)
+        .map(|listener| (listener.socket, listener.protocol))
         .collect::<HashSet<_>>();
     let n_sockets = sockets.len();
-    let n_ipv4 = sockets
+
+    let n_tcpv4 = sockets
         .iter()
-        .filter(|socket| socket.ip().is_ipv4())
+        .filter(|(socket, protocol)| Protocol::TCP.eq(protocol) && socket.ip().is_ipv4())
         .count();
-    let n_ipv6 = sockets
+    let n_tcpv6 = sockets
         .iter()
-        .filter(|socket| socket.ip().is_ipv6())
+        .filter(|(socket, protocol)| Protocol::TCP.eq(protocol) && socket.ip().is_ipv6())
         .count();
+    let n_udpv4 = sockets
+        .iter()
+        .filter(|(socket, protocol)| Protocol::UDP.eq(protocol) && socket.ip().is_ipv4())
+        .count();
+    let n_udpv6 = sockets
+        .iter()
+        .filter(|(socket, protocol)| Protocol::UDP.eq(protocol) && socket.ip().is_ipv6())
+        .count();
+
     let processes = listeners
         .iter()
         .map(|listener| listener.process.pid)
@@ -61,11 +83,13 @@ fn get_bench_info() -> String {
 
     format!(
         "====================\n\
-    Listeners: {n_listeners}\n\
-    Processes: {n_processes}\n\
-    Sockets: {n_sockets}\n\
-    \tIPv4: {n_ipv4}\n\
-    \tIPv6: {n_ipv6}\n\
+    - Listeners: {n_listeners}\n\
+    - Processes: {n_processes}\n\
+    - Sockets: {n_sockets}\n\
+    \t- TCP (IPv4): {n_tcpv4}\n\
+    \t- TCP (IPv6): {n_tcpv6}\n\
+    \t- UDP (IPv4): {n_udpv4}\n\
+    \t- UDP (IPv6): {n_udpv6}\n\
     ===================="
     )
 }
