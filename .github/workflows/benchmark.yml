@@ -23,12 +23,7 @@ jobs:
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: freebsd
-          architecture: x86_64
-          version: 14.3
-          cpu_count: 4
-          memory: 4G
-          shutdown_vm: true
-          sync_files: true
+          version: 15.0
           run: |
             sudo pkg update
             curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
