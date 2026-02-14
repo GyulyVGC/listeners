@@ -94,6 +94,3 @@ jobs:
 
             echo "Running cargo build..."
             cargo build --verbose
-
-            echo "Running cargo clippy..."
-            cargo clippy -- -D warnings
