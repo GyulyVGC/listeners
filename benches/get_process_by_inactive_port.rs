@@ -1,4 +1,4 @@
-use crate::helpers::{SystemLoad, cleanup_bench, prepare_bench, save_chart_svg, save_info_txt};
+use crate::helpers::{SystemLoad, cleanup, save_chart_svg, save_info_txt};
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 use listeners::Protocol;
 use rand::prelude::{IndexedRandom, IteratorRandom};
@@ -21,14 +21,10 @@ fn benchmark_get_process_by_inactive_port_high(c: &mut Criterion) {
 }
 
 fn benchmark_get_process_by_inactive_port(c: &mut Criterion, system_load: SystemLoad) {
-    let id = match system_load {
-        SystemLoad::Low => "get_process_by_inactive_port_low",
-        SystemLoad::Medium => "get_process_by_inactive_port_medium",
-        SystemLoad::High => "get_process_by_inactive_port_high",
-    };
+    let id = format!("get_process_by_inactive_port_{system_load}");
 
     // prepare bench
-    let (sockets, bench_info) = prepare_bench(system_load);
+    let (sockets, bench_info) = system_load.activate();
 
     let active_ports_protos: HashSet<(u16, Protocol)> = listeners::get_all()
         .unwrap()
@@ -50,7 +46,7 @@ fn benchmark_get_process_by_inactive_port(c: &mut Criterion, system_load: System
         }
     }
 
-    c.bench_function(id, |b| {
+    c.bench_function(&id, |b| {
         b.iter_batched(
             || *inactive_ports_protos.iter().choose(&mut rng).unwrap(),
             |(port, protocol)| {
@@ -64,11 +60,11 @@ fn benchmark_get_process_by_inactive_port(c: &mut Criterion, system_load: System
     });
 
     // save files
-    save_chart_svg(id);
-    save_info_txt(id, &bench_info);
+    save_chart_svg(&id, &bench_info);
+    save_info_txt(&id, &bench_info);
 
     // cleanup bench
-    cleanup_bench(sockets);
+    cleanup(sockets);
 }
 
 criterion_group!(
