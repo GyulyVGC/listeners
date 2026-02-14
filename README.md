@@ -43,7 +43,7 @@ Add this to your `Cargo.toml`:
 ``` toml
 [dependencies]
 
-listeners = "0.3"
+listeners = "0.4"
 ```
 
 Get all the listening processes:
