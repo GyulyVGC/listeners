@@ -1,50 +1,46 @@
-use crate::helpers::{save_chart_svg, save_mean_txt};
+use crate::helpers::{prepare_bench, save_chart_svg, save_info_txt};
 use criterion::{Criterion, criterion_group, criterion_main};
-use helpers::spawn_sockets;
 use std::hint::black_box;
 
 #[path = "helpers.rs"]
 mod helpers;
 
 fn benchmark_get_all_100(c: &mut Criterion) {
-    // spawn sockets
-    let _sockets = spawn_sockets(100);
-    let listeners = listeners::get_all().unwrap_or_default().len();
-    println!("=== Benchmarking get_all with {listeners} listeners ===");
+    let size = 100;
+
+    let (_sockets, bench_info) = prepare_bench(size);
 
     // benchmark
     let id = "get_all_100";
-    benchmark_get_all(c, id);
+    benchmark_get_all(c, id, &bench_info);
 }
 
 fn benchmark_get_all_1k(c: &mut Criterion) {
-    // spawn sockets
-    let _sockets = spawn_sockets(1_000);
-    let listeners = listeners::get_all().unwrap_or_default().len();
-    println!("=== Benchmarking get_all with {listeners} listeners ===");
+    let size = 1_000;
+
+    let (_sockets, bench_info) = prepare_bench(size);
 
     // benchmark
     let id = "get_all_1k";
-    benchmark_get_all(c, id);
+    benchmark_get_all(c, id, &bench_info);
 }
 
 fn benchmark_get_all_10k(c: &mut Criterion) {
-    // spawn sockets
-    let _sockets = spawn_sockets(10_000);
-    let listeners = listeners::get_all().unwrap_or_default().len();
-    println!("=== Benchmarking get_all with {listeners} listeners ===");
+    let size = 10_000;
+
+    let (_sockets, bench_info) = prepare_bench(size);
 
     // benchmark
     let id = "get_all_10k";
-    benchmark_get_all(c, id);
+    benchmark_get_all(c, id, &bench_info);
 }
 
-fn benchmark_get_all(c: &mut Criterion, id: &str) {
+fn benchmark_get_all(c: &mut Criterion, id: &str, bench_info: &str) {
     c.bench_function(id, |b| b.iter(|| black_box(listeners::get_all())));
 
     // save files
     save_chart_svg(id);
-    save_mean_txt(id);
+    save_info_txt(id, bench_info);
 }
 
 criterion_group!(

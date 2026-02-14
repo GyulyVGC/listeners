@@ -1,5 +1,6 @@
 use listeners::Protocol;
 use serde_json::Value;
+use std::collections::HashSet;
 use std::env::consts::OS;
 use std::net::{IpAddr, Ipv4Addr, SocketAddr, TcpListener, UdpSocket};
 
@@ -9,8 +10,19 @@ pub enum SocketType {
     UDP(UdpSocket),
 }
 
+pub fn prepare_bench(size: usize) -> (Vec<SocketType>, String) {
+    // spawn sockets
+    let sockets = spawn_sockets(size);
+
+    // get bench info
+    let bench_info = get_bench_info();
+    println!("{bench_info}");
+
+    (sockets, bench_info)
+}
+
 // TODO: sockets should be associated with different PIDs
-pub fn spawn_sockets(n: usize) -> Vec<SocketType> {
+fn spawn_sockets(n: usize) -> Vec<SocketType> {
     let mut sockets: Vec<SocketType> = Vec::new();
     let socket = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
     for _ in 0..n / 2 {
@@ -22,6 +34,40 @@ pub fn spawn_sockets(n: usize) -> Vec<SocketType> {
         sockets.push(SocketType::UDP(socket));
     }
     sockets
+}
+
+fn get_bench_info() -> String {
+    let listeners = listeners::get_all().unwrap_or_default();
+
+    let n_listeners = listeners.len();
+    let sockets = listeners
+        .iter()
+        .map(|listener| listener.socket)
+        .collect::<HashSet<_>>();
+    let n_sockets = sockets.len();
+    let n_ipv4 = sockets
+        .iter()
+        .filter(|socket| socket.ip().is_ipv4())
+        .count();
+    let n_ipv6 = sockets
+        .iter()
+        .filter(|socket| socket.ip().is_ipv6())
+        .count();
+    let processes = listeners
+        .iter()
+        .map(|listener| listener.process.pid)
+        .collect::<HashSet<_>>();
+    let n_processes = processes.len();
+
+    format!(
+        "====================\n\
+    Listeners: {n_listeners}\n\
+    Processes: {n_processes}\n\
+    Sockets: {n_sockets}\n\
+    \tIPv4: {n_ipv4}\n\
+    \tIPv6: {n_ipv6}\n\
+    ===================="
+    )
 }
 
 #[allow(dead_code)]
@@ -55,7 +101,7 @@ pub fn save_chart_svg(benchmark_id: &str) {
     std::fs::write(&dest, &svg).unwrap();
 }
 
-pub fn save_mean_txt(benchmark_id: &str) {
+pub fn save_info_txt(benchmark_id: &str, bench_info: &str) {
     let json = std::fs::read_to_string(format!(
         "target/criterion/{benchmark_id}/new/estimates.json"
     ))
@@ -64,5 +110,5 @@ pub fn save_mean_txt(benchmark_id: &str) {
     let mean_ns = json["mean"]["point_estimate"].as_f64().unwrap();
     let mean_ms = (mean_ns / 1_000_000.0).round() as usize;
     let dest = format!("resources/benchmarks/{OS}_{benchmark_id}.txt");
-    std::fs::write(&dest, &format!("{mean_ms} ms")).unwrap();
+    std::fs::write(&dest, &format!("{bench_info}\n\n{mean_ms} ms")).unwrap();
 }

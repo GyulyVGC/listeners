@@ -1,6 +1,5 @@
-use crate::helpers::{get_ports_protos, save_chart_svg, save_mean_txt};
+use crate::helpers::{SocketType, get_ports_protos, prepare_bench, save_chart_svg, save_info_txt};
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
-use helpers::spawn_sockets;
 use listeners::Protocol;
 use rand::prelude::{IndexedRandom, IteratorRandom};
 use std::collections::HashSet;
@@ -12,64 +11,52 @@ mod helpers;
 fn benchmark_get_process_by_port_100(c: &mut Criterion) {
     let size = 100;
 
-    // spawn sockets
-    let sockets = spawn_sockets(size);
-    let ports_protos = get_ports_protos(&sockets);
-    println!(
-        "=== Benchmarking get_process_by_port with {} sockets ===",
-        ports_protos.len()
-    );
+    let (sockets, bench_info) = prepare_bench(size);
 
     // benchmark with active ports
     let id = "get_process_by_port_100";
-    benchmark_get_process_by_port(c, id, ports_protos);
+    benchmark_get_process_by_port(c, id, &sockets, &bench_info);
 
     // benchmark with inactive ports
     let id = "get_process_by_inactive_port_100";
-    benchmark_get_process_by_inactive_port(c, id, size);
+    benchmark_get_process_by_inactive_port(c, id, size, &bench_info);
 }
 
 fn benchmark_get_process_by_port_1k(c: &mut Criterion) {
     let size = 1_000;
 
-    // spawn sockets
-    let sockets = spawn_sockets(size);
-    let ports_protos = get_ports_protos(&sockets);
-    println!(
-        "=== Benchmarking get_process_by_port with {} sockets ===",
-        ports_protos.len()
-    );
+    let (sockets, bench_info) = prepare_bench(size);
 
     // benchmark with active ports
     let id = "get_process_by_port_1k";
-    benchmark_get_process_by_port(c, id, ports_protos);
+    benchmark_get_process_by_port(c, id, &sockets, &bench_info);
 
     // benchmark with inactive ports
     let id = "get_process_by_inactive_port_1k";
-    benchmark_get_process_by_inactive_port(c, id, size);
+    benchmark_get_process_by_inactive_port(c, id, size, &bench_info);
 }
 
 fn benchmark_get_process_by_port_10k(c: &mut Criterion) {
     let size = 10_000;
 
-    // spawn sockets
-    let sockets = spawn_sockets(size);
-    let ports_protos = get_ports_protos(&sockets);
-    println!(
-        "=== Benchmarking get_process_by_port with {} sockets ===",
-        ports_protos.len()
-    );
+    let (sockets, bench_info) = prepare_bench(size);
 
     // benchmark with active ports
     let id = "get_process_by_port_10k";
-    benchmark_get_process_by_port(c, id, ports_protos);
+    benchmark_get_process_by_port(c, id, &sockets, &bench_info);
 
     // benchmark with inactive ports
     let id = "get_process_by_inactive_port_10k";
-    benchmark_get_process_by_inactive_port(c, id, size);
+    benchmark_get_process_by_inactive_port(c, id, size, &bench_info);
 }
 
-fn benchmark_get_process_by_port(c: &mut Criterion, id: &str, ports_protos: Vec<(u16, Protocol)>) {
+fn benchmark_get_process_by_port(
+    c: &mut Criterion,
+    id: &str,
+    sockets: &Vec<SocketType>,
+    bench_info: &str,
+) {
+    let ports_protos = get_ports_protos(sockets);
     let mut rng = rand::rng();
     c.bench_function(id, |b| {
         b.iter_batched(
@@ -85,10 +72,15 @@ fn benchmark_get_process_by_port(c: &mut Criterion, id: &str, ports_protos: Vec<
 
     // save files
     save_chart_svg(id);
-    save_mean_txt(id);
+    save_info_txt(id, bench_info);
 }
 
-fn benchmark_get_process_by_inactive_port(c: &mut Criterion, id: &str, size: usize) {
+fn benchmark_get_process_by_inactive_port(
+    c: &mut Criterion,
+    id: &str,
+    size: usize,
+    bench_info: &str,
+) {
     let active_ports_protos: HashSet<(u16, Protocol)> = listeners::get_all()
         .unwrap()
         .into_iter()
@@ -124,7 +116,7 @@ fn benchmark_get_process_by_inactive_port(c: &mut Criterion, id: &str, size: usi
 
     // save files
     save_chart_svg(id);
-    save_mean_txt(id);
+    save_info_txt(id, bench_info);
 }
 
 criterion_group!(
