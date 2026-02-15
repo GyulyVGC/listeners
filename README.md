@@ -1,4 +1,4 @@
-# Listene*rs*
+# listene*rs*
 
 [![Downloads](https://img.shields.io/crates/d/listeners.svg)](https://crates.io/crates/listeners)
 [![Stars](https://img.shields.io/github/stars/GyulyVGC/listeners?logo=github&style=flat)](https://github.com/GyulyVGC/listeners)
