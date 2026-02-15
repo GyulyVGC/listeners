@@ -10,12 +10,13 @@ type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 /// Indicates whether the current operating system is supported by this library.
 ///
-/// Currently, the supported operating systems are Windows, Linux, macOS, and FreeBSD.
+/// Currently, the supported operating systems are Windows, Linux, macOS, FreeBSD and OpenBSD.
 pub const IS_OS_SUPPORTED: bool = cfg!(any(
     target_os = "windows",
     target_os = "linux",
     target_os = "macos",
-    target_os = "freebsd"
+    target_os = "freebsd",
+    target_os = "openbsd"
 ));
 
 /// A process listening on a socket.
