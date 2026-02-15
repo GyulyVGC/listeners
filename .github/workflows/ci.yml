@@ -71,6 +71,33 @@ jobs:
             echo "Running cargo tests..."
             cargo test --verbose -- --nocapture
 
+  rust-openbsd:
+    name: openbsd
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run CI
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: openbsd
+          version: 7.8
+          run: |
+            sudo pkg_add rust rust-rustfmt rust-clippy
+
+            echo "Running cargo fmt check..."
+            cargo fmt --all -- --check
+
+            echo "Running cargo build..."
+            cargo build --verbose
+
+            echo "Running cargo clippy..."
+            cargo clippy -- -D warnings
+
+            echo "Running cargo tests..."
+            cargo test --verbose -- --nocapture
+
   rust-unsupportted:
     name: unsupported
     runs-on: ubuntu-latest

@@ -2,7 +2,7 @@ use crate::Protocol;
 use libc::{KI_MAXCOMLEN, pid_t};
 use std::{
     collections::HashSet,
-    ffi::{CStr, CString},
+    ffi::CStr,
     io,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     os::raw::{c_char, c_int},

@@ -44,6 +44,27 @@ jobs:
         with:
           commit_message: "update benchmarks for freebsd"
 
+  benchmark-openbsd:
+    name: openbsd
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run CI
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: openbsd
+          version: 7.8
+          run: |
+            sudo sysctl kern.maxfiles 20000
+            sudo ilimit -n 16384
+            
+            sudo pkg_add rust rust-rustfmt rust-clippy
+
+            echo "Running benchmarks..."
+            cargo bench
+
   benchmark:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
