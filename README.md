@@ -30,7 +30,7 @@ This library wants to fill this gap, and it aims to be:
 - [x] Linux
 - [x] macOS
 - [x] FreeBSD
-- [ ] OpenBSD
+- [x] OpenBSD
 - [ ] NetBSD
 - [ ] Android
 - [ ] iOS

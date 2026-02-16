@@ -4,8 +4,6 @@ use std::collections::HashSet;
 mod ffi;
 mod helpers;
 
-const PATH_NOT_FOUND: &str = "??";
-
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
@@ -14,7 +12,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     for process in processes {
         let process_path = helpers::locate_process(&process.name)
             .map(|path| path.to_string_lossy().into_owned())
-            .unwrap_or(PATH_NOT_FOUND.into());
+            .unwrap_or_default();
 
         let sockets = ffi::get_sockets(process.pid)?;
 
@@ -38,7 +36,7 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
     for process in processes {
         let process_path = helpers::locate_process(&process.name)
             .map(|path| path.to_string_lossy().into_owned())
-            .unwrap_or(PATH_NOT_FOUND.into());
+            .unwrap_or_default();
 
         let sockets = ffi::get_sockets(process.pid)?;
 
