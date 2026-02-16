@@ -58,7 +58,7 @@ jobs:
           version: 7.8
           run: |
             sudo sysctl kern.maxfiles 20000
-            sudo ilimit -n 16384
+            sudo ulimit -n 16384
             
             sudo pkg_add rust rust-rustfmt rust-clippy
 
