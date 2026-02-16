@@ -48,6 +48,3 @@ harness = false
 [[bench]]
 name = "get_process_by_inactive_port"
 harness = false
-
-[dependencies]
-libc = "0.2.182"
