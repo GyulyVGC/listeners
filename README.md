@@ -1,17 +1,18 @@
-# Listene*rs*
+# listene*rs*
 
-[![Downloads](https://img.shields.io/crates/d/listeners.svg)](https://crates.io/crates/listeners)
 [![Stars](https://img.shields.io/github/stars/GyulyVGC/listeners?logo=github&style=flat)](https://github.com/GyulyVGC/listeners)
+[![Downloads](https://img.shields.io/crates/d/listeners.svg)](https://crates.io/crates/listeners)
+[![Codecov](https://codecov.io/gh/GyulyVGC/listeners/graph/badge.svg?token=GSDVTT75C2)](https://codecov.io/gh/GyulyVGC/listeners)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
 [![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
 [![Crates](https://img.shields.io/crates/v/listeners?&logo=rust)](https://crates.io/crates/listeners)
 
-**Cross-platform library for Rust to [_efficiently_](#benchmarks) find out processes listening on network sockets.**
+**Cross-platform library for Rust to [_efficiently_](#benchmarks) find out processes listening on network ports.**
 
 ## Motivation
 
 Despite some Rust libraries to get process information already exist,
-none of them correlates process ID and name to active network sockets in a cross-platform way.
+none of them correlates process ID and name to open network ports in a cross-platform way.
 
 Some examples of existing libraries:
 - [netstat2](https://crates.io/crates/netstat2): doesn't provide the process name (and it's unmaintained)
