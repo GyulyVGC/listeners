@@ -2,6 +2,10 @@
 
 All releases with the relative changes are documented in this file.
 
+## [UNRELEASED]
+### Fixed
+- Use more loose version requirements to avoid dependency conflicts in projects using this library
+
 ## [0.4.0] - 2026-02-14
 ### Added
 - FreeBSD support ([#32](https://github.com/GyulyVGC/listeners/pull/32))
