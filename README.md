@@ -2,6 +2,7 @@
 
 [![Downloads](https://img.shields.io/crates/d/listeners.svg)](https://crates.io/crates/listeners)
 [![Stars](https://img.shields.io/github/stars/GyulyVGC/listeners?logo=github&style=flat)](https://github.com/GyulyVGC/listeners)
+[![Codecov](https://codecov.io/gh/GyulyVGC/listeners/graph/badge.svg?token=GSDVTT75C2)](https://codecov.io/gh/GyulyVGC/listeners)
 [![CI](https://github.com/gyulyvgc/listeners/workflows/CI/badge.svg)](https://github.com/GyulyVGC/listeners/actions/)
 [![Docs](https://docs.rs/listeners/badge.svg)](https://docs.rs/listeners/latest/)
 [![Crates](https://img.shields.io/crates/v/listeners?&logo=rust)](https://crates.io/crates/listeners)
