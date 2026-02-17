@@ -31,13 +31,20 @@ mod openbsd;
 #[cfg(target_os = "openbsd")]
 use openbsd as target_os;
 
+/* ---------- netbsd ---------- */
+#[cfg(target_os = "netbsd")]
+mod netbsd;
+#[cfg(target_os = "netbsd")]
+use netbsd as target_os;
+
 /* -------- unsupported -------- */
 #[cfg(all(
     not(target_os = "linux"),
     not(target_os = "macos"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
-    not(target_os = "openbsd")
+    not(target_os = "openbsd"),
+    not(target_os = "netbsd")
 ))]
 mod unsupported;
 #[cfg(all(
@@ -45,6 +52,7 @@ mod unsupported;
     not(target_os = "macos"),
     not(target_os = "windows"),
     not(target_os = "freebsd"),
-    not(target_os = "openbsd")
+    not(target_os = "openbsd"),
+    not(target_os = "netbsd")
 ))]
 use unsupported as target_os;

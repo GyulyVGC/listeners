@@ -1,7 +1,3 @@
-#[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
-fn main() {}
-
-#[cfg(any(target_os = "freebsd", target_os = "openbsd"))]
 fn main() {
     #[cfg(target_os = "freebsd")]
     {
@@ -14,9 +10,15 @@ fn main() {
         let path = std::path::PathBuf::from("src/platform/openbsd/native");
         compile_native_lib(&path, "native_openbsd_lib");
     }
+
+    #[cfg(target_os = "netbsd")]
+    {
+        let path = std::path::PathBuf::from("src/platform/netbsd/native");
+        compile_native_lib(&path, "native_netbsd_lib");
+    }
 }
 
-#[cfg(any(target_os = "freebsd", target_os = "openbsd"))]
+#[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
 fn compile_native_lib(src_dir: &std::path::Path, lib_name: &str) {
     let mut c_files = Vec::new();
     find_c_files(src_dir, &mut c_files);
@@ -42,7 +44,7 @@ fn compile_native_lib(src_dir: &std::path::Path, lib_name: &str) {
     println!("cargo:rerun-if-changed={}", src_dir.display());
 }
 
-#[cfg(any(target_os = "freebsd", target_os = "openbsd"))]
+#[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
 fn find_c_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
     if !dir.is_dir() {
         return;

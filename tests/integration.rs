@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 use std::str::FromStr;
 
-#[cfg(not(any(target_os = "freebsd", target_os = "openbsd")))]
+#[cfg(not(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd")))]
 #[test]
 #[serial]
 fn test_consistency() {

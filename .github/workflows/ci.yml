@@ -98,8 +98,8 @@ jobs:
             echo "Running cargo tests..."
             cargo test --verbose -- --nocapture
 
-  rust-unsupportted:
-    name: unsupported
+  rust-netbsd:
+    name: netbsd
     runs-on: ubuntu-latest
 
     steps:
@@ -121,3 +121,6 @@ jobs:
 
             echo "Running cargo build..."
             cargo build --verbose
+
+            echo "Running cargo tests..."
+            cargo test --verbose -- --nocapture

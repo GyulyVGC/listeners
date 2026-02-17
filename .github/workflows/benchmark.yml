@@ -65,6 +65,27 @@ jobs:
             echo "Running benchmarks..."
             cargo bench
 
+  benchmark-netbsd:
+    name: netbsd
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run CI
+        uses: cross-platform-actions/action@v0.32.0
+        with:
+          operating_system: netbsd
+          version: 10.1
+          run: |
+            sudo pkgin update
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+            
+            export PATH=$HOME/.cargo/bin:$PATH
+
+            echo "Running benchmarks..."
+            cargo bench
+
   benchmark:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
