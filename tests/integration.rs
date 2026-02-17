@@ -54,6 +54,12 @@ fn test_inactive_ports() {
         let process_by_port = listeners::get_process_by_port(*p, Protocol::UDP);
         assert!(process_by_port.is_err());
     }
+
+    // also check that port 0 is error
+    let process_by_port = listeners::get_process_by_port(0, Protocol::TCP);
+    assert!(process_by_port.is_err());
+    let process_by_port = listeners::get_process_by_port(0, Protocol::UDP);
+    assert!(process_by_port.is_err());
 }
 
 #[test]
