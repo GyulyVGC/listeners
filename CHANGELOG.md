@@ -23,7 +23,7 @@ All releases with the relative changes are documented in this file.
 - New `Protocol` enum
 - Added `protocol` field to `Listener` struct, indicating whether the listener uses TCP or UDP
 ### Changed
-- The library now retrieves all the processes listening on TCP/UDP sockets, instead of just the TCP-based ones in `LISTEN` state ([#13](https://github.com/GyulyVGC/listeners/pull/13) — fixes [#5](https://github.com/GyulyVGC/listeners/issues/5)) 
+- The library now retrieves all the processes listening on TCP/UDP ports, instead of just the TCP-based ones in `LISTEN` state ([#13](https://github.com/GyulyVGC/listeners/pull/13) — fixes [#5](https://github.com/GyulyVGC/listeners/issues/5)) 
 
 ## [0.2.1] - 2024-07-12
 ### Fixed

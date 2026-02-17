@@ -222,7 +222,7 @@ pub fn save_chart_svg(benchmark_id: &str, bench_info: &BenchInfo) {
     let insert_pos = svg.find('\n').unwrap() + 1;
     svg.insert_str(
         insert_pos,
-        &format!("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n<text x=\"255\" y=\"15\" font-weight=\"bold\" text-anchor=\"middle\" font-family=\"sans-serif\" font-size=\"9.67741935483871\" opacity=\"1\" fill=\"#000000\">Open sockets: {open_sockets}</text>\n"),
+        &format!("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n<text x=\"255\" y=\"15\" font-weight=\"bold\" text-anchor=\"middle\" font-family=\"sans-serif\" font-size=\"9.67741935483871\" opacity=\"1\" fill=\"#000000\">Open ports: {open_sockets}</text>\n"),
     );
     let dest = format!("resources/benchmarks/{OS}_{benchmark_id}.svg");
     std::fs::write(&dest, &svg).unwrap();
