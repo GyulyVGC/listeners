@@ -47,8 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
+          ref: ${{ github.ref_name }}
 
       - name: Run Benchmarks
         uses: cross-platform-actions/action@v0.32.0
