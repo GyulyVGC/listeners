@@ -32,7 +32,7 @@ This library wants to fill this gap, and it aims to be:
 - [x] macOS
 - [x] FreeBSD
 - [x] OpenBSD
-- [ ] NetBSD
+- [x] NetBSD
 - [ ] Android
 - [ ] iOS
 - [ ] Other?
