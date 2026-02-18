@@ -1,4 +1,4 @@
-use crate::helpers::{SystemLoad, cleanup, get_ports_protos, save_chart_svg, save_info_txt};
+use crate::helpers::{SystemLoad, cleanup, save_chart_svg, save_info_txt};
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
 use rand::prelude::IndexedRandom;
 use std::hint::black_box;
@@ -24,7 +24,7 @@ fn benchmark_get_process_by_active_port(c: &mut Criterion, system_load: SystemLo
     // prepare bench
     let (sockets, bench_info) = system_load.activate();
 
-    let ports_protos = get_ports_protos(&sockets);
+    let ports_protos = &bench_info.active_ports_protos;
     let mut rng = rand::rng();
     c.bench_function(&id, |b| {
         b.iter_batched(

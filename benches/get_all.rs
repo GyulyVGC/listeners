@@ -21,7 +21,7 @@ fn benchmark_get_all(c: &mut Criterion, system_load: SystemLoad) {
     let id = format!("get_all_{system_load}");
 
     // prepare bench
-    let (sockets, bench_info) = system_load.activate();
+    let (childs, bench_info) = system_load.activate();
 
     c.bench_function(&id, |b| b.iter(|| black_box(listeners::get_all())));
 
@@ -30,7 +30,7 @@ fn benchmark_get_all(c: &mut Criterion, system_load: SystemLoad) {
     save_info_txt(&id, &bench_info);
 
     // cleanup bench
-    cleanup(sockets);
+    cleanup(childs);
 }
 
 criterion_group!(

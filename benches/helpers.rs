@@ -3,13 +3,8 @@ use serde_json::Value;
 use std::collections::HashSet;
 use std::env::consts::OS;
 use std::fmt::Display;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
-
-#[allow(dead_code)]
-pub enum SocketType {
-    TCP(TcpListener),
-    UDP(UdpSocket),
-}
+use std::process::Child;
+use rand::prelude::IndexedRandom;
 
 pub struct BenchInfo {
     n_listeners: usize,
@@ -19,12 +14,15 @@ pub struct BenchInfo {
     n_tcpv6: usize,
     n_udpv4: usize,
     n_udpv6: usize,
+    #[allow(dead_code)]
+    pub active_ports_protos: Vec<(u16, Protocol)>,
+    #[allow(dead_code)]
+    pub inactive_ports_protos: Vec<(u16, Protocol)>,
 }
 
 impl BenchInfo {
     fn get() -> Self {
         let listeners = listeners::get_all().unwrap_or_default();
-
         let n_listeners = listeners.len();
 
         let sockets = listeners
@@ -56,6 +54,29 @@ impl BenchInfo {
             .collect::<HashSet<_>>();
         let n_processes = processes.len();
 
+        // to test the "not found" case: use random ports/protocols that aren't in the list
+        let mut rng = rand::rng();
+        let all_ports: Vec<u16> = (1..u16::MAX).collect();
+        let all_protocols = vec![Protocol::TCP, Protocol::UDP];
+        let mut inactive_ports_protos = Vec::new();
+        while inactive_ports_protos.len() < 1_000 {
+            let port = *all_ports.choose(&mut rng).unwrap();
+            let protocol = *all_protocols.choose(&mut rng).unwrap();
+            if !sockets.iter().any(|(active_sock, active_proto)|
+                active_sock.port() == port && active_proto == &protocol
+            ) {
+                inactive_ports_protos.push((port, protocol));
+            }
+        }
+
+        // to test the "found" case: only get ports and protocols for spawned processes
+        // (to avoid using ports from processes that might stop running while benchmarking)
+        let active_ports_protos = listeners
+            .iter()
+            .filter(|listener| listener.process.name == "spawn_process" && listener.socket.port() != 0)
+            .map(|listener| (listener.socket.port(), listener.protocol))
+            .collect();
+
         Self {
             n_listeners,
             n_processes,
@@ -64,6 +85,8 @@ impl BenchInfo {
             n_tcpv6,
             n_udpv4,
             n_udpv6,
+            active_ports_protos,
+            inactive_ports_protos,
         }
     }
 }
@@ -78,6 +101,7 @@ impl Display for BenchInfo {
             n_tcpv6,
             n_udpv4,
             n_udpv6,
+            ..
         } = self;
         write!(
             f,
@@ -102,7 +126,7 @@ pub enum SystemLoad {
 }
 
 impl SystemLoad {
-    pub fn num_sockets(&self) -> usize {
+    fn num_sockets(&self) -> usize {
         match self {
             SystemLoad::Low => 100,
             SystemLoad::Medium => 1_000,
@@ -110,26 +134,46 @@ impl SystemLoad {
         }
     }
 
-    // fn num_processes(&self) -> usize {
-    //     match self {
-    //         SystemLoad::Low => 10,
-    //         SystemLoad::Medium => 100,
-    //         SystemLoad::High => 1_000,
-    //     }
-    // }
+    fn num_processes(&self) -> usize {
+        match self {
+            SystemLoad::Low => 10,
+            SystemLoad::Medium => 100,
+            SystemLoad::High => 1_000,
+        }
+    }
 
-    pub fn activate(self) -> (Vec<SocketType>, BenchInfo) {
-        // spawn sockets
-        let sockets = spawn_sockets(self.num_sockets());
-
+    pub fn activate(self) -> (Vec<Child>, BenchInfo) {
         // spawn processes
-        // let childs = spawn_processes(system_load.num_processes());
+        let childs = self.spawn_processes();
 
         // get bench info
         let bench_info = BenchInfo::get();
         println!("{bench_info}");
 
-        (sockets, bench_info)
+        (childs, bench_info)
+    }
+
+    /// Spawns `tot_processes` processes, each opening `tot_sockets`/`tot_processes` ports.
+    fn spawn_processes(self) -> Vec<Child> {
+        let tot_processes = self.num_processes();
+        let tot_sockets = self.num_sockets();
+        let n_each = tot_sockets / tot_processes;
+
+        let mut processes: Vec<Child> = Vec::new();
+
+        for _ in 0..tot_processes {
+            let process =
+                std::process::Command::new("target/release/spawn_process")
+                    .arg(n_each.to_string())
+                    .spawn()
+                    .unwrap();
+            processes.push(process);
+        }
+
+        // wait for processes to spawn and open their ports
+        std::thread::sleep(std::time::Duration::from_secs(5));
+
+        processes
     }
 }
 
@@ -143,74 +187,11 @@ impl Display for SystemLoad {
     }
 }
 
-fn spawn_sockets(n: usize) -> Vec<SocketType> {
-    let mut sockets: Vec<SocketType> = Vec::new();
-    let socket_v4 = SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0);
-    let socket_v6 = SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 0);
-
-    for _ in 0..n / 4 {
-        let socket = TcpListener::bind(socket_v4).unwrap();
-        sockets.push(SocketType::TCP(socket));
+pub fn cleanup(childs: Vec<Child>) {
+    for mut process in childs {
+        let _ = process.kill();
+        let _ = process.wait();
     }
-    for _ in 0..n / 4 {
-        let socket = TcpListener::bind(socket_v6).unwrap();
-        sockets.push(SocketType::TCP(socket));
-    }
-    for _ in 0..n / 4 {
-        let socket = UdpSocket::bind(socket_v4).unwrap();
-        sockets.push(SocketType::UDP(socket));
-    }
-    for _ in 0..n / 4 {
-        let socket = UdpSocket::bind(socket_v6).unwrap();
-        sockets.push(SocketType::UDP(socket));
-    }
-
-    sockets
-}
-
-// TODO: increase the number of PIDs
-// TODO: sockets should be associated with different PIDs
-// fn spawn_processes(n: usize) -> Vec<Child> {
-//     let mut processes: Vec<Child> = Vec::new();
-//
-//     for _ in 0..n {
-//         #[cfg(not(target_os = "windows"))]
-//         let program = "sleep";
-//         #[cfg(target_os = "windows")]
-//         let program = "timeout";
-//         let process = std::process::Command::new(program)
-//             .arg("1000")
-//             .spawn()
-//             .unwrap();
-//         processes.push(process);
-//     }
-//
-//     processes
-// }
-
-pub fn cleanup(sockets: Vec<SocketType>) {
-    drop(sockets);
-    // for mut process in processes {
-    //     let _ = process.kill();
-    //     let _ = process.wait();
-    // }
-}
-
-#[allow(dead_code)]
-pub fn get_ports_protos(sockets: &[SocketType]) -> Vec<(u16, Protocol)> {
-    sockets
-        .iter()
-        .filter_map(|socket| match socket {
-            SocketType::TCP(tcp) => tcp
-                .local_addr()
-                .ok()
-                .map(|addr| (addr.port(), Protocol::TCP)),
-            SocketType::UDP(udp) => udp
-                .local_addr()
-                .ok()
-                .map(|addr| (addr.port(), Protocol::UDP)),
-        })
-        .collect::<Vec<_>>()
 }
 
 pub fn save_chart_svg(benchmark_id: &str, bench_info: &BenchInfo) {
@@ -219,10 +200,11 @@ pub fn save_chart_svg(benchmark_id: &str, bench_info: &BenchInfo) {
     ))
     .unwrap();
     let open_sockets = bench_info.n_sockets;
+    let processes = bench_info.n_processes;
     let insert_pos = svg.find('\n').unwrap() + 1;
     svg.insert_str(
         insert_pos,
-        &format!("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n<text x=\"255\" y=\"15\" font-weight=\"bold\" text-anchor=\"middle\" font-family=\"sans-serif\" font-size=\"9.67741935483871\" opacity=\"1\" fill=\"#000000\">Open ports: {open_sockets}</text>\n"),
+        &format!("<rect width=\"100%\" height=\"100%\" fill=\"white\"/>\n<text x=\"255\" y=\"15\" font-weight=\"bold\" text-anchor=\"middle\" font-family=\"sans-serif\" font-size=\"9.67741935483871\" opacity=\"1\" fill=\"#000000\">Processes: {processes} — Open ports: {open_sockets}</text>\n"),
     );
     let dest = format!("resources/benchmarks/{OS}_{benchmark_id}.svg");
     std::fs::write(&dest, &svg).unwrap();

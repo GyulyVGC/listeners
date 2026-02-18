@@ -81,7 +81,7 @@ check the [`examples`](https://github.com/GyulyVGC/listeners/tree/main/examples)
 ## Benchmarks
 
 Below you can find exhaustive benchmarks measuring the performance of this library APIs
-on all supported platforms, varying the system load (number of sockets open on unique ports).
+on all supported platforms, varying the system load (number of running processes and open ports).
 
 The benchmarks include:
 - `listeners::get_all`: get all the listening processes and their sockets
