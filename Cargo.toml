@@ -2,7 +2,6 @@
 name = "listeners"
 version = "0.4.0"
 edition = "2024"
-rust-version = "1.91"
 authors = ["Giuliano Bellini <gyulyvgc99@gmail.com>"]
 description = "Cross-platform library to find out processes listening on network ports"
 readme = "README.md"
