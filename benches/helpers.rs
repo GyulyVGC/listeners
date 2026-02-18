@@ -25,8 +25,6 @@ impl BenchInfo {
         let listeners = listeners::get_all().unwrap_or_default();
         let n_listeners = listeners.len();
 
-        println!("listeners: {listeners:?}");
-
         let sockets = listeners
             .iter()
             .map(|listener| (listener.socket, listener.protocol))
@@ -76,7 +74,12 @@ impl BenchInfo {
         let active_ports_protos = listeners
             .iter()
             .filter(|listener| {
-                listener.process.name == "spawn_process" && listener.socket.port() != 0
+                #[cfg(target_os = "windows")]
+                let process_name = "spawn_process.exe";
+                #[cfg(not(target_os = "windows"))]
+                let process_name = "spawn_process";
+
+                listener.process.name == process_name && listener.socket.port() != 0
             })
             .map(|listener| (listener.socket.port(), listener.protocol))
             .collect();
