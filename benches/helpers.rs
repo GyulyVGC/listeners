@@ -25,6 +25,8 @@ impl BenchInfo {
         let listeners = listeners::get_all().unwrap_or_default();
         let n_listeners = listeners.len();
 
+        println!("listeners: {listeners:?}");
+
         let sockets = listeners
             .iter()
             .map(|listener| (listener.socket, listener.protocol))
