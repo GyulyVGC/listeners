@@ -161,6 +161,8 @@ impl SystemLoad {
         let tot_sockets = self.num_sockets();
         let n_each = tot_sockets / tot_processes;
 
+        println!("Spawning {tot_processes} processes, each opening {n_each} sockets...");
+
         let mut processes: Vec<Child> = Vec::new();
 
         for _ in 0..tot_processes {
