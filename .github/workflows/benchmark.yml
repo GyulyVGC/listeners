@@ -15,76 +15,57 @@ env:
 
 jobs:
 
-  benchmark-freebsd:
-    name: freebsd
+  benchmark-bsd:
+    name: ${{ matrix.os }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: freebsd
+            version: "14.3"
+            rust_install: |
+              sudo pkg update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
+          - os: openbsd
+            version: "7.8"
+            rust_install: |
+              sudo sysctl kern.maxfiles=20000
+              ulimit -n 16384
+              sudo pkg_add rust rust-rustfmt rust-clippy
+          - os: netbsd
+            version: "10.1"
+            rust_install: |
+              sudo pkgin update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
 
     steps:
       - uses: actions/checkout@v6
         with:
           ref: ${{ github.ref_name }}
 
-      - name: bench
+      - name: Run Benchmarks
         uses: cross-platform-actions/action@v0.32.0
         with:
-          operating_system: freebsd
-          version: 14.3
+          operating_system: ${{ matrix.os }}
+          version: ${{ matrix.version }}
           run: |
-            sudo pkg update
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            
-            export PATH=$HOME/.cargo/bin:$PATH
+            set -e
+            ${{ matrix.rust_install }}
             
             echo "Running benchmarks..."
             cargo bench
+            cargo clean
 
-      - uses: stefanzweifel/git-auto-commit-action@v7
+      - name: Commit benchmark updates
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "update benchmarks for freebsd"
-
-  benchmark-openbsd:
-    name: openbsd
-    runs-on: ubuntu-latest
-    
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Run CI
-        uses: cross-platform-actions/action@v0.32.0
-        with:
-          operating_system: openbsd
-          version: 7.8
-          run: |
-            sudo sysctl kern.maxfiles 20000
-            sudo ulimit -n 16384
-            
-            sudo pkg_add rust rust-rustfmt rust-clippy
-
-            echo "Running benchmarks..."
-            cargo bench
-
-  benchmark-netbsd:
-    name: netbsd
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Run CI
-        uses: cross-platform-actions/action@v0.32.0
-        with:
-          operating_system: netbsd
-          version: 10.1
-          run: |
-            sudo pkgin update
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            
-            export PATH=$HOME/.cargo/bin:$PATH
-
-            echo "Running benchmarks..."
-            cargo bench
+          commit_message: "update benchmarks for ${{ matrix.os }}"
 
   benchmark:
     name: ${{ matrix.os }}-latest

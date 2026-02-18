@@ -1,20 +1,20 @@
 use crate::{Listener, Process, Protocol};
 use std::collections::HashSet;
 
-mod ffi;
-mod helpers;
+use super::ffi::openbsd;
+use super::helpers;
 
 pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let mut listeners = HashSet::new();
 
-    let processes = ffi::get_all_processes()?;
+    let processes = openbsd::get_all_processes()?;
 
     for process in processes {
         let process_path = helpers::locate_process(&process.name)
             .map(|path| path.to_string_lossy().into_owned())
             .unwrap_or_default();
 
-        let sockets = ffi::get_sockets(process.pid)?;
+        let sockets = openbsd::get_sockets(process.pid)?;
 
         for socket in sockets {
             listeners.insert(Listener::new(
@@ -31,14 +31,14 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
 }
 
 pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Result<Process> {
-    let processes = ffi::get_all_processes()?;
+    let processes = openbsd::get_all_processes()?;
 
     for process in processes {
         let process_path = helpers::locate_process(&process.name)
             .map(|path| path.to_string_lossy().into_owned())
             .unwrap_or_default();
 
-        let sockets = ffi::get_sockets(process.pid)?;
+        let sockets = openbsd::get_sockets(process.pid)?;
 
         for socket in sockets {
             if socket.address.port() == port && socket.protocol == protocol {

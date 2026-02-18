@@ -19,23 +19,12 @@ mod linux;
 #[cfg(target_os = "linux")]
 use linux as target_os;
 
-/* ---------- freebsd ---------- */
-#[cfg(target_os = "freebsd")]
-mod freebsd;
-#[cfg(target_os = "freebsd")]
-use freebsd as target_os;
+/* ---------- bsd-like ---------- */
 
-/* ---------- openbsd ---------- */
-#[cfg(target_os = "openbsd")]
-mod openbsd;
-#[cfg(target_os = "openbsd")]
-use openbsd as target_os;
-
-/* ---------- netbsd ---------- */
-#[cfg(target_os = "netbsd")]
-mod netbsd;
-#[cfg(target_os = "netbsd")]
-use netbsd as target_os;
+#[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
+mod bsd;
+#[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
+use bsd as target_os;
 
 /* -------- unsupported -------- */
 #[cfg(all(

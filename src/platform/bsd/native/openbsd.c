@@ -1,26 +1,17 @@
-#include "impl.h"
+#include "common.h"
 
-static int sysctl_call(int mib[], int mnum, char **buffer, size_t *buffer_size)
-{
-    if (sysctl(mib, mnum, NULL, buffer_size, NULL, 0) < 0)
-        return -1;
+#ifdef __OpenBSD__
 
-    *buffer = malloc(*buffer_size);
-    if (!*buffer)
-    {
-        errno = ENOMEM;
-        return -1;
-    }
-
-    if (sysctl(mib, mnum, *buffer, buffer_size, NULL, 0) < 0)
-    {
-        free(*buffer);
-        return -1;
-    }
-
-    return 0;
-}
-
+/**
+ * count_sockets - Count TCP/UDP sockets in a kinfo_file array
+ *
+ * @files: Pointer to an array of kinfo_file structures.
+ * @size:  Number of entries in the files array.
+ *
+ * Iterates through all entries and counts only TCP or UDP sockets.
+ *
+ * Returns: Number of sockets found.
+ */
 static int count_sockets(struct kinfo_file *files, size_t size)
 {
     size_t retval = 0;
@@ -39,14 +30,14 @@ static int count_sockets(struct kinfo_file *files, size_t size)
     return retval;
 }
 
-int proc_all(struct proc_info_t **list, size_t *nentries)
+int openbsd_fetch_processes(struct proc_info_t **list, size_t *nentries)
 {
     int mib[6] = {CTL_KERN, KERN_PROC, KERN_PROC_ALL, 0, sizeof(struct kinfo_proc), INT_MAX};
 
     char *buffer;
     size_t buffer_size;
 
-    if (sysctl_call(mib, 6, &buffer, &buffer_size) < 0)
+    if (sysctl_fetch(mib, 6, &buffer, &buffer_size) < 0)
     {
         return -1;
     }
@@ -72,14 +63,14 @@ int proc_all(struct proc_info_t **list, size_t *nentries)
     return 0;
 }
 
-int socks_by_pid(pid_t pid, struct socket_info_t **list, size_t *nentries)
+int openbsd_fetch_sockets_by_pid(pid_t pid, struct socket_info_t **list, size_t *nentries)
 {
     int mib[6] = {CTL_KERN, KERN_FILE, KERN_FILE_BYPID, pid, sizeof(struct kinfo_file), INT_MAX};
 
     char *buffer;
     size_t buffer_size;
 
-    if (sysctl_call(mib, 6, &buffer, &buffer_size) < 0)
+    if (sysctl_fetch(mib, 6, &buffer, &buffer_size) < 0)
     {
         return -1;
     }
@@ -117,3 +108,5 @@ int socks_by_pid(pid_t pid, struct socket_info_t **list, size_t *nentries)
     free(buffer);
     return 0;
 }
+
+#endif

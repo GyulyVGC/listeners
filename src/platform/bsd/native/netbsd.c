@@ -1,26 +1,18 @@
-#include "impl.h"
+#include "netbsd.h"
 
-static int sysctl_call(int mib[], int mnum, char **buffer, size_t *buffer_size)
-{
-    if (sysctl(mib, mnum, NULL, buffer_size, NULL, 0) < 0)
-        return -1;
+#ifdef __NetBSD__
 
-    *buffer = malloc(*buffer_size);
-    if (!*buffer)
-    {
-        errno = ENOMEM;
-        return -1;
-    }
-
-    if (sysctl(mib, mnum, *buffer, buffer_size, NULL, 0) < 0)
-    {
-        free(*buffer);
-        return -1;
-    }
-
-    return 0;
-}
-
+/**
+ * count_sockets - Count TCP/UDP sockets in a kinfo_pcb array
+ *
+ * @sockets: Pointer to an array of kinfo_pcb structures returned by sysctl.
+ * @socknum: Number of entries in the sockets array.
+ *
+ * Iterates over the array and counts only entries where the protocol
+ * is TCP (IPPROTO_TCP) or UDP (IPPROTO_UDP).
+ *
+ * Returns: The number of TCP/UDP sockets found.
+ */
 static size_t count_sockets(struct kinfo_pcb *sockets, size_t socknum)
 {
     size_t retval = 0;
@@ -36,6 +28,17 @@ static size_t count_sockets(struct kinfo_pcb *sockets, size_t socknum)
     return retval;
 }
 
+/**
+ * count_files - Count socket file entries in a kinfo_file array
+ *
+ * @files:    Pointer to an array of kinfo_file structures returned by sysctl.
+ * @filesnum: Number of entries in the files array.
+ *
+ * Iterates over the array and counts only entries where the file type
+ * is a socket (DTYPE_SOCKET).
+ *
+ * Returns: The number of socket file entries found.
+ */
 static size_t count_files(struct kinfo_file *files, size_t filesnum)
 {
     size_t retval = 0;
@@ -51,12 +54,32 @@ static size_t count_files(struct kinfo_file *files, size_t filesnum)
     return retval;
 }
 
-static int lsock_common(struct socket_info_t **list, size_t *nentries, int mib[], unsigned int mib_size)
+/**
+ * fetch_sockets_common - Fetch TCP/UDP sockets and populate socket_info_t array
+ *
+ * @list:     Output pointer to an array of socket_info_t structures. Caller
+ *            is responsible for freeing the allocated memory.
+ * @nentries: Output number of entries in the array.
+ * @mib:      Array describing the sysctl MIB to fetch the socket PCB data.
+ * @mib_size: Number of elements in the MIB array.
+ *
+ * This function queries the kernel using sysctl, counts TCP/UDP sockets,
+ * allocates a socket_info_t array, and fills each entry with:
+ *   - Protocol (TCP/UDP)
+ *   - Address family (AF_INET/AF_INET6)
+ *   - Kernel virtual address (kvaddr)
+ *   - IP address and port
+ *
+ * Returns: 0 on success, -1 on failure (errno is set accordingly):
+ *            - ENOMEM if memory allocation fails
+ *            - other errno set by sysctl_fetch
+ */
+static int fetch_sockets_common(struct socket_info_t **list, size_t *nentries, int mib[], unsigned int mib_size)
 {
     char *buffer;
     size_t buffer_size;
 
-    if (sysctl_call(mib, mib_size, &buffer, &buffer_size) < 0)
+    if (sysctl_fetch(mib, mib_size, &buffer, &buffer_size) < 0)
     {
         return -1;
     }
@@ -109,7 +132,7 @@ static int lsock_common(struct socket_info_t **list, size_t *nentries, int mib[]
     return 0;
 }
 
-int lsock_tcp(struct socket_info_t **list, size_t *nentries)
+int netbsd_fetch_tcp_sockets(struct socket_info_t **list, size_t *nentries)
 {
     unsigned int mib_len;
     int mib[CTL_MAXNAME];
@@ -124,10 +147,10 @@ int lsock_tcp(struct socket_info_t **list, size_t *nentries)
     mib[mib_len++] = sizeof(struct kinfo_pcb);
     mib[mib_len++] = INT_MAX;
 
-    return lsock_common(list, nentries, mib, mib_len);
+    return fetch_sockets_common(list, nentries, mib, mib_len);
 }
 
-int lsock_tcp6(struct socket_info_t **list, size_t *nentries)
+int netbsd_fetch_tcp6_sockets(struct socket_info_t **list, size_t *nentries)
 {
     unsigned int mib_len;
     int mib[CTL_MAXNAME];
@@ -142,10 +165,10 @@ int lsock_tcp6(struct socket_info_t **list, size_t *nentries)
     mib[mib_len++] = sizeof(struct kinfo_pcb);
     mib[mib_len++] = INT_MAX;
 
-    return lsock_common(list, nentries, mib, mib_len);
+    return fetch_sockets_common(list, nentries, mib, mib_len);
 }
 
-int lsock_udp(struct socket_info_t **list, size_t *nentries)
+int netbsd_fetch_udp_sockets(struct socket_info_t **list, size_t *nentries)
 {
     unsigned int mib_len;
     int mib[CTL_MAXNAME];
@@ -160,10 +183,10 @@ int lsock_udp(struct socket_info_t **list, size_t *nentries)
     mib[mib_len++] = sizeof(struct kinfo_pcb);
     mib[mib_len++] = INT_MAX;
 
-    return lsock_common(list, nentries, mib, mib_len);
+    return fetch_sockets_common(list, nentries, mib, mib_len);
 }
 
-int lsock_udp6(struct socket_info_t **list, size_t *nentries)
+int netbsd_fetch_udp6_sockets(struct socket_info_t **list, size_t *nentries)
 {
     unsigned int mib_len;
     int mib[CTL_MAXNAME];
@@ -178,10 +201,10 @@ int lsock_udp6(struct socket_info_t **list, size_t *nentries)
     mib[mib_len++] = sizeof(struct kinfo_pcb);
     mib[mib_len++] = INT_MAX;
 
-    return lsock_common(list, nentries, mib, mib_len);
+    return fetch_sockets_common(list, nentries, mib, mib_len);
 }
 
-int lsock_files(struct socket_file_t **list, size_t *nentries)
+int netbsd_fetch_socket_files(struct socket_file_t **list, size_t *nentries)
 {
     unsigned int mib_len;
     int mib[CTL_MAXNAME];
@@ -199,7 +222,7 @@ int lsock_files(struct socket_file_t **list, size_t *nentries)
     char *buffer;
     size_t buffer_size;
 
-    if (sysctl_call(mib, mib_len, &buffer, &buffer_size) < 0)
+    if (sysctl_fetch(mib, mib_len, &buffer, &buffer_size) < 0)
     {
         return -1;
     }
@@ -239,7 +262,7 @@ int lsock_files(struct socket_file_t **list, size_t *nentries)
     return 0;
 }
 
-char *proc_name(pid_t pid)
+char *netbsd_fetch_process_name(pid_t pid)
 {
     int mib[6] = {CTL_KERN, KERN_PROC2, KERN_PROC_PID, pid, sizeof(struct kinfo_proc2), 1};
     struct kinfo_proc2 proc;
@@ -255,7 +278,7 @@ char *proc_name(pid_t pid)
     return name;
 }
 
-char *proc_path(pid_t pid)
+char *netbsd_fetch_process_path(pid_t pid)
 {
     int mib[4] = {CTL_KERN, KERN_PROC_ARGS, pid, KERN_PROC_PATHNAME};
     char pathname[PATH_MAX];
@@ -270,3 +293,5 @@ char *proc_path(pid_t pid)
 
     return path;
 }
+
+#endif

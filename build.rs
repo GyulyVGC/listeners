@@ -1,20 +1,8 @@
 fn main() {
-    #[cfg(target_os = "freebsd")]
+    #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
     {
-        let path = std::path::PathBuf::from("src/platform/freebsd/native");
-        compile_native_lib(&path, "native_freebsd_lib");
-    }
-
-    #[cfg(target_os = "openbsd")]
-    {
-        let path = std::path::PathBuf::from("src/platform/openbsd/native");
-        compile_native_lib(&path, "native_openbsd_lib");
-    }
-
-    #[cfg(target_os = "netbsd")]
-    {
-        let path = std::path::PathBuf::from("src/platform/netbsd/native");
-        compile_native_lib(&path, "native_netbsd_lib");
+        let path = std::path::PathBuf::from("src/platform/bsd/native");
+        compile_native_lib(&path, "bsd_native_lib");
     }
 }
 
