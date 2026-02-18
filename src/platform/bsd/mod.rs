@@ -3,8 +3,6 @@ pub(crate) use target_os::get_process_by_port;
 
 mod ffi;
 
-#[cfg(target_os = "openbsd")]
-mod helpers;
 #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 mod pid_name_path_cache;
 
