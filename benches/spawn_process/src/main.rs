@@ -19,8 +19,8 @@ fn main() {
 
 #[allow(dead_code)]
 enum SocketType {
-    TCP(TcpListener),
-    UDP(UdpSocket),
+    Tcp(TcpListener),
+    Udp(UdpSocket),
 }
 
 fn spawn_sockets(n: usize) -> Vec<SocketType> {
@@ -30,19 +30,19 @@ fn spawn_sockets(n: usize) -> Vec<SocketType> {
 
     for _ in 0..n / 4 {
         let socket = TcpListener::bind(socket_v4).unwrap();
-        sockets.push(SocketType::TCP(socket));
+        sockets.push(SocketType::Tcp(socket));
     }
     for _ in 0..n / 4 {
         let socket = TcpListener::bind(socket_v6).unwrap();
-        sockets.push(SocketType::TCP(socket));
+        sockets.push(SocketType::Tcp(socket));
     }
     for _ in 0..n / 4 {
         let socket = UdpSocket::bind(socket_v4).unwrap();
-        sockets.push(SocketType::UDP(socket));
+        sockets.push(SocketType::Udp(socket));
     }
     for _ in 0..n / 4 {
         let socket = UdpSocket::bind(socket_v6).unwrap();
-        sockets.push(SocketType::UDP(socket));
+        sockets.push(SocketType::Udp(socket));
     }
 
     sockets
