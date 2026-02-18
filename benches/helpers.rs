@@ -1,10 +1,10 @@
 use listeners::Protocol;
+use rand::prelude::IndexedRandom;
 use serde_json::Value;
 use std::collections::HashSet;
 use std::env::consts::OS;
 use std::fmt::Display;
 use std::process::Child;
-use rand::prelude::IndexedRandom;
 
 pub struct BenchInfo {
     n_listeners: usize,
@@ -62,9 +62,9 @@ impl BenchInfo {
         while inactive_ports_protos.len() < 1_000 {
             let port = *all_ports.choose(&mut rng).unwrap();
             let protocol = *all_protocols.choose(&mut rng).unwrap();
-            if !sockets.iter().any(|(active_sock, active_proto)|
+            if !sockets.iter().any(|(active_sock, active_proto)| {
                 active_sock.port() == port && active_proto == &protocol
-            ) {
+            }) {
                 inactive_ports_protos.push((port, protocol));
             }
         }
@@ -73,7 +73,9 @@ impl BenchInfo {
         // (to avoid using ports from processes that might stop running while benchmarking)
         let active_ports_protos = listeners
             .iter()
-            .filter(|listener| listener.process.name == "spawn_process" && listener.socket.port() != 0)
+            .filter(|listener| {
+                listener.process.name == "spawn_process" && listener.socket.port() != 0
+            })
             .map(|listener| (listener.socket.port(), listener.protocol))
             .collect();
 
@@ -162,11 +164,10 @@ impl SystemLoad {
         let mut processes: Vec<Child> = Vec::new();
 
         for _ in 0..tot_processes {
-            let process =
-                std::process::Command::new("target/release/spawn_process")
-                    .arg(n_each.to_string())
-                    .spawn()
-                    .unwrap();
+            let process = std::process::Command::new("target/release/spawn_process")
+                .arg(n_each.to_string())
+                .spawn()
+                .unwrap();
             processes.push(process);
         }
 

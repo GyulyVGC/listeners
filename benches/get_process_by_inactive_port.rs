@@ -1,8 +1,6 @@
 use crate::helpers::{SystemLoad, cleanup, save_chart_svg, save_info_txt};
 use criterion::{BatchSize, Criterion, criterion_group, criterion_main};
-use listeners::Protocol;
-use rand::prelude::{IndexedRandom, IteratorRandom};
-use std::collections::HashSet;
+use rand::prelude::IteratorRandom;
 use std::hint::black_box;
 
 #[path = "helpers.rs"]
@@ -26,7 +24,7 @@ fn benchmark_get_process_by_inactive_port(c: &mut Criterion, system_load: System
     // prepare bench
     let (sockets, bench_info) = system_load.activate();
 
-    let inactive_ports_protos = bench_info.inactive_ports_protos;
+    let inactive_ports_protos = &bench_info.inactive_ports_protos;
 
     let mut rng = rand::rng();
     c.bench_function(&id, |b| {
