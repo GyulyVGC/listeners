@@ -4,7 +4,6 @@ use proto_listener::{PidNamePathCache, ProtoListener, pname_ppath};
 
 use crate::{Listener, Process, Protocol};
 
-mod c_iphlpapi;
 mod proto_listener;
 mod socket_table;
 mod statics;
