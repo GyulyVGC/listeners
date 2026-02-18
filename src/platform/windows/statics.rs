@@ -1,5 +1,5 @@
-use std::ffi::{c_int, c_ulong};
-use windows::Win32::NetworkManegement::IpHelper::{TCP_TABLE_CLASS, UDP_TABLE_CLASS};
+use std::ffi::c_ulong;
+use windows::Win32::NetworkManagement::IpHelper::{TCP_TABLE_CLASS, UDP_TABLE_CLASS};
 
 pub(super) const TCP_TABLE_OWNER_PID_ALL: TCP_TABLE_CLASS = TCP_TABLE_CLASS(5);
 pub(super) const UDP_TABLE_OWNER_PID: UDP_TABLE_CLASS = UDP_TABLE_CLASS(1);
