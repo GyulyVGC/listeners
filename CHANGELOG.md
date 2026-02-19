@@ -3,6 +3,8 @@
 All releases with the relative changes are documented in this file.
 
 ## [UNRELEASED]
+### Changed
+- Update benchmarks to be even more comprehensive: test multiple processes each listening on multiple ports ([#41](https://github.com/GyulyVGC/listeners/pull/41) — fixes [#35](https://github.com/GyulyVGC/listeners/issues/35))
 ### Fixed
 - Use more loose version requirements to avoid dependency conflicts in projects using this library
 

@@ -59,6 +59,7 @@ jobs:
             ${{ matrix.rust_install }}
             
             echo "Running benchmarks..."
+            cargo build --release --bin spawn_process
             cargo bench
             cargo clean
 
@@ -89,7 +90,9 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
 
       - name: bench
-        run: cargo bench
+        run: |
+          cargo build --release --bin spawn_process
+          cargo bench
 
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:
