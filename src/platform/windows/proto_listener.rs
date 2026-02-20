@@ -1,13 +1,9 @@
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
-use std::mem::size_of;
-use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
 use std::os::windows::ffi::OsStringExt;
+use std::path::Path;
 use windows::Win32::Foundation::CloseHandle;
-use windows::Win32::System::Diagnostics::ToolHelp::{
-    CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next, TH32CS_SNAPPROCESS,
-};
 use windows::Win32::System::Threading::{
     OpenProcess, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
 };
@@ -84,9 +80,14 @@ impl ProtoListener {
 }
 
 pub(super) fn pname_ppath(pid: u32) -> Option<(String, String)> {
-    let pname = pname(pid);
-    let ppath = Some(ppath(pid));
-    pname.zip(ppath)
+    let process_path = ppath(pid)?;
+
+    let process_name = Path::new(&process_path)
+        .file_name()
+        .map(|v| v.to_string_lossy().into_owned())
+        .unwrap_or_default();
+
+    Some((process_name, process_path))
 }
 
 pub(super) struct PidNamePathCache {
@@ -118,43 +119,13 @@ impl PidNamePathCache {
     }
 }
 
-fn pname(pid: u32) -> Option<String> {
-    let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
-
-    let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-    process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
-
-    if unsafe { Process32First(h, &raw mut process) }.is_ok() {
-        loop {
-            if unsafe { Process32Next(h, &raw mut process) }.is_ok() {
-                let id: u32 = process.th32ProcessID;
-                if id == pid {
-                    break;
-                }
-            } else {
-                return None;
-            }
-        }
-    }
-
-    unsafe {
-        let _ = CloseHandle(h);
-    };
-
-    let name = process.szExeFile;
-    let len = name.iter().position(|&x| x == 0)?;
-
-    #[allow(clippy::cast_sign_loss)]
-    String::from_utf8(name[0..len].iter().map(|e| *e as u8).collect()).ok()
-}
-
-fn ppath(pid: u32) -> String {
+fn ppath(pid: u32) -> Option<String> {
     unsafe {
         let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
-            return String::new();
+            return None;
         };
         if handle.is_invalid() {
-            return String::new();
+            return None;
         }
 
         let mut buffer: [u16; 1024] = [0; 1024];
@@ -169,6 +140,6 @@ fn ppath(pid: u32) -> String {
         let _ = CloseHandle(handle);
 
         let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
-        path.to_string_lossy().into_owned()
+        Some(path.to_string_lossy().into_owned())
     }
 }
