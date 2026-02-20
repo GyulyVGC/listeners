@@ -31,8 +31,8 @@ This library wants to fill this gap, and it aims to be:
 - [x] Linux
 - [x] macOS
 - [x] FreeBSD
-- [ ] OpenBSD
-- [ ] NetBSD
+- [x] OpenBSD
+- [x] NetBSD
 - [ ] Android
 - [ ] iOS
 - [ ] Other?

@@ -6,7 +6,7 @@ use std::collections::HashSet;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 use std::str::FromStr;
 
-#[cfg(not(target_os = "freebsd"))]
+#[cfg(not(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd")))]
 #[test]
 #[serial]
 fn test_consistency() {
@@ -79,6 +79,7 @@ fn test_http_server() {
 
     // assert that the http server process name and path are not empty
     assert!(!http_server_name.is_empty());
+    #[cfg(not(target_os = "openbsd"))]
     assert!(!http_server_path.is_empty());
 
     // get all listeners
@@ -111,6 +112,7 @@ fn test_dns() {
     let found = all.iter().any(|l| {
         // assert that the process name and path are not empty
         assert!(!l.process.name.is_empty());
+        #[cfg(not(target_os = "openbsd"))]
         assert!(!l.process.path.is_empty());
         l.socket.port() == dns_port && l.protocol == Protocol::UDP || l.protocol == Protocol::TCP
     });
