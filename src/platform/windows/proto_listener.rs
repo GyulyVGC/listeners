@@ -102,13 +102,11 @@ pub(super) fn pname_ppath(pid: u32) -> Option<(String, String)> {
 
 pub(super) struct PidNamePathCache {
     cache: HashMap<u32, Option<(String, String)>>,
-    names: HashMap<u32, String>,
 }
 
 impl PidNamePathCache {
     pub(super) fn new() -> Self {
         Self {
-            names: pname_collect(),
             cache: HashMap::new(),
         }
     }
@@ -117,9 +115,7 @@ impl PidNamePathCache {
         let pid = proto_listener.pid;
 
         if let Entry::Vacant(e) = self.cache.entry(pid) {
-            let name = self.names.get(&pid).cloned();
-            let path = ppath(pid);
-            e.insert(name.zip(Some(path)));
+            e.insert(pname_ppath(pid));
         }
 
         self.cache
@@ -193,38 +189,4 @@ fn ppath(pid: u32) -> String {
         let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
         path.to_string_lossy().into_owned()
     }
-}
-
-fn pname_collect() -> HashMap<u32, String> {
-    let mut retval = Default::default();
-
-    let Ok(h) = (unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }) else {
-        return retval;
-    };
-
-    let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-    process.dwSize = size_of::<PROCESSENTRY32>() as u32;
-    if unsafe { Process32First(h, &mut process) }.is_ok() {
-        loop {
-            let id = process.th32ProcessID;
-
-            let name = unsafe {
-                PCSTR(process.szExeFile.as_ptr() as *const u8)
-                    .to_string()
-                    .unwrap_or_default()
-            };
-
-            retval.insert(id, name);
-
-            if unsafe { Process32Next(h, &mut process) }.is_err() {
-                break;
-            }
-        }
-    }
-
-    unsafe {
-        let _ = CloseHandle(h);
-    };
-
-    retval
 }
