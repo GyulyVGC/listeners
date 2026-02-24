@@ -85,16 +85,19 @@ impl ProtoListener {
 }
 
 pub(super) fn pname_ppath(pid: u32) -> Option<(String, String)> {
-    let Some(process_path) = ppath(pid) else {
-        return pname(pid).zip(Some(String::new()));
-    };
+    let path_str = ppath(pid);
 
-    let process_name = Path::new(&process_path)
-        .file_name()
-        .map(|v| v.to_string_lossy().into_owned())
-        .unwrap_or_default();
+    let path = Path::new(&path_str);
+    if path.is_file()
+        && let Some(name) = path.file_name()
+        && !name.is_empty()
+    {
+        let name_str = name.to_string_lossy().into_owned();
+        return Some((name_str, path_str));
+    }
 
-    Some((process_name, process_path))
+    let pname = pname(pid);
+    pname.zip(Some(path_str))
 }
 
 pub(super) struct PidNamePathCache {
@@ -163,17 +166,13 @@ fn pname(pid: u32) -> Option<String> {
     result
 }
 
-fn ppath(pid: u32) -> Option<String> {
-    if pid == 0 || pid == 4 {
-        return None;
-    }
-
+fn ppath(pid: u32) -> String {
     unsafe {
         let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
-            return None;
+            return String::new();
         };
         if handle.is_invalid() {
-            return None;
+            return String::new();
         }
 
         let mut buffer: [u16; 1024] = [0; 1024];
@@ -188,11 +187,11 @@ fn ppath(pid: u32) -> Option<String> {
         let _ = CloseHandle(handle);
 
         if result.is_err() {
-            return None;
+            return String::new();
         }
 
         let path = std::ffi::OsString::from_wide(&buffer[..size as usize]);
-        Some(path.to_string_lossy().into_owned())
+        path.to_string_lossy().into_owned()
     }
 }
 
