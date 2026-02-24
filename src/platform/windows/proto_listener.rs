@@ -196,27 +196,28 @@ fn ppath(pid: u32) -> String {
 }
 
 fn pname_collect() -> HashMap<u32, String> {
-    let mut retval = Default::default();
+    let mut ret_val = HashMap::default();
 
     let Ok(h) = (unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }) else {
-        return retval;
+        return ret_val;
     };
 
     let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-    process.dwSize = size_of::<PROCESSENTRY32>() as u32;
-    if unsafe { Process32First(h, &mut process) }.is_ok() {
-        loop {
-            let id = process.th32ProcessID;
+    let Ok(dw_size) = u32::try_from(size_of::<PROCESSENTRY32>()) else {
+        return ret_val;
+    };
+    process.dwSize = dw_size;
 
-            let name = unsafe {
-                PCSTR(process.szExeFile.as_ptr() as *const u8)
-                    .to_string()
-                    .unwrap_or_default()
+    if unsafe { Process32First(h, &raw mut process) }.is_ok() {
+        loop {
+            if let Ok(name) =
+                (unsafe { PCSTR(process.szExeFile.as_ptr() as *const u8).to_string() })
+            {
+                let id = process.th32ProcessID;
+                ret_val.insert(id, name);
             };
 
-            retval.insert(id, name);
-
-            if unsafe { Process32Next(h, &mut process) }.is_err() {
+            if unsafe { Process32Next(h, &raw mut process) }.is_err() {
                 break;
             }
         }
@@ -226,5 +227,5 @@ fn pname_collect() -> HashMap<u32, String> {
         let _ = CloseHandle(h);
     };
 
-    retval
+    ret_val
 }
