@@ -117,9 +117,9 @@ impl PidNamePathCache {
         let pid = proto_listener.pid;
 
         if let Entry::Vacant(e) = self.cache.entry(pid) {
-            let name = self.names.get(&pid).cloned().unwrap_or_default();
-            let path = ppath(pid).unwrap_or_default();
-            e.insert(Some((name, path)));
+            let name = self.names.get(&pid).cloned();
+            let path = ppath(pid);
+            e.insert(name.zip(Some(path)));
         }
 
         self.cache
@@ -136,12 +136,12 @@ impl PidNamePathCache {
 fn pname(pid: u32) -> Option<String> {
     let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
 
-    let mut process: PROCESSENTRY32 = unsafe { zeroed() };
-    process.dwSize = size_of::<PROCESSENTRY32>() as u32;
+    let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
+    process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
 
     let mut result = None;
 
-    if unsafe { Process32First(h, &mut process) }.is_ok() {
+    if unsafe { Process32First(h, &raw mut process) }.is_ok() {
         loop {
             if process.th32ProcessID == pid {
                 let name = unsafe {
@@ -153,7 +153,7 @@ fn pname(pid: u32) -> Option<String> {
                 break;
             }
 
-            if unsafe { Process32Next(h, &mut process) }.is_err() {
+            if unsafe { Process32Next(h, &raw mut process) }.is_err() {
                 break;
             }
         }
