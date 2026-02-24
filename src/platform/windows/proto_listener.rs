@@ -130,6 +130,39 @@ impl PidNamePathCache {
     }
 }
 
+fn pname(pid: u32) -> Option<String> {
+    let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
+
+    let mut process: PROCESSENTRY32 = unsafe { zeroed() };
+    process.dwSize = size_of::<PROCESSENTRY32>() as u32;
+
+    let mut result = None;
+
+    if unsafe { Process32First(h, &mut process) }.is_ok() {
+        loop {
+            if process.th32ProcessID == pid {
+                let name = unsafe {
+                    PCSTR(process.szExeFile.as_ptr() as *const u8)
+                        .to_string()
+                        .ok()?
+                };
+                result = Some(name);
+                break;
+            }
+
+            if unsafe { Process32Next(h, &mut process) }.is_err() {
+                break;
+            }
+        }
+    }
+
+    unsafe {
+        let _ = CloseHandle(h);
+    }
+
+    result
+}
+
 fn ppath(pid: u32) -> Option<String> {
     if pid == 0 || pid == 4 {
         return None;
@@ -195,37 +228,4 @@ fn pname_collect() -> HashMap<u32, String> {
     };
 
     retval
-}
-
-fn pname(pid: u32) -> Option<String> {
-    let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
-
-    let mut process: PROCESSENTRY32 = unsafe { zeroed() };
-    process.dwSize = size_of::<PROCESSENTRY32>() as u32;
-
-    let mut result = None;
-
-    if unsafe { Process32First(h, &mut process) }.is_ok() {
-        loop {
-            if process.th32ProcessID == pid {
-                let name = unsafe {
-                    PCSTR(process.szExeFile.as_ptr() as *const u8)
-                        .to_string()
-                        .ok()?
-                };
-                result = Some(name);
-                break;
-            }
-
-            if unsafe { Process32Next(h, &mut process) }.is_err() {
-                break;
-            }
-        }
-    }
-
-    unsafe {
-        let _ = CloseHandle(h);
-    }
-
-    result
 }

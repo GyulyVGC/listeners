@@ -15,8 +15,8 @@ include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.62", features = [
     "Win32_Foundation",
-    "Win32_System_Threading",
     "Win32_System_Diagnostics_ToolHelp",
+    "Win32_System_Threading",
     "Win32_NetworkManagement_IpHelper"
 ] }
 
