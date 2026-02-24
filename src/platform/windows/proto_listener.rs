@@ -145,7 +145,7 @@ fn pname(pid: u32) -> Option<String> {
         loop {
             if process.th32ProcessID == pid {
                 let name = unsafe {
-                    PCSTR(process.szExeFile.as_ptr() as *const u8)
+                    PCSTR(process.szExeFile.as_ptr().cast::<u8>())
                         .to_string()
                         .ok()?
                 };
@@ -210,12 +210,11 @@ fn pname_collect() -> HashMap<u32, String> {
 
     if unsafe { Process32First(h, &raw mut process) }.is_ok() {
         loop {
-            if let Ok(name) =
-                (unsafe { PCSTR(process.szExeFile.as_ptr() as *const u8).to_string() })
+            if let Ok(name) = unsafe { PCSTR(process.szExeFile.as_ptr().cast::<u8>()).to_string() }
             {
                 let id = process.th32ProcessID;
                 ret_val.insert(id, name);
-            };
+            }
 
             if unsafe { Process32Next(h, &raw mut process) }.is_err() {
                 break;
