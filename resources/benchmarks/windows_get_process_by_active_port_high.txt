@@ -1,11 +1,11 @@
 ====================
-- Listeners: 10073
-- Processes: 1024
-- Sockets: 10073
-	- TCP (IPv4): 3034
+- Listeners: 10077
+- Processes: 1025
+- Sockets: 10077
+	- TCP (IPv4): 3036
 	- TCP (IPv6): 2021
-	- UDP (IPv4): 3012
-	- UDP (IPv6): 2006
+	- UDP (IPv4): 3013
+	- UDP (IPv6): 2007
 ====================
 
-21 ms
+9 ms
