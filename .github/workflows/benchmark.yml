@@ -15,11 +15,35 @@ env:
 
 jobs:
 
-  benchmark-freebsd:
-    name: freebsd
+  benchmark-bsd:
+    name: ${{ matrix.os }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
+
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - os: freebsd
+            version: "14.3"
+            rust_install: |
+              sudo pkg update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
+          - os: openbsd
+            version: "7.8"
+            rust_install: |
+              sudo sysctl kern.maxfiles=20000
+              ulimit -n 16384
+              sudo pkg_add rust rust-rustfmt rust-clippy
+          - os: netbsd
+            version: "10.1"
+            rust_install: |
+              sudo pkgin update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
 
     steps:
       - uses: actions/checkout@v6
@@ -29,13 +53,11 @@ jobs:
       - name: bench
         uses: cross-platform-actions/action@v0.32.0
         with:
-          operating_system: freebsd
-          version: 14.3
+          operating_system: ${{ matrix.os }}
+          version: ${{ matrix.version }}
           run: |
-            sudo pkg update
-            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-            
-            export PATH=$HOME/.cargo/bin:$PATH
+            set -e
+            ${{ matrix.rust_install }}
             
             echo "Running benchmarks..."
             cargo build --release --bin spawn_process
@@ -43,12 +65,12 @@ jobs:
 
       - uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "update benchmarks for freebsd"
+          commit_message: "update benchmarks for ${{ matrix.os }}"
 
   benchmark:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
-    needs: benchmark-freebsd
+    needs: benchmark-bsd
     permissions:
       contents: write
     strategy:

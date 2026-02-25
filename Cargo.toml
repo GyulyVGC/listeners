@@ -2,7 +2,6 @@
 name = "listeners"
 version = "0.4.0"
 edition = "2024"
-rust-version = "1.91"
 authors = ["Giuliano Bellini <gyulyvgc99@gmail.com>"]
 description = "Cross-platform library to find out processes listening on network ports"
 readme = "README.md"
@@ -26,10 +25,10 @@ byteorder = "1.5"
 [target.'cfg(target_os = "linux")'.dependencies]
 rustix = {version = "1.1", features = ["fs"]}
 
-[target.'cfg(target_os = "freebsd")'.dependencies]
+[target.'cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies]
 libc = "0.2"
 
-[target.'cfg(target_os = "freebsd")'.build-dependencies]
+[target.'cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.build-dependencies]
 cc = "1.2"
 
 [dev-dependencies]
