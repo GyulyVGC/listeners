@@ -26,12 +26,6 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - os: freebsd
-            version: "14.3"
-            rust_install: |
-              sudo pkg update
-              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-              export PATH=$HOME/.cargo/bin:$PATH
           - os: openbsd
             version: "7.8"
             rust_install: |
@@ -39,6 +33,12 @@ jobs:
               ulimit -Hn 11000
               ulimit -n 11000
               sudo pkg_add rust rust-rustfmt rust-clippy
+          - os: freebsd
+            version: "14.3"
+            rust_install: |
+              sudo pkg update
+              curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+              export PATH=$HOME/.cargo/bin:$PATH
           - os: netbsd
             version: "10.1"
             rust_install: |
