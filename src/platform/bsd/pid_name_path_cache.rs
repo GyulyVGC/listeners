@@ -19,13 +19,9 @@ impl ProcNamesPathsCache {
 
     pub(super) fn get(&mut self, pid: i32) -> Option<(String, String)> {
         if let Entry::Vacant(e) = self.cache.entry(pid) {
-            e.insert(Self::get_process_name_path(pid));
+            e.insert(platform::get_process_name_path(pid));
         }
 
         self.cache.get(&pid).cloned().flatten()
-    }
-
-    fn get_process_name_path(pid: i32) -> Option<(String, String)> {
-        platform::get_process_name_path(pid)
     }
 }
