@@ -9,7 +9,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
     let processes = openbsd::get_all_processes()?;
 
     for process in processes {
-        let sockets = openbsd::get_sockets(process.pid)?;
+        let sockets = openbsd::get_sockets(process.pid).unwrap_or_default();
 
         for socket in sockets {
             listeners.insert(Listener::new(
@@ -29,7 +29,7 @@ pub(crate) fn get_process_by_port(port: u16, protocol: Protocol) -> crate::Resul
     let processes = openbsd::get_all_processes()?;
 
     for process in processes {
-        let sockets = openbsd::get_sockets(process.pid)?;
+        let sockets = openbsd::get_sockets(process.pid).unwrap_or_default();
 
         for socket in sockets {
             if socket.address.port() == port && socket.protocol == protocol {
