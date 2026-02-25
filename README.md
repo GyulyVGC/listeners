@@ -146,3 +146,31 @@ Benchmarks are run on GitHub Actions runners, and results are generated with the
 | high        | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/freebsd_get_all_high.svg)   | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/freebsd_get_process_by_active_port_high.svg)   | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/freebsd_get_process_by_inactive_port_high.svg)   |
 
 </details>
+
+### OpenBSD
+
+<details>
+
+<summary>See benchmarks</summary>
+
+| System load | <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;listeners::get_all&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>                   | `listeners::get_process_by_port`<br>(active port)                                                                                            | `listeners::get_process_by_port`<br>(inactive port)                                                                                            |
+|-------------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
+| low         | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_all_low.svg)    | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_process_by_active_port_low.svg)    | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_process_by_inactive_port_low.svg)    |
+| medium      | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_all_medium.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_process_by_active_port_medium.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_process_by_inactive_port_medium.svg) |
+| high        | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_all_high.svg)   | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_process_by_active_port_high.svg)   | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/openbsd_get_process_by_inactive_port_high.svg)   |
+
+</details>
+
+### NetBSD
+
+<details>
+
+<summary>See benchmarks</summary>
+
+| System load | <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;listeners::get_all&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>                  | `listeners::get_process_by_port`<br>(active port)                                                                                           | `listeners::get_process_by_port`<br>(inactive port)                                                                                           |
+|-------------|--------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| low         | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_all_low.svg)    | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_process_by_active_port_low.svg)    | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_process_by_inactive_port_low.svg)    |
+| medium      | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_all_medium.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_process_by_active_port_medium.svg) | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_process_by_inactive_port_medium.svg) |
+| high        | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_all_high.svg)   | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_process_by_active_port_high.svg)   | ![](https://raw.githubusercontent.com/GyulyVGC/listeners/refs/heads/main/resources/benchmarks/netbsd_get_process_by_inactive_port_high.svg)   |
+
+</details>
