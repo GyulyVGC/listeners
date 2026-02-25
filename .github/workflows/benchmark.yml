@@ -36,7 +36,8 @@ jobs:
             version: "7.8"
             rust_install: |
               sudo sysctl kern.maxfiles=20000
-              ulimit -n 10500
+              ulimit -Hn 11000
+              ulimit -n 11000
               sudo pkg_add rust rust-rustfmt rust-clippy
           - os: netbsd
             version: "10.1"
