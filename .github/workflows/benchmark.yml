@@ -23,6 +23,7 @@ jobs:
 
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         include:
           - os: freebsd
@@ -49,7 +50,7 @@ jobs:
         with:
           ref: ${{ github.ref_name }}
 
-      - name: Run Benchmarks
+      - name: bench
         uses: cross-platform-actions/action@v0.32.0
         with:
           operating_system: ${{ matrix.os }}
@@ -61,17 +62,15 @@ jobs:
             echo "Running benchmarks..."
             cargo build --release --bin spawn_process
             cargo bench
-            cargo clean
 
-      - name: Commit benchmark updates
-        uses: stefanzweifel/git-auto-commit-action@v7
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "update benchmarks for ${{ matrix.os }}"
 
   benchmark:
     name: ${{ matrix.os }}-latest
     runs-on: ${{ matrix.os }}-latest
-    needs: benchmark-freebsd
+    needs: benchmark-bsd
     permissions:
       contents: write
     strategy:
