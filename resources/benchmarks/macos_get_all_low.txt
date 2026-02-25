@@ -1,9 +1,9 @@
 ====================
-- Listeners: 107
+- Listeners: 110
 - Processes: 15
-- Sockets: 107
-	- TCP (IPv4): 32
-	- TCP (IPv6): 23
+- Sockets: 110
+	- TCP (IPv4): 33
+	- TCP (IPv6): 25
 	- UDP (IPv4): 31
 	- UDP (IPv6): 21
 ====================
