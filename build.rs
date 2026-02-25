@@ -1,15 +1,16 @@
 fn main() {
     #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
     {
-        let path = std::path::PathBuf::from("src/platform/bsd/native");
-        compile_native_lib(&path, "bsd_native_lib");
+        compile_native_lib();
     }
 }
 
 #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
-fn compile_native_lib(src_dir: &std::path::Path, lib_name: &str) {
+fn compile_native_lib() {
+    let src_dir = std::path::PathBuf::from("src/platform/bsd/native");
+
     let mut c_files = Vec::new();
-    find_c_files(src_dir, &mut c_files);
+    find_c_files(&src_dir, &mut c_files);
 
     if c_files.is_empty() {
         println!("cargo:warning=no C files found in {}", src_dir.display());
@@ -22,8 +23,8 @@ fn compile_native_lib(src_dir: &std::path::Path, lib_name: &str) {
         build.file(file);
     }
 
-    build.include(src_dir);
-    build.compile(lib_name);
+    build.include(&src_dir);
+    build.compile("bsd_native_lib");
 
     for file in &c_files {
         println!("cargo:rerun-if-changed={}", file.display());
