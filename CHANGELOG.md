@@ -3,6 +3,8 @@
 All releases with the relative changes are documented in this file.
 
 ## [UNRELEASED]
+### Added
+- OpenBSD and NetBSD support ([#39](https://github.com/GyulyVGC/listeners/pull/39))
 ### Changed
 - Update benchmarks to be even more comprehensive: test multiple processes each listening on multiple ports ([#41](https://github.com/GyulyVGC/listeners/pull/41) — fixes [#35](https://github.com/GyulyVGC/listeners/issues/35))
 ### Fixed
