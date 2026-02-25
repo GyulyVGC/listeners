@@ -1,8 +1,6 @@
 fn main() {
     #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
-    {
-        compile_native_lib();
-    }
+    compile_native_lib();
 }
 
 #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
