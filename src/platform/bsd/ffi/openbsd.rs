@@ -1,4 +1,4 @@
-use super::{CSocketInfo, SocketInfo};
+use super::{CSocketInfo, SocketInfo, socket_info_list};
 use libc::{KI_MAXCOMLEN, pid_t};
 use std::{
     collections::HashSet,
@@ -77,19 +77,5 @@ pub(in crate::platform::bsd) fn get_sockets(pid: i32) -> io::Result<Vec<SocketIn
         return Err(io::Error::last_os_error());
     }
 
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.into());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    Ok(sockets)
+    Ok(socket_info_list(list, nentries))
 }

@@ -1,4 +1,4 @@
-use super::{CSocketInfo, SocketInfo};
+use super::{CSocketInfo, SocketInfo, socket_info_list};
 use std::{
     collections::HashMap,
     ffi::CStr,
@@ -96,29 +96,4 @@ pub(in crate::platform::bsd) fn get_process_path(pid: i32) -> io::Result<String>
 
         Ok(path)
     }
-}
-
-fn socket_info_list(list: *mut CSocketInfo, nentries: usize) -> Vec<SocketInfo> {
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.into());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    sockets
-}
-
-pub(in crate::platform::bsd) fn get_process_name_path(pid: i32) -> Option<(String, String)> {
-    let name = get_process_name(pid).ok();
-    let path = Some(get_process_path(pid).unwrap_or_default());
-
-    name.zip(path)
 }

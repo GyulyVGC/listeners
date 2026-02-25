@@ -1,4 +1,4 @@
-use super::{CSocketInfo, SocketInfo};
+use super::{CSocketInfo, SocketInfo, socket_info_list};
 use std::{
     collections::HashMap,
     ffi::CStr,
@@ -33,21 +33,7 @@ pub(in crate::platform::bsd) fn get_tcp_sockets() -> io::Result<Vec<SocketInfo>>
         return Err(io::Error::last_os_error());
     }
 
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.into());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    Ok(sockets)
+    Ok(socket_info_list(list, nentries))
 }
 
 pub(in crate::platform::bsd) fn get_tcp6_sockets() -> io::Result<Vec<SocketInfo>> {
@@ -58,21 +44,7 @@ pub(in crate::platform::bsd) fn get_tcp6_sockets() -> io::Result<Vec<SocketInfo>
         return Err(io::Error::last_os_error());
     }
 
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.into());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    Ok(sockets)
+    Ok(socket_info_list(list, nentries))
 }
 
 pub(in crate::platform::bsd) fn get_udp6_sockets() -> io::Result<Vec<SocketInfo>> {
@@ -83,21 +55,7 @@ pub(in crate::platform::bsd) fn get_udp6_sockets() -> io::Result<Vec<SocketInfo>
         return Err(io::Error::last_os_error());
     }
 
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.into());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    Ok(sockets)
+    Ok(socket_info_list(list, nentries))
 }
 
 pub(in crate::platform::bsd) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>> {
@@ -108,21 +66,7 @@ pub(in crate::platform::bsd) fn get_udp_sockets() -> io::Result<Vec<SocketInfo>>
         return Err(io::Error::last_os_error());
     }
 
-    let mut sockets = Vec::new();
-
-    if nentries > 0 && !list.is_null() {
-        unsafe {
-            let c_sockets = std::slice::from_raw_parts(list, nentries);
-
-            for c_socket in c_sockets {
-                sockets.push(c_socket.into());
-            }
-
-            libc::free(list.cast::<libc::c_void>());
-        }
-    }
-
-    Ok(sockets)
+    Ok(socket_info_list(list, nentries))
 }
 
 pub(in crate::platform::bsd) fn get_kvaddr_to_pid_table() -> io::Result<HashMap<u64, i32>> {
@@ -178,11 +122,4 @@ pub(in crate::platform::bsd) fn get_process_path(pid: i32) -> io::Result<String>
 
         Ok(path)
     }
-}
-
-pub(in crate::platform::bsd) fn get_process_name_path(pid: i32) -> Option<(String, String)> {
-    let name = get_process_name(pid).ok();
-    let path = Some(get_process_path(pid).unwrap_or_default());
-
-    name.zip(path)
 }

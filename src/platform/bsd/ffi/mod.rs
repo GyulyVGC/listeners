@@ -65,3 +65,21 @@ impl From<&CSocketInfo> for SocketInfo {
         }
     }
 }
+
+pub(super) fn socket_info_list(list: *mut CSocketInfo, nentries: usize) -> Vec<SocketInfo> {
+    let mut sockets = Vec::new();
+
+    if nentries > 0 && !list.is_null() {
+        unsafe {
+            let c_sockets = std::slice::from_raw_parts(list, nentries);
+
+            for c_socket in c_sockets {
+                sockets.push(c_socket.into());
+            }
+
+            libc::free(list.cast::<libc::c_void>());
+        }
+    }
+
+    sockets
+}
