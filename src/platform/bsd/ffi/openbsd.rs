@@ -16,8 +16,8 @@ pub(in crate::platform::bsd) struct ProcessInfo {
 
 #[repr(C)]
 struct CProcessInfo {
-    pub name: [c_char; KI_MAXCOMLEN as usize],
-    pub pid: pid_t,
+    name: [c_char; KI_MAXCOMLEN as usize],
+    pid: pid_t,
 }
 
 impl From<&CProcessInfo> for ProcessInfo {

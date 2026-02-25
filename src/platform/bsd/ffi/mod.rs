@@ -8,11 +8,11 @@ type KvAddr = usize;
 type KvAddr = u64;
 
 #[cfg(target_os = "freebsd")]
-pub mod freebsd;
+pub(super) mod freebsd;
 #[cfg(target_os = "netbsd")]
-pub mod netbsd;
+pub(super) mod netbsd;
 #[cfg(target_os = "openbsd")]
-pub mod openbsd;
+pub(super) mod openbsd;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub(super) struct SocketInfo {
