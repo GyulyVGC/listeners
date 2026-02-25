@@ -89,7 +89,6 @@ fn test_http_server() {
         .iter()
         .find(|l| http_server_process.eq(&l.process))
         .unwrap();
-    println!("{http_server_listener}");
     assert_eq!(
         http_server_listener,
         &Listener {
@@ -110,10 +109,8 @@ fn test_dns() {
     let dns_port = 53;
     let all = listeners::get_all().unwrap();
     let found = all.iter().any(|l| {
-        // assert that the process name and path are not empty
+        // assert that the process name is not empty
         assert!(!l.process.name.is_empty());
-        #[cfg(not(target_os = "openbsd"))]
-        assert!(!l.process.path.is_empty());
         l.socket.port() == dns_port && l.protocol == Protocol::UDP || l.protocol == Protocol::TCP
     });
     assert!(found);
@@ -144,6 +141,10 @@ fn test_udp() {
             .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
             .unwrap();
         let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        // assert that the process name and path are not empty
+        assert!(!l.process.name.is_empty());
+        #[cfg(not(target_os = "openbsd"))]
+        assert!(!l.process.path.is_empty());
         l.process == process_by_port
     });
 
@@ -175,6 +176,10 @@ fn test_tcp() {
             .find(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
             .unwrap();
         let process_by_port = get_process_by_port(l.socket.port(), Protocol::TCP).unwrap();
+        // assert that the process name and path are not empty
+        assert!(!l.process.name.is_empty());
+        #[cfg(not(target_os = "openbsd"))]
+        assert!(!l.process.path.is_empty());
         l.process == process_by_port
     });
 
@@ -206,6 +211,10 @@ fn test_tcp6() {
             .find(|l| l.socket.port() == *p && l.protocol == Protocol::TCP)
             .unwrap();
         let process_by_port = get_process_by_port(l.socket.port(), Protocol::TCP).unwrap();
+        // assert that the process name and path are not empty
+        assert!(!l.process.name.is_empty());
+        #[cfg(not(target_os = "openbsd"))]
+        assert!(!l.process.path.is_empty());
         l.process == process_by_port
     });
 
@@ -237,6 +246,10 @@ fn test_udp6() {
             .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
             .unwrap();
         let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        // assert that the process name and path are not empty
+        assert!(!l.process.name.is_empty());
+        #[cfg(not(target_os = "openbsd"))]
+        assert!(!l.process.path.is_empty());
         l.process == process_by_port
     });
 
