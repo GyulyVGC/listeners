@@ -35,6 +35,8 @@ jobs:
               sysctl kern.maxfilesperproc
               sysctl kern.maxfiles
               
+              doas -s
+              
               sudo sysctl kern.maxfiles=20000
               ulimit -Hn 11000
               ulimit -n 11000
