@@ -137,7 +137,10 @@ impl SystemLoad {
         match self {
             SystemLoad::Low => 100,
             SystemLoad::Medium => 1_000,
+            #[cfg(not(target_os = "openbsd"))]
             SystemLoad::High => 10_000,
+            #[cfg(target_os = "openbsd")]
+            SystemLoad::High => 1_000,
         }
     }
 
@@ -145,7 +148,10 @@ impl SystemLoad {
         match self {
             SystemLoad::Low => 10,
             SystemLoad::Medium => 100,
+            #[cfg(not(target_os = "openbsd"))]
             SystemLoad::High => 1_000,
+            #[cfg(target_os = "openbsd")]
+            SystemLoad::High => 100,
         }
     }
 
