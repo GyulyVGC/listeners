@@ -1,0 +1,11 @@
+====================
+- Listeners: 1007
+- Processes: 104
+- Sockets: 1007
+	- TCP (IPv4): 302
+	- TCP (IPv6): 201
+	- UDP (IPv4): 302
+	- UDP (IPv6): 202
+====================
+
+0 ms
