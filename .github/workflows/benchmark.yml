@@ -37,7 +37,7 @@ jobs:
           - os: openbsd
             version: "7.8"
             rust_install: |
-              sudo sysctl kern.maxfiles=20000
+              sudo sysctl -w kern.maxfiles=20000
               ulimit -n 1024
               sudo pkg_add rust rust-rustfmt rust-clippy
           - os: freebsd
