@@ -29,6 +29,12 @@ jobs:
           - os: openbsd
             version: "7.8"
             rust_install: |
+              whoami
+              ulimit -n
+              ulimit -Hn
+              sysctl kern.maxfilesperproc
+              sysctl kern.maxfiles
+              
               sudo sysctl kern.maxfiles=20000
               ulimit -Hn 11000
               ulimit -n 11000
