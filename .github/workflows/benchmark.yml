@@ -26,21 +26,21 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - os: openbsd
-            version: "7.8"
-            rust_install: |
-              sudo sysctl kern.maxfiles=20000
-              ulimit -n 1024
-              sudo pkg_add rust rust-rustfmt rust-clippy
           - os: netbsd
             version: "10.1"
             rust_install: |
               sudo pkgin update
               ulimit -n
               ulimit -Hn
-              ulimit -n 10000
+              ulimit -n 20000
               curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
               export PATH=$HOME/.cargo/bin:$PATH
+          - os: openbsd
+            version: "7.8"
+            rust_install: |
+              sudo sysctl kern.maxfiles=20000
+              ulimit -n 1024
+              sudo pkg_add rust rust-rustfmt rust-clippy
           - os: freebsd
             version: "14.3"
             rust_install: |
