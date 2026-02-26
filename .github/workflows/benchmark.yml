@@ -30,14 +30,14 @@ jobs:
             version: "10.1"
             rust_install: |
               sudo pkgin update
-              sudo sysctl kern.maxfiles=20000
+              sudo sysctl -w kern.maxfiles=20000
               ulimit -n 3404
               curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
               export PATH=$HOME/.cargo/bin:$PATH
           - os: openbsd
             version: "7.8"
             rust_install: |
-              sudo sysctl -w kern.maxfiles=20000
+              sudo sysctl kern.maxfiles=20000
               ulimit -n 1024
               sudo pkg_add rust rust-rustfmt rust-clippy
           - os: freebsd
