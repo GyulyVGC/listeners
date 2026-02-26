@@ -155,7 +155,7 @@ Benchmarks are run on GitHub Actions runners, and results are generated with the
 
 > [!NOTE]
 > 
-> Benchmarks for OpenBSD under high system load are currently unavailable due to the impossibility to increase the maximum limit of open files within the GitHub Actions runner.
+> Benchmarks for OpenBSD under high system load are currently unavailable due to the impossibility to further increase the maximum limit of open files within the GitHub Actions runner.
 
 | System load | <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;listeners::get_all&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</code>                   | `listeners::get_process_by_port`<br>(active port)                                                                                            | `listeners::get_process_by_port`<br>(inactive port)                                                                                            |
 |-------------|---------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
