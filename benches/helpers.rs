@@ -134,6 +134,11 @@ pub enum SystemLoad {
 
 impl SystemLoad {
     fn num_sockets(&self) -> usize {
+        #[cfg(target_os = "openbsd")]
+        if matches!(self, SystemLoad::High) {
+            return 100;
+        }
+
         match self {
             SystemLoad::Low => 100,
             SystemLoad::Medium => 1_000,
@@ -142,6 +147,11 @@ impl SystemLoad {
     }
 
     fn num_processes(&self) -> usize {
+        #[cfg(target_os = "openbsd")]
+        if matches!(self, SystemLoad::High) {
+            return 10;
+        }
+
         match self {
             SystemLoad::Low => 10,
             SystemLoad::Medium => 100,
