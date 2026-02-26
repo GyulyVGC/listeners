@@ -30,9 +30,7 @@ jobs:
             version: "10.1"
             rust_install: |
               sudo pkgin update
-              ulimit -n
-              ulimit -Hn
-              ulimit -n 20000
+              ulimit -n 3404
               curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
               export PATH=$HOME/.cargo/bin:$PATH
           - os: openbsd
