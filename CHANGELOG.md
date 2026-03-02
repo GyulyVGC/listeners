@@ -2,6 +2,10 @@
 
 All releases with the relative changes are documented in this file.
 
+## [0.5.1] - 2026-03-02
+### Fixed
+- Include build.rs in the published crate
+
 ## [0.5.0] - 2026-03-02
 ### Added
 - OpenBSD and NetBSD support ([#39](https://github.com/GyulyVGC/listeners/pull/39))
