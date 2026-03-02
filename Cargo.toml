@@ -1,6 +1,6 @@
 [package]
 name = "listeners"
-version = "0.5.0"
+version = "0.5.1"
 edition = "2024"
 authors = ["Giuliano Bellini <gyulyvgc99@gmail.com>"]
 description = "Cross-platform library to find out processes listening on network ports"
@@ -9,7 +9,7 @@ repository = "https://github.com/GyulyVGC/listeners"
 license = "MIT"
 keywords = ["listen", "port", "process", "socket", "pid"]
 categories = ["network-programming"]
-include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*"]
+include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*", "build.rs"]
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.62", features = [
