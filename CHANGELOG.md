@@ -2,7 +2,7 @@
 
 All releases with the relative changes are documented in this file.
 
-## [UNRELEASED]
+## [0.5.0] - 2026-03-02
 ### Added
 - OpenBSD and NetBSD support ([#39](https://github.com/GyulyVGC/listeners/pull/39))
 ### Changed
