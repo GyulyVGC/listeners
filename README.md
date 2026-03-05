@@ -11,17 +11,15 @@
 
 ## Motivation
 
+It turns out that associating open network ports with the processes that are using them is not a trivial task:
+this requires interacting with low-level system APIs that are platform-specific, written in C, not well documented, and expensive to call if not used properly.
+
 Despite some Rust libraries to get process information already exist,
 none of them correlates process ID and name to open network ports in a cross-platform way.
 
-Some examples of existing libraries:
-- [netstat2](https://crates.io/crates/netstat2): doesn't provide the process name (and it's unmaintained)
-- [libproc](https://crates.io/crates/libproc): only for Linux and macOS
-- [sysinfo](https://crates.io/crates/sysinfo): doesn't expose the sockets used by each process
-
 This library wants to fill this gap, and it aims to be: 
 - **Cross-platform**: it currently supports Windows, Linux, macOS, FreeBSD, OpenBSD and NetBSD
-- **Performant**: it focuses on performance (see [benchmarks](#benchmarks)) by internally using low-level system APIs
+- **Fast**: it focuses on performance (see [benchmarks](#benchmarks)) by internally using caching and low-level system APIs
 - **Simple**: it exposes intuitive APIs to get details about the listening processes
 - **Lightweight**: it has only the strictly necessary dependencies
 
