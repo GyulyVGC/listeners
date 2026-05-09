@@ -332,10 +332,6 @@ fn test_udp_state_is_unknown() {
         .iter()
         .find(|l| l.socket.port() == port && l.protocol == Protocol::UDP)
         .unwrap();
-    // Linux reports raw 0x07 for UDP, which maps to Closed; other platforms use Unknown
-    #[cfg(target_os = "linux")]
-    assert_eq!(listener.state, SocketState::Closed);
-    #[cfg(not(target_os = "linux"))]
     assert_eq!(listener.state, SocketState::Unknown);
 }
 
