@@ -53,6 +53,7 @@ extern "C"
 #endif
         int32_t protocol;
         uint16_t port;
+        int32_t state;
     };
 
 #if defined(__FreeBSD__) || defined(__NetBSD__)

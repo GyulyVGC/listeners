@@ -39,6 +39,7 @@ static void fillsock_tcp(struct socket_info_t *sock, struct xtcpcb *xtp)
     sock->port = ntohs(xtp->xt_inp.inp_lport);
     sock->protocol = IPPROTO_TCP;
     sock->kvaddr = xtp->xt_inp.xi_socket.xso_so;
+    sock->state = xtp->t_state;
 
     if (xtp->xt_inp.inp_vflag & INP_IPV6)
     {
@@ -66,6 +67,7 @@ static void fillsock_udp(struct socket_info_t *sock, struct xinpcb *xip)
     sock->port = ntohs(xip->inp_lport);
     sock->protocol = IPPROTO_UDP;
     sock->kvaddr = xip->xi_socket.xso_so;
+    sock->state = -1;
 
     if (xip->inp_vflag & INP_IPV6)
     {

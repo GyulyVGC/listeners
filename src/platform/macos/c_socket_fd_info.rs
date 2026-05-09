@@ -3,8 +3,8 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use byteorder::{ByteOrder, NetworkEndian};
 
-use crate::Protocol;
 use crate::platform::macos::proto_listener::ProtoListener;
+use crate::{Protocol, SocketState};
 
 use super::statics::{IPPROTO_TCP, IPPROTO_UDP};
 
@@ -20,10 +20,16 @@ impl CSocketFdInfo {
         let family = sock_info.soi_family;
         let transport_protocol = sock_info.soi_protocol;
 
-        let general_sock_info = unsafe {
+        let (general_sock_info, state) = unsafe {
             match transport_protocol {
-                IPPROTO_TCP => sock_info.soi_proto.pri_tcp.tcpsi_ini,
-                IPPROTO_UDP => sock_info.soi_proto.pri_in,
+                IPPROTO_TCP => {
+                    let tcp_info = sock_info.soi_proto.pri_tcp;
+                    (
+                        tcp_info.tcpsi_ini,
+                        SocketState::from_bsd(tcp_info.tcpsi_state),
+                    )
+                }
+                IPPROTO_UDP => (sock_info.soi_proto.pri_in, SocketState::Unknown),
                 _ => return Err("Unsupported protocol".into()),
             }
         };
@@ -36,6 +42,7 @@ impl CSocketFdInfo {
             local_address,
             NetworkEndian::read_u16(&lport_bytes),
             protocol,
+            state,
         );
 
         Ok(socket_info)

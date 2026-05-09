@@ -24,6 +24,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
                 path,
                 socket.address,
                 socket.protocol,
+                socket.state,
             ));
         }
     }

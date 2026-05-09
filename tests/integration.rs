@@ -1,5 +1,5 @@
 use http_test_server::TestServer;
-use listeners::{Listener, Process, Protocol, get_process_by_port};
+use listeners::{Listener, Process, Protocol, SocketState, get_process_by_port};
 use rand::prelude::IteratorRandom;
 use serial_test::serial;
 use std::collections::HashSet;
@@ -98,7 +98,8 @@ fn test_http_server() {
                 path: http_server_path
             },
             socket: SocketAddr::from_str(&format!("127.0.0.1:{http_server_port}")).unwrap(),
-            protocol: Protocol::TCP
+            protocol: Protocol::TCP,
+            state: SocketState::Listen,
         }
     );
 }
@@ -219,6 +220,123 @@ fn test_tcp6() {
     });
 
     assert!(all_found);
+}
+
+#[test]
+#[serial]
+fn test_tcp_listen_state() {
+    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+    let socket = TcpListener::bind(SocketAddr::new(ip, 0)).unwrap();
+    let port = socket.local_addr().unwrap().port();
+
+    let all = listeners::get_all().unwrap();
+    let listener = all
+        .iter()
+        .find(|l| l.socket.port() == port && l.protocol == Protocol::TCP)
+        .unwrap();
+    assert_eq!(listener.state, SocketState::Listen);
+}
+
+#[test]
+#[serial]
+fn test_tcp_established_state() {
+    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+    let server = TcpListener::bind(SocketAddr::new(ip, 0)).unwrap();
+    let port = server.local_addr().unwrap().port();
+
+    let _client = std::net::TcpStream::connect(server.local_addr().unwrap()).unwrap();
+    let (_accepted, _) = server.accept().unwrap();
+
+    let all = listeners::get_all().unwrap();
+    let has_established = all
+        .iter()
+        .any(|l| l.socket.port() == port && l.state == SocketState::Established);
+    assert!(
+        has_established,
+        "Expected an established TCP connection on port {port}"
+    );
+}
+
+#[test]
+#[serial]
+fn test_tcp_listen_state_ipv6() {
+    let ip = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+    let socket = TcpListener::bind(SocketAddr::new(ip, 0)).unwrap();
+    let port = socket.local_addr().unwrap().port();
+
+    let all = listeners::get_all().unwrap();
+    let listener = all
+        .iter()
+        .find(|l| l.socket.port() == port && l.protocol == Protocol::TCP)
+        .unwrap();
+    assert_eq!(listener.state, SocketState::Listen);
+}
+
+#[test]
+#[serial]
+fn test_tcp_established_state_ipv6() {
+    let ip = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+    let server = TcpListener::bind(SocketAddr::new(ip, 0)).unwrap();
+    let port = server.local_addr().unwrap().port();
+
+    let _client = std::net::TcpStream::connect(server.local_addr().unwrap()).unwrap();
+    let (_accepted, _) = server.accept().unwrap();
+
+    let all = listeners::get_all().unwrap();
+    let has_established = all
+        .iter()
+        .any(|l| l.socket.port() == port && l.state == SocketState::Established);
+    assert!(
+        has_established,
+        "Expected an established IPv6 TCP connection on port {port}"
+    );
+}
+
+#[test]
+#[serial]
+fn test_tcp_close_wait_state() {
+    use std::io::Read;
+
+    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+    let server = TcpListener::bind(SocketAddr::new(ip, 0)).unwrap();
+    let port = server.local_addr().unwrap().port();
+
+    let client = std::net::TcpStream::connect(server.local_addr().unwrap()).unwrap();
+    let (mut accepted, _) = server.accept().unwrap();
+
+    // Drop client to send FIN; read until EOF to confirm the FIN has been received
+    // before sampling state, ensuring the kernel has moved accepted into CloseWait.
+    drop(client);
+    let mut buf = [0u8; 1];
+    let _ = accepted.read(&mut buf);
+
+    let all = listeners::get_all().unwrap();
+    let has_close_wait = all
+        .iter()
+        .any(|l| l.socket.port() == port && l.state == SocketState::CloseWait);
+    assert!(
+        has_close_wait,
+        "Expected a CloseWait TCP connection on port {port}"
+    );
+}
+
+#[test]
+#[serial]
+fn test_udp_state_is_unknown() {
+    let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
+    let socket = UdpSocket::bind(SocketAddr::new(ip, 0)).unwrap();
+    let port = socket.local_addr().unwrap().port();
+
+    let all = listeners::get_all().unwrap();
+    let listener = all
+        .iter()
+        .find(|l| l.socket.port() == port && l.protocol == Protocol::UDP)
+        .unwrap();
+    // Linux reports raw 0x07 for UDP, which maps to Closed; other platforms use Unknown
+    #[cfg(target_os = "linux")]
+    assert_eq!(listener.state, SocketState::Closed);
+    #[cfg(not(target_os = "linux"))]
+    assert_eq!(listener.state, SocketState::Unknown);
 }
 
 #[test]

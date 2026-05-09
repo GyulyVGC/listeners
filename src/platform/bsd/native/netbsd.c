@@ -111,6 +111,7 @@ static int fetch_sockets_common(struct socket_info_t **list, size_t *nentries, i
         (*list)[idx].protocol = sockets[i].ki_protocol;
         (*list)[idx].address.family = sockets[i].ki_family;
         (*list)[idx].kvaddr = sockets[i].ki_sockaddr;
+        (*list)[idx].state = (sockets[i].ki_protocol == IPPROTO_TCP) ? (int32_t)sockets[i].ki_tstate : -1;
 
         if (sockets[i].ki_family == AF_INET)
         {
