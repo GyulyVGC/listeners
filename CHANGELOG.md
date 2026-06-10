@@ -2,6 +2,10 @@
 
 All releases with the relative changes are documented in this file.
 
+## [Unreleased]
+### Added
+- `state` field on `Listener` exposing the socket's TCP connection state via the new `SocketState` enum (`UNKNOWN` for UDP)
+
 ## [0.5.1] - 2026-03-02
 ### Fixed
 - Include build.rs in the published crate

@@ -157,19 +157,19 @@ impl SocketState {
 ///
 /// Output:
 /// ``` text
-/// PID: 440        Process name: ControlCenter             Socket: 0.0.0.0:0                      Protocol: UDP
-/// PID: 456        Process name: rapportd                  Socket: [::]:49158                     Protocol: TCP
-/// PID: 456        Process name: rapportd                  Socket: 0.0.0.0:49158                  Protocol: TCP
-/// PID: 456        Process name: rapportd                  Socket: 0.0.0.0:0                      Protocol: UDP
-/// PID: 485        Process name: sharingd                  Socket: 0.0.0.0:0                      Protocol: UDP
-/// PID: 516        Process name: WiFiAgent                 Socket: 0.0.0.0:0                      Protocol: UDP
-/// PID: 1480       Process name: rustrover                 Socket: [::7f00:1]:63342               Protocol: TCP
-/// PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49659            Protocol: TCP
-/// PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49656            Protocol: TCP
-/// PID: 2156       Process name: Google Chrome             Socket: 0.0.0.0:0                      Protocol: UDP
-/// PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:60834            Protocol: UDP
-/// PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:53220            Protocol: UDP
-/// PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:59216            Protocol: UDP
+/// PID: 440     Process name: ControlCenter             Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+/// PID: 456     Process name: rapportd                  Socket: [::]:49158                     Protocol: TCP     State: LISTEN
+/// PID: 456     Process name: rapportd                  Socket: 0.0.0.0:49158                  Protocol: TCP     State: LISTEN
+/// PID: 456     Process name: rapportd                  Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+/// PID: 485     Process name: sharingd                  Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+/// PID: 516     Process name: WiFiAgent                 Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+/// PID: 1480    Process name: rustrover                 Socket: [::7f00:1]:63342               Protocol: TCP     State: ESTABLISHED
+/// PID: 2123    Process name: Telegram                  Socket: 192.168.1.102:49659            Protocol: TCP     State: ESTABLISHED
+/// PID: 2123    Process name: Telegram                  Socket: 192.168.1.102:49656            Protocol: TCP     State: ESTABLISHED
+/// PID: 2156    Process name: Google Chrome             Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+/// PID: 2167    Process name: Google Chrome Helper      Socket: 192.168.1.102:60834            Protocol: UDP     State: UNKNOWN
+/// PID: 2167    Process name: Google Chrome Helper      Socket: 192.168.1.102:53220            Protocol: UDP     State: UNKNOWN
+/// PID: 2167    Process name: Google Chrome Helper      Socket: 192.168.1.102:59216            Protocol: UDP     State: UNKNOWN
 /// ```
 pub fn get_all() -> Result<HashSet<Listener>> {
     platform::get_all()
@@ -194,7 +194,7 @@ pub fn get_all() -> Result<HashSet<Listener>> {
 ///
 /// Output:
 /// ``` text
-/// PID: 2123       Process name: Telegram
+/// PID: 2123    Process name: Telegram
 /// ```
 pub fn get_process_by_port(port: u16, protocol: Protocol) -> Result<Process> {
     if port == 0 {
@@ -238,9 +238,10 @@ impl Display for Listener {
             state,
         } = self;
         let process = process.to_string();
+        let protocol = protocol.to_string();
         write!(
             f,
-            "{process:<55} Socket: {socket:<30} Protocol: {protocol} State: {state}"
+            "{process:<52} Socket: {socket:<30} Protocol: {protocol:<7} State: {state}"
         )
     }
 }
@@ -267,7 +268,7 @@ impl Display for SocketState {
 impl Display for Process {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let Process { pid, name, .. } = self;
-        write!(f, "PID: {pid:<10} Process name: {name}")
+        write!(f, "PID: {pid:<7} Process name: {name}")
     }
 }
 
@@ -298,7 +299,7 @@ mod tests {
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 455        Process name: rapportd                  Socket: 0.0.0.0:51189                  Protocol: TCP State: LISTEN"
+            "PID: 455     Process name: rapportd                  Socket: 0.0.0.0:51189                  Protocol: TCP     State: LISTEN"
         );
     }
 
@@ -314,7 +315,7 @@ mod tests {
         );
         assert_eq!(
             listener.to_string(),
-            "PID: 160        Process name: mysqld                    Socket: [::]:3306                      Protocol: UDP State: UNKNOWN"
+            "PID: 160     Process name: mysqld                    Socket: [::]:3306                      Protocol: UDP     State: UNKNOWN"
         );
     }
 
@@ -327,7 +328,7 @@ mod tests {
         );
         assert_eq!(
             process.to_string(),
-            "PID: 611        Process name: Microsoft SharePoint"
+            "PID: 611     Process name: Microsoft SharePoint"
         );
     }
 }

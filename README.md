@@ -58,19 +58,19 @@ if let Ok(listeners) = listeners::get_all() {
 Output:
 
 ``` text
-PID: 440        Process name: ControlCenter             Socket: 0.0.0.0:0                      Protocol: UDP
-PID: 456        Process name: rapportd                  Socket: [::]:49158                     Protocol: TCP
-PID: 456        Process name: rapportd                  Socket: 0.0.0.0:49158                  Protocol: TCP
-PID: 456        Process name: rapportd                  Socket: 0.0.0.0:0                      Protocol: UDP
-PID: 485        Process name: sharingd                  Socket: 0.0.0.0:0                      Protocol: UDP   
-PID: 516        Process name: WiFiAgent                 Socket: 0.0.0.0:0                      Protocol: UDP
-PID: 1480       Process name: rustrover                 Socket: [::7f00:1]:63342               Protocol: TCP
-PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49659            Protocol: TCP
-PID: 2123       Process name: Telegram                  Socket: 192.168.1.102:49656            Protocol: TCP
-PID: 2156       Process name: Google Chrome             Socket: 0.0.0.0:0                      Protocol: UDP
-PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:60834            Protocol: UDP
-PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:53220            Protocol: UDP
-PID: 2167       Process name: Google Chrome Helper      Socket: 192.168.1.102:59216            Protocol: UDP 
+PID: 440     Process name: ControlCenter             Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+PID: 456     Process name: rapportd                  Socket: [::]:49158                     Protocol: TCP     State: LISTEN
+PID: 456     Process name: rapportd                  Socket: 0.0.0.0:49158                  Protocol: TCP     State: LISTEN
+PID: 456     Process name: rapportd                  Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+PID: 485     Process name: sharingd                  Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+PID: 516     Process name: WiFiAgent                 Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+PID: 1480    Process name: rustrover                 Socket: [::7f00:1]:63342               Protocol: TCP     State: ESTABLISHED
+PID: 2123    Process name: Telegram                  Socket: 192.168.1.102:49659            Protocol: TCP     State: ESTABLISHED
+PID: 2123    Process name: Telegram                  Socket: 192.168.1.102:49656            Protocol: TCP     State: ESTABLISHED
+PID: 2156    Process name: Google Chrome             Socket: 0.0.0.0:0                      Protocol: UDP     State: UNKNOWN
+PID: 2167    Process name: Google Chrome Helper      Socket: 192.168.1.102:60834            Protocol: UDP     State: UNKNOWN
+PID: 2167    Process name: Google Chrome Helper      Socket: 192.168.1.102:53220            Protocol: UDP     State: UNKNOWN
+PID: 2167    Process name: Google Chrome Helper      Socket: 192.168.1.102:59216            Protocol: UDP     State: UNKNOWN
 ```
  
 For more examples of usage, including how to get listening processes in a more granular way,
