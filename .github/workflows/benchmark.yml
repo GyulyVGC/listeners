@@ -53,7 +53,7 @@ jobs:
           ref: ${{ github.ref_name }}
 
       - name: bench
-        uses: cross-platform-actions/action@v1.1.0
+        uses: cross-platform-actions/action@v1.2.0
         with:
           operating_system: ${{ matrix.os }}
           version: ${{ matrix.version }}
