@@ -1,6 +1,6 @@
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 
-use crate::Protocol;
+use crate::{Protocol, SocketState};
 
 #[cfg(target_os = "freebsd")]
 type KvAddr = usize;
@@ -18,6 +18,7 @@ pub(super) mod openbsd;
 pub(super) struct SocketInfo {
     pub(super) address: SocketAddr,
     pub(super) protocol: Protocol,
+    pub(super) state: SocketState,
     #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
     pub(super) kvaddr: KvAddr,
 }
@@ -41,6 +42,7 @@ pub(super) struct CSocketInfo {
     kvaddr: KvAddr,
     protocol: i32,
     port: u16,
+    state: i32,
 }
 
 impl From<&CSocketInfo> for SocketInfo {
@@ -62,6 +64,7 @@ impl From<&CSocketInfo> for SocketInfo {
                 libc::IPPROTO_TCP => Protocol::TCP,
                 _ => Protocol::UDP,
             },
+            state: SocketState::from_bsd(value.state),
         }
     }
 }

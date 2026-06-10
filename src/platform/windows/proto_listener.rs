@@ -1,5 +1,6 @@
 use crate::Listener;
 use crate::Protocol;
+use crate::SocketState;
 use crate::platform::windows::socket_table::SocketTable;
 use crate::platform::windows::tcp_table::TcpTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
@@ -29,6 +30,7 @@ pub(super) struct ProtoListener {
     local_port: u16,
     pub(super) pid: u32,
     protocol: Protocol,
+    state: SocketState,
 }
 
 impl ProtoListener {
@@ -74,12 +76,19 @@ impl ProtoListener {
         Err("No listener found on port".into())
     }
 
-    pub(super) fn new(local_addr: IpAddr, local_port: u16, pid: u32, protocol: Protocol) -> Self {
+    pub(super) fn new(
+        local_addr: IpAddr,
+        local_port: u16,
+        pid: u32,
+        protocol: Protocol,
+        state: SocketState,
+    ) -> Self {
         Self {
             local_addr,
             local_port,
             pid,
             protocol,
+            state,
         }
     }
 }
@@ -128,7 +137,14 @@ impl PidNamePathCache {
             .flatten()
             .map(|(pname, ppath)| {
                 let socket = SocketAddr::new(proto_listener.local_addr, proto_listener.local_port);
-                Listener::new(pid, pname, ppath, socket, proto_listener.protocol)
+                Listener::new(
+                    pid,
+                    pname,
+                    ppath,
+                    socket,
+                    proto_listener.protocol,
+                    proto_listener.state,
+                )
             })
     }
 }

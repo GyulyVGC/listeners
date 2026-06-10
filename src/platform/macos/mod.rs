@@ -41,6 +41,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
                     path,
                     proto_listener.socket_addr(),
                     proto_listener.protocol(),
+                    proto_listener.state(),
                 );
                 listeners.insert(listener);
             }

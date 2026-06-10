@@ -18,6 +18,7 @@ pub(crate) fn get_all() -> crate::Result<HashSet<Listener>> {
                 String::new(),
                 socket.address,
                 socket.protocol,
+                socket.state,
             ));
         }
     }

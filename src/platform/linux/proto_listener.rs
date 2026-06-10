@@ -1,4 +1,4 @@
-use crate::Protocol;
+use crate::{Protocol, SocketState};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
@@ -9,6 +9,7 @@ pub(super) struct ProtoListener {
     local_addr: SocketAddr,
     inode: u64,
     protocol: Protocol,
+    state: SocketState,
 }
 
 impl ProtoListener {
@@ -22,6 +23,10 @@ impl ProtoListener {
 
     pub(super) fn protocol(&self) -> Protocol {
         self.protocol
+    }
+
+    pub(super) fn state(&self) -> SocketState {
+        self.state
     }
 
     pub(super) fn get_all() -> crate::Result<Vec<ProtoListener>> {
@@ -117,8 +122,11 @@ impl ProtoListener {
         let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
-        // consider all states
-        let _ = s.nth(1).ok_or("Failed to get state")?;
+        let state_hex = s.nth(1).ok_or("Failed to get state")?;
+        let state = match protocol {
+            Protocol::TCP => SocketState::from_linux(state_hex),
+            Protocol::UDP => SocketState::Unknown,
+        };
 
         let local_ip_port = local_addr_hex
             .split(':')
@@ -138,6 +146,7 @@ impl ProtoListener {
             local_addr,
             inode,
             protocol,
+            state,
         })
     }
 
@@ -150,8 +159,11 @@ impl ProtoListener {
         let mut s = line.split_whitespace();
 
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
-        // consider all states
-        let _ = s.nth(1).ok_or("Failed to get state")?;
+        let state_hex = s.nth(1).ok_or("Failed to get state")?;
+        let state = match protocol {
+            Protocol::TCP => SocketState::from_linux(state_hex),
+            Protocol::UDP => SocketState::Unknown,
+        };
 
         let mut local_ip_port = local_addr_hex.split(':');
 
@@ -190,6 +202,7 @@ impl ProtoListener {
             local_addr,
             inode,
             protocol,
+            state,
         })
     }
 }

@@ -3,6 +3,7 @@ use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use super::statics::UDP_TABLE_OWNER_PID;
 use crate::Protocol;
+use crate::SocketState;
 use crate::platform::target_os::proto_listener::ProtoListener;
 use crate::platform::windows::statics::{
     AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
@@ -56,6 +57,7 @@ impl SocketTable for TcpTable {
             port,
             row.owning_pid,
             Protocol::TCP,
+            SocketState::from_windows(row.state),
         ))
     }
 }
@@ -93,6 +95,7 @@ impl SocketTable for Tcp6Table {
             port,
             row.owning_pid,
             Protocol::TCP,
+            SocketState::from_windows(row.state),
         ))
     }
 }
@@ -130,6 +133,7 @@ impl SocketTable for UdpTable {
             port,
             row.owning_pid,
             Protocol::UDP,
+            SocketState::Unknown,
         ))
     }
 }
@@ -167,6 +171,7 @@ impl SocketTable for Udp6Table {
             port,
             row.owning_pid,
             Protocol::UDP,
+            SocketState::Unknown,
         ))
     }
 }

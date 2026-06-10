@@ -101,6 +101,7 @@ int openbsd_fetch_sockets_by_pid(pid_t pid, struct socket_info_t **list, size_t 
         (*list)[idx].port = ntohs(files[i].inp_lport);
         (*list)[idx].address.family = files[i].so_family;
         memcpy(&((*list)[idx].address.addr), files[i].inp_laddru, sizeof(files[i].inp_laddru));
+        (*list)[idx].state = (files[i].so_protocol == IPPROTO_TCP) ? (int32_t)files[i].t_state : -1;
 
         ++idx;
     }
