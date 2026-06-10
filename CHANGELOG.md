@@ -4,7 +4,8 @@ All releases with the relative changes are documented in this file.
 
 ## [Unreleased]
 ### Added
-- `state` field on `Listener` exposing the socket's TCP connection state via the new `SocketState` enum (`UNKNOWN` for UDP)
+- Added `state` field to `Listener` struct, exposing the socket's TCP connection state ([#49](https://github.com/GyulyVGC/listeners/pull/49))
+- New `SocketState` enum ([#49](https://github.com/GyulyVGC/listeners/pull/49))
 
 ## [0.5.1] - 2026-03-02
 ### Fixed
