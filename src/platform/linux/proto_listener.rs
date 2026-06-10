@@ -124,7 +124,7 @@ impl ProtoListener {
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
         let state_hex = s.nth(1).ok_or("Failed to get state")?;
         let state = match protocol {
-            Protocol::TCP => SocketState::from_linux(u8::from_str_radix(state_hex, 16)?),
+            Protocol::TCP => SocketState::from_linux(state_hex),
             Protocol::UDP => SocketState::Unknown,
         };
 
@@ -161,7 +161,7 @@ impl ProtoListener {
         let local_addr_hex = s.nth(1).ok_or("Failed to get local address")?;
         let state_hex = s.nth(1).ok_or("Failed to get state")?;
         let state = match protocol {
-            Protocol::TCP => SocketState::from_linux(u8::from_str_radix(state_hex, 16)?),
+            Protocol::TCP => SocketState::from_linux(state_hex),
             Protocol::UDP => SocketState::Unknown,
         };
 

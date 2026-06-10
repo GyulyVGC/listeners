@@ -84,19 +84,19 @@ pub enum SocketState {
 
 impl SocketState {
     #[cfg(target_os = "linux")]
-    pub(crate) fn from_linux(raw: u8) -> Self {
-        match raw {
-            0x01 => Self::Established,
-            0x02 => Self::SynSent,
-            0x03 => Self::SynReceived,
-            0x04 => Self::FinWait1,
-            0x05 => Self::FinWait2,
-            0x06 => Self::TimeWait,
-            0x07 => Self::Closed,
-            0x08 => Self::CloseWait,
-            0x09 => Self::LastAck,
-            0x0A => Self::Listen,
-            0x0B => Self::Closing,
+    pub(crate) fn from_linux(state_hex: &str) -> Self {
+        match u8::from_str_radix(state_hex, 16) {
+            Ok(0x01) => Self::Established,
+            Ok(0x02) => Self::SynSent,
+            Ok(0x03) => Self::SynReceived,
+            Ok(0x04) => Self::FinWait1,
+            Ok(0x05) => Self::FinWait2,
+            Ok(0x06) => Self::TimeWait,
+            Ok(0x07) => Self::Closed,
+            Ok(0x08) => Self::CloseWait,
+            Ok(0x09) => Self::LastAck,
+            Ok(0x0A) => Self::Listen,
+            Ok(0x0B) => Self::Closing,
             _ => Self::Unknown,
         }
     }
