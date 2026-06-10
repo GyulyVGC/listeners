@@ -62,9 +62,9 @@ pub enum SocketState {
     SynSent,
     /// Received a connection request.
     SynReceived,
-    /// First step of the four-way closing handshake.
+    /// Sent a FIN, waiting for its ACK or the peer's FIN.
     FinWait1,
-    /// Second step of the four-way closing handshake.
+    /// FIN acknowledged, waiting for the peer's FIN.
     FinWait2,
     /// Waiting for remaining packets after close.
     TimeWait,
@@ -252,8 +252,8 @@ impl Display for SocketState {
             SocketState::Established => write!(f, "ESTABLISHED"),
             SocketState::SynSent => write!(f, "SYN_SENT"),
             SocketState::SynReceived => write!(f, "SYN_RECEIVED"),
-            SocketState::FinWait1 => write!(f, "FIN_WAIT1"),
-            SocketState::FinWait2 => write!(f, "FIN_WAIT2"),
+            SocketState::FinWait1 => write!(f, "FIN_WAIT_1"),
+            SocketState::FinWait2 => write!(f, "FIN_WAIT_2"),
             SocketState::TimeWait => write!(f, "TIME_WAIT"),
             SocketState::Closed => write!(f, "CLOSED"),
             SocketState::CloseWait => write!(f, "CLOSE_WAIT"),
