@@ -1,6 +1,6 @@
 [package]
 name = "listeners"
-version = "0.5.1"
+version = "0.6.0"
 edition = "2024"
 authors = ["Giuliano Bellini <gyulyvgc99@gmail.com>"]
 description = "Cross-platform library to find out processes listening on network ports"
@@ -33,10 +33,10 @@ cc = "1.2"
 
 [dev-dependencies]
 http-test-server = "2.1.1"
-serial_test = "3.3.1"
+serial_test = "3.5.0"
 criterion = "0.8.2"
-serde_json = "1.0.149"
-rand = "0.10.0"
+serde_json = "1.0.150"
+rand = "0.10.1"
 
 [[bench]]
 name = "get_all"

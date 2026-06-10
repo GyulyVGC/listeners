@@ -2,7 +2,7 @@
 
 All releases with the relative changes are documented in this file.
 
-## [Unreleased]
+## [0.6.0] - 2026-06-10
 ### Added
 - Added `state` field to `Listener` struct, exposing the socket's TCP connection state ([#49](https://github.com/GyulyVGC/listeners/pull/49))
 - New `SocketState` enum ([#49](https://github.com/GyulyVGC/listeners/pull/49))
