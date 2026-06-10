@@ -224,6 +224,41 @@ fn test_tcp6() {
 
 #[test]
 #[serial]
+fn test_udp6() {
+    let mut opened_ports: Vec<u16> = Vec::new();
+    let mut sockets: Vec<UdpSocket> = Vec::new();
+
+    let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
+    let mut current_port = 5600;
+    let num_sockets = 10;
+
+    for _ in 0..num_sockets {
+        let socket = UdpSocket::bind(SocketAddr::new(ip_addr, current_port)).unwrap();
+        current_port = socket.local_addr().unwrap().port();
+        opened_ports.push(current_port);
+        sockets.push(socket);
+        current_port += 1;
+    }
+
+    let all_listeners = listeners::get_all().unwrap();
+    let all_found = opened_ports.iter().all(|p| {
+        let l = all_listeners
+            .iter()
+            .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
+            .unwrap();
+        let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
+        // assert that the process name and path are not empty
+        assert!(!l.process.name.is_empty());
+        #[cfg(not(target_os = "openbsd"))]
+        assert!(!l.process.path.is_empty());
+        l.process == process_by_port
+    });
+
+    assert!(all_found);
+}
+
+#[test]
+#[serial]
 fn test_tcp_listen_state() {
     let ip = IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1));
     let socket = TcpListener::bind(SocketAddr::new(ip, 0)).unwrap();
@@ -333,39 +368,4 @@ fn test_udp_state_is_unknown() {
         .find(|l| l.socket.port() == port && l.protocol == Protocol::UDP)
         .unwrap();
     assert_eq!(listener.state, SocketState::Unknown);
-}
-
-#[test]
-#[serial]
-fn test_udp6() {
-    let mut opened_ports: Vec<u16> = Vec::new();
-    let mut sockets: Vec<UdpSocket> = Vec::new();
-
-    let ip_addr = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1));
-    let mut current_port = 5600;
-    let num_sockets = 10;
-
-    for _ in 0..num_sockets {
-        let socket = UdpSocket::bind(SocketAddr::new(ip_addr, current_port)).unwrap();
-        current_port = socket.local_addr().unwrap().port();
-        opened_ports.push(current_port);
-        sockets.push(socket);
-        current_port += 1;
-    }
-
-    let all_listeners = listeners::get_all().unwrap();
-    let all_found = opened_ports.iter().all(|p| {
-        let l = all_listeners
-            .iter()
-            .find(|l| l.socket.port() == *p && l.protocol == Protocol::UDP)
-            .unwrap();
-        let process_by_port = get_process_by_port(l.socket.port(), Protocol::UDP).unwrap();
-        // assert that the process name and path are not empty
-        assert!(!l.process.name.is_empty());
-        #[cfg(not(target_os = "openbsd"))]
-        assert!(!l.process.path.is_empty());
-        l.process == process_by_port
-    });
-
-    assert!(all_found);
 }
