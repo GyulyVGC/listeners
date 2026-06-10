@@ -331,4 +331,67 @@ mod tests {
             "PID: 611     Process name: Microsoft SharePoint"
         );
     }
+
+    #[cfg(target_os = "linux")]
+    #[test]
+    fn test_socket_state_from_linux() {
+        assert_eq!(SocketState::from_linux("01"), SocketState::Established);
+        assert_eq!(SocketState::from_linux("02"), SocketState::SynSent);
+        assert_eq!(SocketState::from_linux("03"), SocketState::SynReceived);
+        assert_eq!(SocketState::from_linux("04"), SocketState::FinWait1);
+        assert_eq!(SocketState::from_linux("05"), SocketState::FinWait2);
+        assert_eq!(SocketState::from_linux("06"), SocketState::TimeWait);
+        assert_eq!(SocketState::from_linux("07"), SocketState::Closed);
+        assert_eq!(SocketState::from_linux("08"), SocketState::CloseWait);
+        assert_eq!(SocketState::from_linux("09"), SocketState::LastAck);
+        assert_eq!(SocketState::from_linux("0A"), SocketState::Listen);
+        assert_eq!(SocketState::from_linux("0B"), SocketState::Closing);
+        // unmapped code, non-hex, and out-of-range values all fall back to Unknown
+        assert_eq!(SocketState::from_linux("0C"), SocketState::Unknown);
+        assert_eq!(SocketState::from_linux("zz"), SocketState::Unknown);
+        assert_eq!(SocketState::from_linux("100"), SocketState::Unknown);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn test_socket_state_from_windows() {
+        assert_eq!(SocketState::from_windows(1), SocketState::Closed);
+        assert_eq!(SocketState::from_windows(2), SocketState::Listen);
+        assert_eq!(SocketState::from_windows(3), SocketState::SynSent);
+        assert_eq!(SocketState::from_windows(4), SocketState::SynReceived);
+        assert_eq!(SocketState::from_windows(5), SocketState::Established);
+        assert_eq!(SocketState::from_windows(6), SocketState::FinWait1);
+        assert_eq!(SocketState::from_windows(7), SocketState::FinWait2);
+        assert_eq!(SocketState::from_windows(8), SocketState::CloseWait);
+        assert_eq!(SocketState::from_windows(9), SocketState::Closing);
+        assert_eq!(SocketState::from_windows(10), SocketState::LastAck);
+        assert_eq!(SocketState::from_windows(11), SocketState::TimeWait);
+        // 0 and MIB_TCP_STATE_DELETE_TCB (12) and beyond fall back to Unknown
+        assert_eq!(SocketState::from_windows(0), SocketState::Unknown);
+        assert_eq!(SocketState::from_windows(12), SocketState::Unknown);
+    }
+
+    #[cfg(any(
+        target_os = "macos",
+        target_os = "freebsd",
+        target_os = "netbsd",
+        target_os = "openbsd"
+    ))]
+    #[test]
+    fn test_socket_state_from_bsd() {
+        assert_eq!(SocketState::from_bsd(0), SocketState::Closed);
+        assert_eq!(SocketState::from_bsd(1), SocketState::Listen);
+        assert_eq!(SocketState::from_bsd(2), SocketState::SynSent);
+        assert_eq!(SocketState::from_bsd(3), SocketState::SynReceived);
+        assert_eq!(SocketState::from_bsd(4), SocketState::Established);
+        assert_eq!(SocketState::from_bsd(5), SocketState::CloseWait);
+        assert_eq!(SocketState::from_bsd(6), SocketState::FinWait1);
+        assert_eq!(SocketState::from_bsd(7), SocketState::Closing);
+        assert_eq!(SocketState::from_bsd(8), SocketState::LastAck);
+        assert_eq!(SocketState::from_bsd(9), SocketState::FinWait2);
+        assert_eq!(SocketState::from_bsd(10), SocketState::TimeWait);
+        // the -1 UDP sentinel and any out-of-range value fall back to Unknown
+        assert_eq!(SocketState::from_bsd(-1), SocketState::Unknown);
+        assert_eq!(SocketState::from_bsd(11), SocketState::Unknown);
+    }
 }
