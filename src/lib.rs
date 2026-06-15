@@ -332,6 +332,22 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_socket_state_to_string() {
+        assert_eq!(SocketState::Established.to_string(), "ESTABLISHED");
+        assert_eq!(SocketState::SynSent.to_string(), "SYN_SENT");
+        assert_eq!(SocketState::SynReceived.to_string(), "SYN_RECEIVED");
+        assert_eq!(SocketState::FinWait1.to_string(), "FIN_WAIT_1");
+        assert_eq!(SocketState::FinWait2.to_string(), "FIN_WAIT_2");
+        assert_eq!(SocketState::TimeWait.to_string(), "TIME_WAIT");
+        assert_eq!(SocketState::Closed.to_string(), "CLOSED");
+        assert_eq!(SocketState::CloseWait.to_string(), "CLOSE_WAIT");
+        assert_eq!(SocketState::LastAck.to_string(), "LAST_ACK");
+        assert_eq!(SocketState::Listen.to_string(), "LISTEN");
+        assert_eq!(SocketState::Closing.to_string(), "CLOSING");
+        assert_eq!(SocketState::Unknown.to_string(), "UNKNOWN");
+    }
+
     #[cfg(target_os = "linux")]
     #[test]
     fn test_socket_state_from_linux() {
