@@ -27,7 +27,7 @@ jobs:
           - os: windows
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -79,7 +79,7 @@ jobs:
               export PATH=$HOME/.cargo/bin:$PATH
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Run CI
         uses: cross-platform-actions/action@v1.3.0
