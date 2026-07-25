@@ -51,36 +51,22 @@ impl CSocketFdInfo {
     fn get_local_addr(family: c_int, tcp_sockaddr_in: InSockinfo) -> crate::Result<IpAddr> {
         match family {
             2 => {
-                // AF_INET — only one slot can apply.
+                // AF_INET
                 Ok(IpAddr::V4(Self::v4_slot(&tcp_sockaddr_in)))
             }
             30 => {
-                // AF_INET6. The family does NOT tell us which slot of `insi_laddr`
-                // holds the address; `insi_vflag` does. An AF_INET6 socket bound to
-                // an IPv4-mapped address (`::ffff:127.0.0.1`) reports
-                // `INI_IPV4` only, and keeps the address in the 4-byte slot — while
-                // the 16-byte slot holds 12 zero pad bytes plus the v4 address, which
-                // read as IPv6 is `::127.0.0.1`: the deprecated IPv4-COMPATIBLE
-                // address, NOT the mapped one that was bound.
-                //
-                // Order matters. A DUAL-STACK socket (`::` with `IPV6_V6ONLY` off)
-                // sets BOTH flags, and its true address is the v6 wildcard, so v6 must
-                // win when `INI_IPV6` is present. Reading the v4 slot of a genuine v6
-                // socket yields nonsense — for `::1` that slot holds `00000001`,
-                // which would surface as `0.0.0.1`.
+                // AF_INET6. `soi_family` doesn't say which slot of `insi_laddr` holds
+                // the address; `insi_vflag` does. Check IPV6 first: a dual-stack `::`
+                // sets both flags, but its address is the v6 wildcard.
                 let vflag = tcp_sockaddr_in.insi_vflag;
                 if vflag & INI_IPV6 != 0 {
                     Ok(IpAddr::V6(Self::v6_slot(&tcp_sockaddr_in)))
                 } else if vflag & INI_IPV4 != 0 {
-                    // Reported as the v4-MAPPED form rather than as a bare
-                    // `IpAddr::V4`, so this platform agrees with the Linux
-                    // implementation, which reads the mapped form literally out of
-                    // `/proc/net/tcp6` for the same bind. A caller wanting the v4
-                    // view has `Ipv6Addr::to_ipv4_mapped()`; a caller given a bare V4
-                    // here could not tell it apart from an AF_INET socket.
+                    // IPv4-mapped bind: address is in the v4 slot. Report the mapped
+                    // form, matching the Linux backend.
                     Ok(IpAddr::V6(Self::v4_slot(&tcp_sockaddr_in).to_ipv6_mapped()))
                 } else {
-                    // Neither flag set: trust the family rather than invent a slot.
+                    // Neither flag set: fall back to the family's slot.
                     Ok(IpAddr::V6(Self::v6_slot(&tcp_sockaddr_in)))
                 }
             }
