@@ -305,6 +305,9 @@ fn test_tcp_listen_state_ipv6() {
         .find(|l| l.socket.port() == port && l.protocol == Protocol::TCP)
         .unwrap();
     assert_eq!(listener.state, SocketState::Listen);
+    // A plain `::1` bind (vflag = INI_IPV6 only) must decode the v6 slot exactly;
+    // the other IPv6 tests only match by port, so this pins the decoded value.
+    assert_eq!(listener.socket.ip(), IpAddr::V6(Ipv6Addr::LOCALHOST));
 }
 
 #[test]
@@ -387,36 +390,46 @@ fn test_udp_state_is_unknown() {
 #[serial]
 fn test_tcp_ipv4_mapped_address_is_not_ipv4_compatible() {
     let mapped = Ipv6Addr::new(0, 0, 0, 0, 0, 0xffff, 0x7f00, 0x0001); // ::ffff:127.0.0.1
-    let socket = TcpListener::bind(SocketAddr::new(IpAddr::V6(mapped), 0)).unwrap();
-    let port = socket.local_addr().unwrap().port();
+    let tcp = TcpListener::bind(SocketAddr::new(IpAddr::V6(mapped), 0)).unwrap();
+    let udp = UdpSocket::bind(SocketAddr::new(IpAddr::V6(mapped), 0)).unwrap();
 
     let all = listeners::get_all().unwrap();
-    let listener = all
-        .iter()
-        .find(|l| l.socket.port() == port && l.protocol == Protocol::TCP)
-        .unwrap();
 
     // The IPv4-COMPATIBLE address `::127.0.0.1` shares the low 32 bits with the
     // mapped one and is what the bug produced, so name it explicitly.
     let compatible = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0x7f00, 0x0001));
-    assert_ne!(
-        listener.socket.ip(),
-        compatible,
-        "reported the deprecated IPv4-compatible address instead of the mapped one",
-    );
 
-    // Whichever representation the platform uses, it must be loopback-equivalent:
-    // `::ffff:127.0.0.1` and `127.0.0.1` are the same address, and both are loopback.
-    let canonical = match listener.socket.ip() {
-        IpAddr::V4(v4) => IpAddr::V4(v4),
-        IpAddr::V6(v6) => v6.to_ipv4_mapped().map_or(IpAddr::V6(v6), IpAddr::V4),
-    };
-    assert_eq!(
-        canonical,
-        IpAddr::V4(Ipv4Addr::LOCALHOST),
-        "an ::ffff:127.0.0.1 bind must canonicalize to 127.0.0.1, got {:?}",
-        listener.socket.ip(),
-    );
+    // TCP reads `insi_vflag` from `pri_tcp.tcpsi_ini`, UDP from `pri_in` — a different
+    // union member — so run the shared decode through both protocols.
+    let cases = [
+        (tcp.local_addr().unwrap().port(), Protocol::TCP),
+        (udp.local_addr().unwrap().port(), Protocol::UDP),
+    ];
+    for (port, protocol) in cases {
+        let listener = all
+            .iter()
+            .find(|l| l.socket.port() == port && l.protocol == protocol)
+            .unwrap();
+
+        assert_ne!(
+            listener.socket.ip(),
+            compatible,
+            "{protocol:?}: reported the deprecated IPv4-compatible address instead of the mapped one",
+        );
+
+        // Whichever representation the platform uses, it must be loopback-equivalent:
+        // `::ffff:127.0.0.1` and `127.0.0.1` are the same address, and both are loopback.
+        let canonical = match listener.socket.ip() {
+            IpAddr::V4(v4) => IpAddr::V4(v4),
+            IpAddr::V6(v6) => v6.to_ipv4_mapped().map_or(IpAddr::V6(v6), IpAddr::V4),
+        };
+        assert_eq!(
+            canonical,
+            IpAddr::V4(Ipv4Addr::LOCALHOST),
+            "{protocol:?}: an ::ffff:127.0.0.1 bind must canonicalize to 127.0.0.1, got {:?}",
+            listener.socket.ip(),
+        );
+    }
 }
 
 /// A DUAL-STACK `::` bind sets BOTH `INI_IPV4` and `INI_IPV6` (`vflag = 0x03`), so the
