@@ -6,7 +6,7 @@ use byteorder::{ByteOrder, NetworkEndian};
 use crate::platform::macos::proto_listener::ProtoListener;
 use crate::{Protocol, SocketState};
 
-use super::statics::{IPPROTO_TCP, IPPROTO_UDP};
+use super::statics::{INI_IPV4, INI_IPV6, IPPROTO_TCP, IPPROTO_UDP};
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
@@ -51,19 +51,55 @@ impl CSocketFdInfo {
     fn get_local_addr(family: c_int, tcp_sockaddr_in: InSockinfo) -> crate::Result<IpAddr> {
         match family {
             2 => {
-                // AF_INET
-                let addr = unsafe { tcp_sockaddr_in.insi_laddr.ina_46.i46a_addr4.s_addr };
-                Ok(IpAddr::V4(Ipv4Addr::from(u32::from_be(addr))))
+                // AF_INET — only one slot can apply.
+                Ok(IpAddr::V4(Self::v4_slot(&tcp_sockaddr_in)))
             }
             30 => {
-                // AF_INET6
-                let addr = unsafe { &tcp_sockaddr_in.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
-                let mut ipv6_addr = [0_u16; 8];
-                NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
-                Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
+                // AF_INET6. The family does NOT tell us which slot of `insi_laddr`
+                // holds the address; `insi_vflag` does. An AF_INET6 socket bound to
+                // an IPv4-mapped address (`::ffff:127.0.0.1`) reports
+                // `INI_IPV4` only, and keeps the address in the 4-byte slot — while
+                // the 16-byte slot holds 12 zero pad bytes plus the v4 address, which
+                // read as IPv6 is `::127.0.0.1`: the deprecated IPv4-COMPATIBLE
+                // address, NOT the mapped one that was bound.
+                //
+                // Order matters. A DUAL-STACK socket (`::` with `IPV6_V6ONLY` off)
+                // sets BOTH flags, and its true address is the v6 wildcard, so v6 must
+                // win when `INI_IPV6` is present. Reading the v4 slot of a genuine v6
+                // socket yields nonsense — for `::1` that slot holds `00000001`,
+                // which would surface as `0.0.0.1`.
+                let vflag = tcp_sockaddr_in.insi_vflag;
+                if vflag & INI_IPV6 != 0 {
+                    Ok(IpAddr::V6(Self::v6_slot(&tcp_sockaddr_in)))
+                } else if vflag & INI_IPV4 != 0 {
+                    // Reported as the v4-MAPPED form rather than as a bare
+                    // `IpAddr::V4`, so this platform agrees with the Linux
+                    // implementation, which reads the mapped form literally out of
+                    // `/proc/net/tcp6` for the same bind. A caller wanting the v4
+                    // view has `Ipv6Addr::to_ipv4_mapped()`; a caller given a bare V4
+                    // here could not tell it apart from an AF_INET socket.
+                    Ok(IpAddr::V6(Self::v4_slot(&tcp_sockaddr_in).to_ipv6_mapped()))
+                } else {
+                    // Neither flag set: trust the family rather than invent a slot.
+                    Ok(IpAddr::V6(Self::v6_slot(&tcp_sockaddr_in)))
+                }
             }
             _ => Err("Unsupported socket family".into()),
         }
+    }
+
+    /// The 4-byte `i46a_addr4` slot.
+    fn v4_slot(sock_info: &InSockinfo) -> Ipv4Addr {
+        let addr = unsafe { sock_info.insi_laddr.ina_46.i46a_addr4.s_addr };
+        Ipv4Addr::from(u32::from_be(addr))
+    }
+
+    /// The 16-byte `ina_6` slot.
+    fn v6_slot(sock_info: &InSockinfo) -> Ipv6Addr {
+        let addr = unsafe { &sock_info.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
+        let mut ipv6_addr = [0_u16; 8];
+        NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
+        Ipv6Addr::from(ipv6_addr)
     }
 
     fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {
