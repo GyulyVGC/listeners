@@ -2,6 +2,10 @@
 
 All releases with the relative changes are documented in this file.
 
+## [UNRELEASED]
+### Fixed
+- Correctly report IPv4-mapped IPv6 addresses on macOS ([#57](https://github.com/GyulyVGC/listeners/pull/57) — fixes [#56](https://github.com/GyulyVGC/listeners/issues/56))
+
 ## [0.6.0] - 2026-06-10
 ### Added
 - Added `state` field to `Listener` struct, exposing the socket's TCP connection state ([#49](https://github.com/GyulyVGC/listeners/pull/49))

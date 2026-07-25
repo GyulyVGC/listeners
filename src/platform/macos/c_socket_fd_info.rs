@@ -6,7 +6,7 @@ use byteorder::{ByteOrder, NetworkEndian};
 use crate::platform::macos::proto_listener::ProtoListener;
 use crate::{Protocol, SocketState};
 
-use super::statics::{IPPROTO_TCP, IPPROTO_UDP};
+use super::statics::{INI_IPV4, INI_IPV6, IPPROTO_TCP, IPPROTO_UDP};
 
 #[repr(C)]
 pub(super) struct CSocketFdInfo {
@@ -52,18 +52,40 @@ impl CSocketFdInfo {
         match family {
             2 => {
                 // AF_INET
-                let addr = unsafe { tcp_sockaddr_in.insi_laddr.ina_46.i46a_addr4.s_addr };
-                Ok(IpAddr::V4(Ipv4Addr::from(u32::from_be(addr))))
+                Ok(IpAddr::V4(Self::v4_slot(&tcp_sockaddr_in)))
             }
             30 => {
-                // AF_INET6
-                let addr = unsafe { &tcp_sockaddr_in.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
-                let mut ipv6_addr = [0_u16; 8];
-                NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
-                Ok(IpAddr::V6(Ipv6Addr::from(ipv6_addr)))
+                // AF_INET6. `soi_family` doesn't say which slot of `insi_laddr` holds
+                // the address; `insi_vflag` does. Check IPV6 first: a dual-stack `::`
+                // sets both flags, but its address is the v6 wildcard.
+                let vflag = tcp_sockaddr_in.insi_vflag;
+                if vflag & INI_IPV6 != 0 {
+                    Ok(IpAddr::V6(Self::v6_slot(&tcp_sockaddr_in)))
+                } else if vflag & INI_IPV4 != 0 {
+                    // IPv4-mapped bind: address is in the v4 slot. Report the mapped
+                    // form, matching the Linux backend.
+                    Ok(IpAddr::V6(Self::v4_slot(&tcp_sockaddr_in).to_ipv6_mapped()))
+                } else {
+                    // Neither flag set: fall back to the family's slot.
+                    Ok(IpAddr::V6(Self::v6_slot(&tcp_sockaddr_in)))
+                }
             }
             _ => Err("Unsupported socket family".into()),
         }
+    }
+
+    /// The 4-byte `i46a_addr4` slot.
+    fn v4_slot(sock_info: &InSockinfo) -> Ipv4Addr {
+        let addr = unsafe { sock_info.insi_laddr.ina_46.i46a_addr4.s_addr };
+        Ipv4Addr::from(u32::from_be(addr))
+    }
+
+    /// The 16-byte `ina_6` slot.
+    fn v6_slot(sock_info: &InSockinfo) -> Ipv6Addr {
+        let addr = unsafe { &sock_info.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
+        let mut ipv6_addr = [0_u16; 8];
+        NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
+        Ipv6Addr::from(ipv6_addr)
     }
 
     fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {
