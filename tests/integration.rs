@@ -375,6 +375,10 @@ fn test_udp_state_is_unknown() {
 /// An IPv4-mapped bind (`::ffff:127.0.0.1`) must report the bound address, not the
 /// deprecated IPv4-compatible `::127.0.0.1` that shares its low 32 bits — the bug when
 /// `get_local_addr` read the v6 slot by `soi_family` instead of the v4 slot by `insi_vflag`.
+///
+/// Only macOS and Linux allow binding an IPv4-mapped address; the BSDs and Windows
+/// default to `IPV6_V6ONLY` and reject the bind.
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 #[test]
 #[serial]
 fn test_tcp_ipv4_mapped_address_is_not_ipv4_compatible() {
