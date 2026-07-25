@@ -369,3 +369,76 @@ fn test_udp_state_is_unknown() {
         .unwrap();
     assert_eq!(listener.state, SocketState::Unknown);
 }
+
+/// An IPv4-mapped bind must report the address that was BOUND, not the
+/// IPv4-compatible address that shares its low 32 bits.
+///
+/// Before the `insi_vflag` fix, macOS reported `::ffff:127.0.0.1` as `::127.0.0.1`:
+/// `get_local_addr` branched on `soi_family` alone, so an AF_INET6 socket always had
+/// its 16-byte `ina_6` slot read — but for a mapped bind the kernel keeps the address
+/// in the 4-byte `i46a_addr4` slot and leaves `ina_6` holding 12 zero pad bytes plus
+/// the v4 address. Read as IPv6 that is a different, deprecated address.
+///
+/// Kernel evidence for the same socket (macOS 27.0): `getsockname` returns AF_INET6
+/// `::ffff:127.0.0.1`, while `proc_pidfdinfo` reports `insi_vflag = 0x01`
+/// (INI_IPV4 set, INI_IPV6 CLEAR) with v4 slot `7f000001` and v6 slot
+/// `0000000000000000000000007f000001`.
+#[test]
+#[serial]
+fn test_tcp_ipv4_mapped_address_is_not_ipv4_compatible() {
+    let mapped = Ipv6Addr::new(0, 0, 0, 0, 0, 0xffff, 0x7f00, 0x0001); // ::ffff:127.0.0.1
+    let socket = TcpListener::bind(SocketAddr::new(IpAddr::V6(mapped), 0)).unwrap();
+    let port = socket.local_addr().unwrap().port();
+
+    let all = listeners::get_all().unwrap();
+    let listener = all
+        .iter()
+        .find(|l| l.socket.port() == port && l.protocol == Protocol::TCP)
+        .unwrap();
+
+    // The IPv4-COMPATIBLE address `::127.0.0.1` shares the low 32 bits with the
+    // mapped one and is what the bug produced, so name it explicitly.
+    let compatible = IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0x7f00, 0x0001));
+    assert_ne!(
+        listener.socket.ip(),
+        compatible,
+        "reported the deprecated IPv4-compatible address instead of the mapped one",
+    );
+
+    // Whichever representation the platform uses, it must be loopback-equivalent:
+    // `::ffff:127.0.0.1` and `127.0.0.1` are the same address, and both are loopback.
+    let canonical = match listener.socket.ip() {
+        IpAddr::V4(v4) => IpAddr::V4(v4),
+        IpAddr::V6(v6) => v6.to_ipv4_mapped().map_or(IpAddr::V6(v6), IpAddr::V4),
+    };
+    assert_eq!(
+        canonical,
+        IpAddr::V4(Ipv4Addr::LOCALHOST),
+        "an ::ffff:127.0.0.1 bind must canonicalize to 127.0.0.1, got {:?}",
+        listener.socket.ip(),
+    );
+}
+
+/// A DUAL-STACK `::` bind sets BOTH `INI_IPV4` and `INI_IPV6` (`vflag = 0x03`), so the
+/// fix's slot precedence matters: v6 must win, or the wildcard would be reported as
+/// `0.0.0.0` and the socket's IPv6 reach would be lost. Paired with the test above
+/// because the two together pin the ORDER of the two flag checks, which a single test
+/// cannot.
+#[test]
+#[serial]
+fn test_tcp_dual_stack_wildcard_reports_ipv6_unspecified() {
+    let socket = TcpListener::bind(SocketAddr::new(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 0)).unwrap();
+    let port = socket.local_addr().unwrap().port();
+
+    let all = listeners::get_all().unwrap();
+    let listener = all
+        .iter()
+        .find(|l| l.socket.port() == port && l.protocol == Protocol::TCP)
+        .unwrap();
+
+    assert_eq!(
+        listener.socket.ip(),
+        IpAddr::V6(Ipv6Addr::UNSPECIFIED),
+        "a `::` bind must report the IPv6 wildcard, not the v4 slot's 0.0.0.0",
+    );
+}
