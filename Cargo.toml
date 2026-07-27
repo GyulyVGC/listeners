@@ -33,7 +33,7 @@ cc = "1.2"
 
 [dev-dependencies]
 http-test-server = "2.1.1"
-serial_test = "3.5.0"
+serial_test = "4.0.1"
 criterion = "0.8.2"
 serde_json = "1.0.150"
 rand = "0.10.1"
