@@ -29,7 +29,7 @@ impl ProtoListener {
         self.state
     }
 
-    pub(super) fn get_all() -> crate::Result<Vec<ProtoListener>> {
+    pub(super) fn get_all() -> Vec<ProtoListener> {
         let mut table = Vec::new();
 
         if let Ok(tcp_table) = File::open("/proc/net/tcp") {
@@ -51,7 +51,7 @@ impl ProtoListener {
         if let Ok(udp_table) = File::open("/proc/net/udp") {
             for line in BufReader::new(udp_table).lines().map_while(Result::ok) {
                 if let Ok(l) = ProtoListener::from_protocol_table_entry(&line, Protocol::UDP) {
-                    table.push(l)
+                    table.push(l);
                 }
             }
         }
@@ -59,12 +59,12 @@ impl ProtoListener {
         if let Ok(udp6_table) = File::open("/proc/net/udp6") {
             for line in BufReader::new(udp6_table).lines().map_while(Result::ok) {
                 if let Ok(l) = ProtoListener::from_protocolv6_table_entry(&line, Protocol::UDP) {
-                    table.push(l)
+                    table.push(l);
                 }
             }
         }
 
-        Ok(table)
+        table
     }
 
     pub(super) fn get_by_port(port: u16, protocol: Protocol) -> crate::Result<ProtoListener> {

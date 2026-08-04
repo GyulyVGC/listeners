@@ -15,10 +15,9 @@ pub(super) fn build_inode_proc_map() -> crate::Result<HashMap<u64, ProcInfo>> {
     let mut map: HashMap<u64, ProcInfo> = HashMap::new();
 
     for proc_fd in proc_fds {
-        let dirfd = proc_fd.as_fd();
         let path = "fd";
         let Ok(dir_fd) = rustix::fs::openat(
-            dirfd,
+            proc_fd.as_fd(),
             path,
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
@@ -63,10 +62,9 @@ pub(super) fn get_proc_by_inode(inode: u64) -> crate::Result<ProcInfo> {
     let proc_fds = ProcFd::get_all()?;
 
     for proc_fd in proc_fds {
-        let dirfd = proc_fd.as_fd();
         let path = "fd";
         let Ok(dir_fd) = rustix::fs::openat(
-            dirfd,
+            proc_fd.as_fd(),
             path,
             OFlags::RDONLY | OFlags::DIRECTORY | OFlags::CLOEXEC,
             Mode::empty(),
