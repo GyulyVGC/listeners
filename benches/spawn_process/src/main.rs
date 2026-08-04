@@ -1,3 +1,5 @@
+#![allow(clippy::unwrap_used)]
+
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, TcpListener, UdpSocket};
 use std::thread::sleep;
 use std::time::Duration;

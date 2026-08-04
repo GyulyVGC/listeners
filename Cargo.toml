@@ -11,6 +11,18 @@ keywords = ["listen", "port", "process", "socket", "pid"]
 categories = ["network-programming"]
 include = ["src/**/*", "LICENSE", "README.md", "CHANGELOG.md", "examples/**/*", "build.rs"]
 
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+unreachable = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 windows = { version = "0.62", features = [
     "Win32_Foundation",
