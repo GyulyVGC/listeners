@@ -6,20 +6,19 @@ use crate::platform::windows::tcp_table::TcpTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::ffi::CStr;
 use std::mem::size_of;
 use std::mem::zeroed;
 use std::net::{IpAddr, SocketAddr};
 use std::os::windows::ffi::OsStringExt;
 use std::path::Path;
-use windows::Win32::Foundation::CloseHandle;
-use windows::Win32::System::Diagnostics::ToolHelp::{
+use windows_sys::Win32::Foundation::{CloseHandle, FALSE, HANDLE, INVALID_HANDLE_VALUE};
+use windows_sys::Win32::System::Diagnostics::ToolHelp::{
     CreateToolhelp32Snapshot, PROCESSENTRY32, Process32First, Process32Next, TH32CS_SNAPPROCESS,
 };
-use windows::Win32::System::Threading::{
-    OpenProcess, PROCESS_NAME_FORMAT, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
+use windows_sys::Win32::System::Threading::{
+    OpenProcess, PROCESS_NAME_WIN32, PROCESS_QUERY_LIMITED_INFORMATION, QueryFullProcessImageNameW,
 };
-use windows::core::PCSTR;
-use windows::core::PWSTR;
 
 use super::udp_table::UdpTable;
 use super::udp6_table::Udp6Table;
@@ -149,27 +148,46 @@ impl PidNamePathCache {
     }
 }
 
+fn is_invalid(handle: HANDLE) -> bool {
+    handle.is_null() || handle == INVALID_HANDLE_VALUE
+}
+
+/// Takes a snapshot of the running processes.
+fn process_snapshot() -> Option<HANDLE> {
+    let handle = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
+    (!is_invalid(handle)).then_some(handle)
+}
+
+/// Reads the `szExeFile` field of a process entry.
+///
+/// Returns `None` if the field isn't NUL-terminated or isn't valid UTF-8.
+fn exe_file(process: &PROCESSENTRY32) -> Option<String> {
+    let raw = &process.szExeFile;
+    // SAFETY: `c_char` and `u8` share their layout, and the length is taken from the
+    // array itself, so the read stays within `szExeFile` even if the OS didn't
+    // NUL-terminate it.
+    let bytes = unsafe { std::slice::from_raw_parts(raw.as_ptr().cast::<u8>(), raw.len()) };
+    let name = CStr::from_bytes_until_nul(bytes).ok()?;
+    name.to_str().ok().map(str::to_owned)
+}
+
 fn pname(pid: u32) -> Option<String> {
-    let h = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).ok()? };
+    let dw_size = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
+    let h = process_snapshot()?;
 
     let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-    process.dwSize = u32::try_from(size_of::<PROCESSENTRY32>()).ok()?;
+    process.dwSize = dw_size;
 
     let mut result = None;
 
-    if unsafe { Process32First(h, &raw mut process) }.is_ok() {
+    if unsafe { Process32First(h, &raw mut process) } != FALSE {
         loop {
             if process.th32ProcessID == pid {
-                let name = unsafe {
-                    PCSTR(process.szExeFile.as_ptr().cast::<u8>())
-                        .to_string()
-                        .ok()?
-                };
-                result = Some(name);
+                result = exe_file(&process);
                 break;
             }
 
-            if unsafe { Process32Next(h, &raw mut process) }.is_err() {
+            if unsafe { Process32Next(h, &raw mut process) } == FALSE {
                 break;
             }
         }
@@ -184,10 +202,8 @@ fn pname(pid: u32) -> Option<String> {
 
 fn ppath(pid: u32) -> String {
     unsafe {
-        let Ok(handle) = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid) else {
-            return String::new();
-        };
-        if handle.is_invalid() {
+        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+        if is_invalid(handle) {
             return String::new();
         }
 
@@ -196,13 +212,13 @@ fn ppath(pid: u32) -> String {
 
         let result = QueryFullProcessImageNameW(
             handle,
-            PROCESS_NAME_FORMAT(0),
-            PWSTR(buffer.as_mut_ptr()),
+            PROCESS_NAME_WIN32,
+            buffer.as_mut_ptr(),
             &raw mut size,
         );
         let _ = CloseHandle(handle);
 
-        if result.is_err() {
+        if result == FALSE {
             return String::new();
         }
 
@@ -214,25 +230,24 @@ fn ppath(pid: u32) -> String {
 fn pname_collect() -> HashMap<u32, String> {
     let mut ret_val = HashMap::default();
 
-    let Ok(h) = (unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) }) else {
+    let Ok(dw_size) = u32::try_from(size_of::<PROCESSENTRY32>()) else {
+        return ret_val;
+    };
+    let Some(h) = process_snapshot() else {
         return ret_val;
     };
 
     let mut process = unsafe { zeroed::<PROCESSENTRY32>() };
-    let Ok(dw_size) = u32::try_from(size_of::<PROCESSENTRY32>()) else {
-        return ret_val;
-    };
     process.dwSize = dw_size;
 
-    if unsafe { Process32First(h, &raw mut process) }.is_ok() {
+    if unsafe { Process32First(h, &raw mut process) } != FALSE {
         loop {
-            if let Ok(name) = unsafe { PCSTR(process.szExeFile.as_ptr().cast::<u8>()).to_string() }
-            {
+            if let Some(name) = exe_file(&process) {
                 let id = process.th32ProcessID;
                 ret_val.insert(id, name);
             }
 
-            if unsafe { Process32Next(h, &raw mut process) }.is_err() {
+            if unsafe { Process32Next(h, &raw mut process) } == FALSE {
                 break;
             }
         }

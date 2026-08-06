@@ -2,6 +2,10 @@
 
 All releases with the relative changes are documented in this file.
 
+## [UNRELEASED]
+### Changed
+- Lighten the dependency tree: use `windows-sys` instead of `windows` on Windows, and drop `byteorder` on macOS
+
 ## [0.6.1] - 2026-08-02
 ### Fixed
 - Correctly report IPv4-mapped IPv6 addresses on macOS ([#57](https://github.com/GyulyVGC/listeners/pull/57) — fixes [#56](https://github.com/GyulyVGC/listeners/issues/56))
