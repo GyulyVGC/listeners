@@ -4,7 +4,7 @@ All releases with the relative changes are documented in this file.
 
 ## [UNRELEASED]
 ### Changed
-- Lighten the dependency tree: use `windows-sys` instead of `windows` on Windows, and drop `byteorder` on macOS
+- Lighten the dependency tree: drop `byteorder` on macOS, and use `windows-sys` instead of `windows` on Windows ([#60](https://github.com/GyulyVGC/listeners/pull/60))
 
 ## [0.6.1] - 2026-08-02
 ### Fixed
