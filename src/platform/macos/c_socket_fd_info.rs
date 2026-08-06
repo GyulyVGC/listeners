@@ -1,8 +1,6 @@
 use std::ffi::{c_char, c_int, c_longlong, c_short, c_uchar, c_uint, c_ushort};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use byteorder::{ByteOrder, NetworkEndian};
-
 use crate::platform::macos::proto_listener::ProtoListener;
 use crate::{Protocol, SocketState};
 
@@ -34,13 +32,13 @@ impl CSocketFdInfo {
             }
         };
 
-        let lport_bytes: [u8; 4] = i32::to_le_bytes(general_sock_info.insi_lport);
+        let [lport_hi, lport_lo, ..] = i32::to_le_bytes(general_sock_info.insi_lport);
         let local_address = Self::get_local_addr(family, general_sock_info)?;
         let protocol = Self::get_protocol(family, transport_protocol)?;
 
         let socket_info = ProtoListener::new(
             local_address,
-            NetworkEndian::read_u16(&lport_bytes),
+            u16::from_be_bytes([lport_hi, lport_lo]),
             protocol,
             state,
         );
@@ -82,10 +80,8 @@ impl CSocketFdInfo {
 
     /// The 16-byte `ina_6` slot.
     fn v6_slot(sock_info: &InSockinfo) -> Ipv6Addr {
-        let addr = unsafe { &sock_info.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
-        let mut ipv6_addr = [0_u16; 8];
-        NetworkEndian::read_u16_into(addr, &mut ipv6_addr);
-        Ipv6Addr::from(ipv6_addr)
+        let addr = unsafe { sock_info.insi_laddr.ina_6.__u6_addr.__u6_addr8 };
+        Ipv6Addr::from(addr)
     }
 
     fn get_protocol(family: c_int, ip_protocol: c_int) -> crate::Result<Protocol> {

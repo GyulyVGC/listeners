@@ -1,18 +1,18 @@
 use std::ffi::{c_ulong, c_void};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-use super::statics::UDP_TABLE_OWNER_PID;
 use crate::Protocol;
 use crate::SocketState;
 use crate::platform::target_os::proto_listener::ProtoListener;
-use crate::platform::windows::statics::{
-    AF_INET, AF_INET6, ERROR_INSUFFICIENT_BUFFER, NO_ERROR, TCP_TABLE_OWNER_PID_ALL,
-};
+use crate::platform::windows::statics::{AF_INET, AF_INET6};
 use crate::platform::windows::tcp_table::TcpTable;
 use crate::platform::windows::tcp6_table::Tcp6Table;
 use crate::platform::windows::udp_table::UdpTable;
 use crate::platform::windows::udp6_table::Udp6Table;
-use windows::Win32::NetworkManagement::IpHelper::{GetExtendedTcpTable, GetExtendedUdpTable};
+use windows_sys::Win32::Foundation::{ERROR_INSUFFICIENT_BUFFER, FALSE, NO_ERROR};
+use windows_sys::Win32::NetworkManagement::IpHelper::{
+    GetExtendedTcpTable, GetExtendedUdpTable, TCP_TABLE_OWNER_PID_ALL, UDP_TABLE_OWNER_PID,
+};
 
 pub(super) trait SocketTable {
     fn get_table() -> crate::Result<Vec<u8>>;
@@ -180,9 +180,9 @@ fn get_udp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     let mut table_size: c_ulong = 0;
     let mut err_code = unsafe {
         GetExtendedUdpTable(
-            None,
+            std::ptr::null_mut(),
             &raw mut table_size,
-            false,
+            FALSE,
             address_family,
             UDP_TABLE_OWNER_PID,
             0,
@@ -194,9 +194,9 @@ fn get_udp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
         table = Vec::<u8>::with_capacity(table_size as usize);
         err_code = unsafe {
             GetExtendedUdpTable(
-                Some(table.as_mut_ptr().cast::<c_void>()),
+                table.as_mut_ptr().cast::<c_void>(),
                 &raw mut table_size,
-                false,
+                FALSE,
                 address_family,
                 UDP_TABLE_OWNER_PID,
                 0,
@@ -218,9 +218,9 @@ fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
     let mut table_size: c_ulong = 0;
     let mut err_code = unsafe {
         GetExtendedTcpTable(
-            None,
+            std::ptr::null_mut(),
             &raw mut table_size,
-            false,
+            FALSE,
             address_family,
             TCP_TABLE_OWNER_PID_ALL,
             0,
@@ -232,9 +232,9 @@ fn get_tcp_table(address_family: c_ulong) -> crate::Result<Vec<u8>> {
         table = Vec::<u8>::with_capacity(table_size as usize);
         err_code = unsafe {
             GetExtendedTcpTable(
-                Some(table.as_mut_ptr().cast::<c_void>()),
+                table.as_mut_ptr().cast::<c_void>(),
                 &raw mut table_size,
-                false,
+                FALSE,
                 address_family,
                 TCP_TABLE_OWNER_PID_ALL,
                 0,
