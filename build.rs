@@ -1,9 +1,9 @@
 fn main() {
-    #[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
+    #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
     compile_native_lib();
 }
 
-#[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 fn compile_native_lib() {
     let src_dir = std::path::PathBuf::from("src/platform/bsd/native");
 
@@ -31,7 +31,7 @@ fn compile_native_lib() {
     println!("cargo:rerun-if-changed={}", src_dir.display());
 }
 
-#[cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))]
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 fn find_c_files(dir: &std::path::Path, out: &mut Vec<std::path::PathBuf>) {
     if !dir.is_dir() {
         return;

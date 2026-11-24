@@ -35,9 +35,9 @@ windows-sys = { version = "0.61", features = [
 rustix = {version = "1.1", features = ["fs"]}
 
 [target.'cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.dependencies]
-libc = "0.2"
+libc = "0.2.183"
 
-[target.'cfg(any(target_os = "freebsd", target_os = "openbsd", target_os = "netbsd"))'.build-dependencies]
+[target.'cfg(any(target_os = "freebsd", target_os = "netbsd"))'.build-dependencies]
 cc = "1.4"
 
 [dev-dependencies]
