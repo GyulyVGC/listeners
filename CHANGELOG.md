@@ -5,6 +5,10 @@ All releases with the relative changes are documented in this file.
 ## [UNRELEASED]
 ### Changed
 - Lighten the dependency tree: drop `byteorder` on macOS, and use `windows-sys` instead of `windows` on Windows ([#60](https://github.com/GyulyVGC/listeners/pull/60))
+- OpenBSD: replace the C shim with pure Rust built on `libc`'s `kinfo_file` and `kinfo_proc`; the minimum `libc` version is now 0.2.183
+### Fixed
+- OpenBSD: fix a heap buffer overflow when listing a process's sockets
+- OpenBSD: process names that fill the whole name buffer are no longer read past its end
 
 ## [0.6.1] - 2026-08-02
 ### Fixed

@@ -24,8 +24,8 @@
 #include <sys/user.h>
 #endif
 
-#if !defined(__FreeBSD__) && !defined(__OpenBSD__) && !defined(__NetBSD__)
-    #error "Unsupported OS: please compile on FreeBSD, OpenBSD, or NetBSD"
+#if !defined(__FreeBSD__) && !defined(__NetBSD__)
+    #error "Unsupported OS: please compile on FreeBSD or NetBSD"
 #endif
 
 #ifdef __cplusplus
@@ -64,14 +64,6 @@ extern "C"
 #elif defined(__NetBSD__)
         uint64_t kvaddr;
 #endif
-        pid_t pid;
-    };
-#endif
-
-#if defined(__OpenBSD__)
-    struct proc_info_t
-    {
-        char name[KI_MAXCOMLEN];
         pid_t pid;
     };
 #endif

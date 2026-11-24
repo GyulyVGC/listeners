@@ -1,4 +1,6 @@
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+use std::net::SocketAddr;
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 use crate::{Protocol, SocketState};
 
@@ -23,28 +25,34 @@ pub(super) struct SocketInfo {
     pub(super) kvaddr: KvAddr,
 }
 
+// The C types below mirror `src/platform/bsd/native/common.h`. OpenBSD no longer uses the C
+// shim, so they are only needed on FreeBSD and NetBSD.
+
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 #[repr(C)]
 pub(super) union CAddress {
     ipv4: [u8; 4],
     ipv6: [u8; 16],
 }
 
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 #[repr(C)]
 pub(super) struct CSocketAddress {
     addr: CAddress,
     family: i32,
 }
 
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 #[repr(C)]
 pub(super) struct CSocketInfo {
     address: CSocketAddress,
-    #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
     kvaddr: KvAddr,
     protocol: i32,
     port: u16,
     state: i32,
 }
 
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 impl From<&CSocketInfo> for SocketInfo {
     fn from(value: &CSocketInfo) -> Self {
         let c_sock_addr = &value.address;
@@ -57,7 +65,6 @@ impl From<&CSocketInfo> for SocketInfo {
         };
 
         SocketInfo {
-            #[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
             kvaddr: value.kvaddr,
             address: SocketAddr::new(ip, value.port),
             protocol: match value.protocol {
@@ -69,6 +76,7 @@ impl From<&CSocketInfo> for SocketInfo {
     }
 }
 
+#[cfg(any(target_os = "freebsd", target_os = "netbsd"))]
 pub(super) fn socket_info_list(list: *mut CSocketInfo, nentries: usize) -> Vec<SocketInfo> {
     let mut sockets = Vec::new();
 
